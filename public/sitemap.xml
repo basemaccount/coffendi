@@ -11,6 +11,51 @@
     <priority>0.9</priority>
   </url>
   <url>
+    <loc>https://coffendi.vercel.app/coffees/ethiopia-bensa</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/colombia-el-vergel</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/brazil-pantano</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/guatemala-san-patricio</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/kenya-kirinyaga</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/rwanda-gitesi</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/peru-chirinos</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/honduras-comicovel</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/indonesia-kerinci</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://coffendi.vercel.app/origins</loc>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>

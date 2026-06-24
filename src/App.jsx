@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowRight,
@@ -16,7 +16,10 @@ import {
   Globe2,
   HandHeart,
   Headphones,
+  GitCompareArrows,
   Leaf,
+  LoaderCircle,
+  Mail,
   Map,
   MapPin,
   Menu,
@@ -43,7 +46,11 @@ import {
 } from "react-router-dom";
 import { feature } from "topojson-client";
 import worldData from "world-atlas/countries-110m.json";
+import CoffeeDetailPage from "./components/CoffeeDetailPage";
+import CompareTray from "./components/CompareTray";
 import { coffees, origins, stories, supplySteps } from "./data";
+import { usePersistentState } from "./hooks/usePersistentState";
+import { submitRequest } from "./lib/api";
 
 const mapCountries = feature(worldData, worldData.objects.countries).features;
 
@@ -60,6 +67,23 @@ function ScrollToTop() {
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: "instant" });
+    const coffee = pathname.startsWith("/coffees/")
+      ? coffees.find((item) => pathname.endsWith(item.id))
+      : null;
+    const routeTitles = {
+      "/": "Coffendi — Coffee with a clear origin",
+      "/coffees": "Green Coffee Portfolio — Coffendi",
+      "/origins": "Coffee Origins — Coffendi",
+      "/availability": "Price & Availability — Coffendi",
+      "/sustainability": "Responsible Sourcing — Coffendi",
+      "/roasters": "For Roasters — Coffendi",
+      "/stories": "Producer Stories — Coffendi",
+      "/quality": "Quality & Cupping — Coffendi",
+      "/contact": "Contact Coffendi",
+    };
+    document.title = coffee
+      ? `${coffee.name} · ${coffee.country} — Coffendi`
+      : routeTitles[pathname] || "Coffendi";
   }, [pathname]);
 
   return null;
@@ -79,7 +103,7 @@ function Logo({ compact = false }) {
   );
 }
 
-function Header({ sampleCount, onOpenSamples, onOpenFinder }) {
+function Header({ sampleCount, onOpenSamples, onOpenFinder, onOpenSearch }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const location = useLocation();
 
@@ -105,6 +129,15 @@ function Header({ sampleCount, onOpenSamples, onOpenFinder }) {
             ))}
           </nav>
           <div className="header-actions">
+            <button
+              className="icon-button"
+              type="button"
+              onClick={onOpenSearch}
+              aria-label="Search coffees and pages"
+              title="Search"
+            >
+              <Search size={19} />
+            </button>
             <button
               className="icon-button sample-button"
               type="button"
@@ -190,6 +223,123 @@ function MobileDock({ onOpenFinder }) {
   );
 }
 
+function SearchPalette({ open, onClose }) {
+  const [query, setQuery] = useState("");
+  const inputRef = useRef(null);
+  const location = useLocation();
+
+  useEffect(() => {
+    if (!open) return undefined;
+    setQuery("");
+    document.body.classList.add("no-scroll");
+    const focusTimer = window.setTimeout(() => inputRef.current?.focus(), 80);
+    const onKeyDown = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      window.clearTimeout(focusTimer);
+      window.removeEventListener("keydown", onKeyDown);
+      document.body.classList.remove("no-scroll");
+    };
+  }, [open, onClose]);
+
+  useEffect(() => {
+    if (open) onClose();
+  }, [location.pathname]);
+
+  const normalized = query.toLowerCase().trim();
+  const coffeeResults = coffees
+    .filter((coffee) =>
+      [
+        coffee.name,
+        coffee.country,
+        coffee.region,
+        coffee.producer,
+        coffee.process,
+        ...coffee.flavor,
+      ]
+        .join(" ")
+        .toLowerCase()
+        .includes(normalized),
+    )
+    .slice(0, normalized ? 6 : 4);
+  const pageResults = [
+    ["Price & availability", "/availability", "Live positions and warehouse stock"],
+    ["Origin map", "/origins", "Regions, partners, and harvest windows"],
+    ["Quality & cupping", "/quality", "Protocols, grading, and physical analysis"],
+    ["For roasters", "/roasters", "Samples, matching, blends, and logistics"],
+    ["Sustainability", "/sustainability", "Traceability and producer programs"],
+  ].filter(([title, , copy]) => `${title} ${copy}`.toLowerCase().includes(normalized));
+
+  return (
+    <>
+      <div className={`search-backdrop ${open ? "is-open" : ""}`} onClick={onClose} />
+      <section
+        className={`search-palette ${open ? "is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Search Coffendi"
+      >
+        <div className="search-palette__input">
+          <Search size={20} />
+          <input
+            ref={inputRef}
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder="Coffee, origin, producer, flavor, or page"
+            aria-label="Search Coffendi"
+          />
+          <button className="icon-button" type="button" onClick={onClose} aria-label="Close search">
+            <X size={19} />
+          </button>
+        </div>
+        <div className="search-palette__results">
+          {coffeeResults.length > 0 && (
+            <div>
+              <p>Coffees</p>
+              {coffeeResults.map((coffee) => (
+                <Link key={coffee.id} to={`/coffees/${coffee.id}`}>
+                  <img src={coffee.image} alt="" loading="lazy" decoding="async" />
+                  <span>
+                    <strong>{coffee.name}</strong>
+                    <small>
+                      {coffee.country} · {coffee.process} · {coffee.score} pts
+                    </small>
+                  </span>
+                  <ArrowRight size={16} />
+                </Link>
+              ))}
+            </div>
+          )}
+          {pageResults.length > 0 && (
+            <div>
+              <p>Explore</p>
+              {pageResults.map(([title, path, copy]) => (
+                <Link key={path} to={path}>
+                  <span>
+                    <strong>{title}</strong>
+                    <small>{copy}</small>
+                  </span>
+                  <ArrowRight size={16} />
+                </Link>
+              ))}
+            </div>
+          )}
+          {!coffeeResults.length && !pageResults.length && (
+            <div className="search-empty">
+              <Bean size={25} />
+              <strong>No result for “{query}”</strong>
+              <span>Try a country, process, producer, or flavor note.</span>
+            </div>
+          )}
+        </div>
+      </section>
+    </>
+  );
+}
+
 function SectionHeading({ eyebrow, title, copy, action }) {
   return (
     <div className="section-heading">
@@ -213,13 +363,19 @@ function StatusPill({ status }) {
   return <span className={className}>{status}</span>;
 }
 
-function CoffeeCard({ coffee, isSelected, onToggleSample }) {
-  const [expanded, setExpanded] = useState(false);
-
+function CoffeeCard({
+  coffee,
+  isSelected,
+  onToggleSample,
+  isCompared,
+  onToggleCompare,
+}) {
   return (
     <article className="coffee-card">
       <div className="coffee-card__image">
-        <img src={coffee.image} alt="" />
+        <Link to={`/coffees/${coffee.id}`} aria-label={`View ${coffee.name}`}>
+          <img src={coffee.image} alt="" loading="lazy" decoding="async" />
+        </Link>
         <StatusPill status={coffee.status} />
         <span className="score">
           <Award size={14} /> {coffee.score}
@@ -230,7 +386,9 @@ function CoffeeCard({ coffee, isSelected, onToggleSample }) {
           <span>{coffee.country}</span>
           <span>{coffee.region}</span>
         </div>
-        <h3>{coffee.name}</h3>
+        <h3>
+          <Link to={`/coffees/${coffee.id}`}>{coffee.name}</Link>
+        </h3>
         <p className="producer">{coffee.producer}</p>
         <div className="flavor-list">
           {coffee.flavor.map((item) => (
@@ -255,19 +413,6 @@ function CoffeeCard({ coffee, isSelected, onToggleSample }) {
             <dd>{coffee.price}</dd>
           </div>
         </dl>
-        {expanded && (
-          <div className="coffee-card__details">
-            <p>
-              <strong>Harvest</strong> {coffee.harvest}
-            </p>
-            <p>
-              <strong>Altitude</strong> {coffee.altitude}
-            </p>
-            <p>
-              <strong>Certification</strong> {coffee.certification.join(", ")}
-            </p>
-          </div>
-        )}
         <div className="coffee-card__actions">
           <button
             className={`button button--small ${isSelected ? "button--selected" : "button--dark"}`}
@@ -278,13 +423,17 @@ function CoffeeCard({ coffee, isSelected, onToggleSample }) {
             {isSelected ? "Sample added" : "Request sample"}
           </button>
           <button
-            className="text-button"
+            className={`icon-button compare-button ${isCompared ? "is-selected" : ""}`}
             type="button"
-            onClick={() => setExpanded((current) => !current)}
+            onClick={() => onToggleCompare(coffee.id)}
+            aria-label={`${isCompared ? "Remove" : "Add"} ${coffee.name} ${isCompared ? "from" : "to"} comparison`}
+            title={isCompared ? "Remove from comparison" : "Compare coffee"}
           >
-            {expanded ? "Less" : "Lot details"}
-            <ChevronDown className={expanded ? "is-rotated" : ""} size={16} />
+            {isCompared ? <Check size={16} /> : <GitCompareArrows size={16} />}
           </button>
+          <Link className="text-button" to={`/coffees/${coffee.id}`}>
+            View lot <ArrowRight size={16} />
+          </Link>
         </div>
       </div>
     </article>
@@ -387,7 +536,7 @@ function OriginMap({ compact = false }) {
         </div>
       </div>
       <article className="origin-detail">
-        <img src={selected.image} alt="" />
+        <img src={selected.image} alt="" loading="lazy" decoding="async" />
         <div>
           <p className="eyebrow">Selected origin</p>
           <h3>{selected.country}</h3>
@@ -416,7 +565,13 @@ function OriginMap({ compact = false }) {
   );
 }
 
-function HomePage({ selectedSamples, onToggleSample, onOpenFinder }) {
+function HomePage({
+  selectedSamples,
+  onToggleSample,
+  compareIds,
+  onToggleCompare,
+  onOpenFinder,
+}) {
   return (
     <main>
       <section className="home-hero">
@@ -490,6 +645,8 @@ function HomePage({ selectedSamples, onToggleSample, onOpenFinder }) {
                 coffee={coffee}
                 isSelected={selectedSamples.includes(coffee.id)}
                 onToggleSample={onToggleSample}
+                isCompared={compareIds.includes(coffee.id)}
+                onToggleCompare={onToggleCompare}
               />
             ))}
           </div>
@@ -518,7 +675,12 @@ function HomePage({ selectedSamples, onToggleSample, onOpenFinder }) {
       <section className="section section--green story-feature">
         <div className="shell story-feature__grid">
           <div className="story-feature__image">
-            <img src="/images/farmer-guatemala.jpg" alt="Coffee producer harvesting ripe cherries" />
+            <img
+              src="/images/farmer-guatemala.jpg"
+              alt="Coffee producer harvesting ripe cherries"
+              loading="lazy"
+              decoding="async"
+            />
             <span>Huehuetenango · Guatemala</span>
           </div>
           <div className="story-feature__copy">
@@ -579,7 +741,12 @@ function HomePage({ selectedSamples, onToggleSample, onOpenFinder }) {
             </Link>
           </div>
           <div className="impact-preview__image">
-            <img src="/images/drying-beds.jpg" alt="Coffee cherries drying on raised beds" />
+            <img
+              src="/images/drying-beds.jpg"
+              alt="Coffee cherries drying on raised beds"
+              loading="lazy"
+              decoding="async"
+            />
             <div className="impact-caption">
               <Leaf size={21} />
               <span>
@@ -726,7 +893,13 @@ const defaultFilters = {
   minScore: 84,
 };
 
-function CoffeesPage({ selectedSamples, onToggleSample, onOpenFinder }) {
+function CoffeesPage({
+  selectedSamples,
+  onToggleSample,
+  compareIds,
+  onToggleCompare,
+  onOpenFinder,
+}) {
   const location = useLocation();
   const [filters, setFilters] = useState(() => {
     const origin = new URLSearchParams(location.search).get("origin");
@@ -846,6 +1019,8 @@ function CoffeesPage({ selectedSamples, onToggleSample, onOpenFinder }) {
                       coffee={coffee}
                       isSelected={selectedSamples.includes(coffee.id)}
                       onToggleSample={onToggleSample}
+                      isCompared={compareIds.includes(coffee.id)}
+                      onToggleCompare={onToggleCompare}
                     />
                   ))}
                 </div>
@@ -901,7 +1076,7 @@ function CoffeesPage({ selectedSamples, onToggleSample, onOpenFinder }) {
 function PageHero({ eyebrow, title, copy, image, actions, compact = false }) {
   return (
     <section className={`page-hero ${compact ? "page-hero--compact" : ""}`}>
-      <img src={image} alt="" />
+      <img src={image} alt="" fetchpriority="high" decoding="async" />
       <div className="page-hero__shade" />
       <div className="shell page-hero__content">
         <p className="eyebrow eyebrow--light">{eyebrow}</p>
@@ -943,7 +1118,7 @@ function OriginsPage() {
             {origins.map((origin) => (
               <article key={origin.country}>
                 <div>
-                  <img src={origin.image} alt="" />
+                  <img src={origin.image} alt="" loading="lazy" decoding="async" />
                   <span>{origin.country.slice(0, 2).toUpperCase()}</span>
                 </div>
                 <h3>{origin.country}</h3>
@@ -1032,7 +1207,9 @@ function AvailabilityPage({ selectedSamples, onToggleSample }) {
                 {visible.map((coffee) => (
                   <tr key={coffee.id}>
                     <td data-label="Coffee">
-                      <strong>{coffee.name}</strong>
+                      <strong>
+                        <Link to={`/coffees/${coffee.id}`}>{coffee.name}</Link>
+                      </strong>
                       <span>
                         {coffee.country} · {coffee.region}
                       </span>
@@ -1169,7 +1346,12 @@ function SustainabilityPage() {
       <section className="section section--white">
         <div className="shell impact-report">
           <div className="impact-report__image">
-            <img src="/images/coffee-farmer.jpg" alt="Coffee farmer selecting cherries" />
+            <img
+              src="/images/coffee-farmer.jpg"
+              alt="Coffee farmer selecting cherries"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div className="impact-report__copy">
             <p className="eyebrow">2025 field note</p>
@@ -1218,15 +1400,18 @@ function SustainabilityPage() {
 }
 
 function InquiryForm({ type = "roaster", compact = false }) {
-  const [sent, setSent] = useState(false);
+  const [status, setStatus] = useState("idle");
+  const [reference, setReference] = useState("");
+  const [error, setError] = useState("");
 
-  if (sent) {
+  if (status === "success") {
     return (
       <div className="form-success">
         <CheckCircle2 size={36} />
         <h3>Inquiry received</h3>
         <p>A Coffendi sourcing specialist will follow up within one business day.</p>
-        <button className="text-button" type="button" onClick={() => setSent(false)}>
+        <span className="submission-reference">Reference {reference}</span>
+        <button className="text-button" type="button" onClick={() => setStatus("idle")}>
           Send another inquiry
         </button>
       </div>
@@ -1236,11 +1421,35 @@ function InquiryForm({ type = "roaster", compact = false }) {
   return (
     <form
       className={`inquiry-form ${compact ? "inquiry-form--compact" : ""}`}
-      onSubmit={(event) => {
+      onSubmit={async (event) => {
         event.preventDefault();
-        setSent(true);
+        setStatus("submitting");
+        setError("");
+        const form = new FormData(event.currentTarget);
+        try {
+          const result = await submitRequest("/api/inquiries", {
+            name: form.get("name"),
+            company: form.get("company"),
+            email: form.get("email"),
+            audience: type,
+            volume: form.get("volume"),
+            country: form.get("country"),
+            message: form.get("message"),
+            website: form.get("website"),
+            source: window.location.pathname,
+          });
+          setReference(result.reference);
+          setStatus("success");
+        } catch (submissionError) {
+          setError(submissionError.message);
+          setStatus("error");
+        }
       }}
     >
+      <label className="bot-field" aria-hidden="true">
+        Website
+        <input name="website" tabIndex="-1" autoComplete="off" />
+      </label>
       <div className="form-grid">
         <label className="field">
           <span>Name</span>
@@ -1259,7 +1468,7 @@ function InquiryForm({ type = "roaster", compact = false }) {
           {type === "producer" ? (
             <input name="country" placeholder="Origin country" required />
           ) : (
-            <select name="volume" defaultValue="">
+            <select name="volume" defaultValue="" required>
               <option value="" disabled>
                 Select monthly volume
               </option>
@@ -1284,8 +1493,21 @@ function InquiryForm({ type = "roaster", compact = false }) {
           required
         />
       </label>
-      <button className="button button--gold" type="submit">
-        Send inquiry <Send size={17} />
+      {error && (
+        <div className="form-alert" role="alert">
+          {error}
+        </div>
+      )}
+      <button className="button button--gold" type="submit" disabled={status === "submitting"}>
+        {status === "submitting" ? (
+          <>
+            Saving inquiry <LoaderCircle className="spinner" size={17} />
+          </>
+        ) : (
+          <>
+            Send inquiry <Send size={17} />
+          </>
+        )}
       </button>
     </form>
   );
@@ -1447,7 +1669,7 @@ function StoriesPage() {
             {stories.map((story, index) => (
               <article className={index === 0 ? "story-card story-card--lead" : "story-card"} key={story.title}>
                 <div className="story-card__image">
-                  <img src={story.image} alt="" />
+                  <img src={story.image} alt="" loading="lazy" decoding="async" />
                   <span>{story.metric}</span>
                 </div>
                 <div className="story-card__copy">
@@ -1581,7 +1803,12 @@ function QualityPage() {
       <section className="section section--green">
         <div className="shell quality-lab">
           <div className="quality-lab__image">
-            <img src="/images/roaster-machine.jpg" alt="Coffee sample roasting equipment" />
+            <img
+              src="/images/roaster-machine.jpg"
+              alt="Coffee sample roasting equipment"
+              loading="lazy"
+              decoding="async"
+            />
           </div>
           <div className="quality-lab__copy">
             <p className="eyebrow eyebrow--gold">The Coffendi quality lab</p>
@@ -1770,8 +1997,16 @@ function FinderDrawer({ open, onClose, onAddSample }) {
 
   useEffect(() => {
     document.body.classList.toggle("no-scroll", open);
-    return () => document.body.classList.remove("no-scroll");
-  }, [open]);
+    if (!open) return () => document.body.classList.remove("no-scroll");
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      document.body.classList.remove("no-scroll");
+    };
+  }, [open, onClose]);
 
   const findMatches = () => {
     const budgetMax = form.budget === "Under 6" ? 6 : form.budget === "6–8" ? 8 : 11;
@@ -1810,7 +2045,13 @@ function FinderDrawer({ open, onClose, onAddSample }) {
   return (
     <>
       <div className={`drawer-backdrop ${open ? "is-open" : ""}`} onClick={onClose} />
-      <aside className={`finder-drawer ${open ? "is-open" : ""}`} aria-hidden={!open}>
+      <aside
+        className={`finder-drawer ${open ? "is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Find your coffee"
+        aria-hidden={!open}
+      >
         <div className="drawer-header">
           <div>
             <p className="eyebrow">Coffee matching</p>
@@ -1969,18 +2210,38 @@ function FinderDrawer({ open, onClose, onAddSample }) {
   );
 }
 
-function SampleDrawer({ open, onClose, selectedIds, onRemove }) {
+function SampleDrawer({ open, onClose, selectedIds, onRemove, onComplete }) {
   const selected = coffees.filter((coffee) => selectedIds.includes(coffee.id));
-  const [submitted, setSubmitted] = useState(false);
+  const [status, setStatus] = useState("idle");
+  const [reference, setReference] = useState("");
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!open) setSubmitted(false);
-  }, [open]);
+    if (!open) {
+      setStatus("idle");
+      setError("");
+    }
+    document.body.classList.toggle("no-scroll", open);
+    const closeOnEscape = (event) => {
+      if (event.key === "Escape") onClose();
+    };
+    if (open) window.addEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+      document.body.classList.remove("no-scroll");
+    };
+  }, [open, onClose]);
 
   return (
     <>
       <div className={`drawer-backdrop ${open ? "is-open" : ""}`} onClick={onClose} />
-      <aside className={`sample-drawer ${open ? "is-open" : ""}`}>
+      <aside
+        className={`sample-drawer ${open ? "is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Sample request"
+        aria-hidden={!open}
+      >
         <div className="drawer-header">
           <div>
             <p className="eyebrow">Sample request</p>
@@ -1990,14 +2251,22 @@ function SampleDrawer({ open, onClose, selectedIds, onRemove }) {
             <X size={22} />
           </button>
         </div>
-        {submitted ? (
+        {status === "success" ? (
           <div className="drawer-success">
             <CheckCircle2 size={42} />
-            <h3>Sample request ready</h3>
+            <h3>Sample request received</h3>
             <p>
               We’ll confirm sample availability and shipping details by email.
             </p>
-            <button className="button button--dark" type="button" onClick={onClose}>
+            <span className="submission-reference">Reference {reference}</span>
+            <button
+              className="button button--dark"
+              type="button"
+              onClick={() => {
+                onComplete();
+                onClose();
+              }}
+            >
               Done
             </button>
           </div>
@@ -2006,7 +2275,7 @@ function SampleDrawer({ open, onClose, selectedIds, onRemove }) {
             <div className="sample-list">
               {selected.map((coffee) => (
                 <article key={coffee.id}>
-                  <img src={coffee.image} alt="" />
+                  <img src={coffee.image} alt="" loading="lazy" decoding="async" />
                   <div>
                     <span>{coffee.country}</span>
                     <h3>{coffee.name}</h3>
@@ -2027,21 +2296,74 @@ function SampleDrawer({ open, onClose, selectedIds, onRemove }) {
             </div>
             <form
               className="sample-form"
-              onSubmit={(event) => {
+              onSubmit={async (event) => {
                 event.preventDefault();
-                setSubmitted(true);
+                setStatus("submitting");
+                setError("");
+                const form = new FormData(event.currentTarget);
+                try {
+                  const result = await submitRequest("/api/sample-requests", {
+                    name: form.get("name"),
+                    company: form.get("company"),
+                    email: form.get("email"),
+                    country: form.get("country"),
+                    message: form.get("message"),
+                    website: form.get("website"),
+                    source: window.location.pathname,
+                    coffeeIds: selected.map((coffee) => coffee.id),
+                    coffeeNames: selected.map((coffee) => coffee.name),
+                  });
+                  setReference(result.reference);
+                  setStatus("success");
+                } catch (submissionError) {
+                  setError(submissionError.message);
+                  setStatus("error");
+                }
               }}
             >
+              <label className="bot-field" aria-hidden="true">
+                Website
+                <input name="website" tabIndex="-1" autoComplete="off" />
+              </label>
+              <label className="field">
+                <span>Name</span>
+                <input name="name" placeholder="Your name" autoComplete="name" required />
+              </label>
+              <label className="field">
+                <span>Company</span>
+                <input name="company" placeholder="Roastery name" autoComplete="organization" required />
+              </label>
               <label className="field">
                 <span>Work email</span>
-                <input type="email" placeholder="name@roastery.com" required />
+                <input name="email" type="email" placeholder="name@roastery.com" autoComplete="email" required />
               </label>
               <label className="field">
                 <span>Delivery country</span>
-                <input placeholder="Country" required />
+                <input name="country" placeholder="Country" autoComplete="country-name" required />
               </label>
-              <button className="button button--gold button--full" type="submit">
-                Submit sample request <Send size={17} />
+              <label className="field">
+                <span>Notes <small>Optional</small></span>
+                <textarea name="message" rows="3" placeholder="Preferred delivery timing or sample notes" />
+              </label>
+              {error && (
+                <div className="form-alert" role="alert">
+                  {error}
+                </div>
+              )}
+              <button
+                className="button button--gold button--full"
+                type="submit"
+                disabled={status === "submitting"}
+              >
+                {status === "submitting" ? (
+                  <>
+                    Saving request <LoaderCircle className="spinner" size={17} />
+                  </>
+                ) : (
+                  <>
+                    Submit sample request <Send size={17} />
+                  </>
+                )}
               </button>
             </form>
           </>
@@ -2060,6 +2382,73 @@ function SampleDrawer({ open, onClose, selectedIds, onRemove }) {
   );
 }
 
+function NewsletterForm() {
+  const [status, setStatus] = useState("idle");
+  const [message, setMessage] = useState("");
+
+  if (status === "success") {
+    return (
+      <div className="newsletter-success">
+        <CheckCircle2 size={19} />
+        <span>
+          <strong>You’re on the list.</strong>
+          Fresh arrivals and field notes will land in your inbox.
+        </span>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="newsletter-form"
+      onSubmit={async (event) => {
+        event.preventDefault();
+        setStatus("submitting");
+        setMessage("");
+        const form = new FormData(event.currentTarget);
+        try {
+          await submitRequest("/api/subscriptions", {
+            email: form.get("email"),
+            consent: true,
+            website: form.get("website"),
+            source: window.location.pathname,
+          });
+          setStatus("success");
+        } catch (submissionError) {
+          setMessage(submissionError.message);
+          setStatus("error");
+        }
+      }}
+    >
+      <label className="bot-field" aria-hidden="true">
+        Website
+        <input name="website" tabIndex="-1" autoComplete="off" />
+      </label>
+      <label htmlFor="newsletter-email">Fresh crop updates</label>
+      <div>
+        <Mail size={16} />
+        <input
+          id="newsletter-email"
+          name="email"
+          type="email"
+          placeholder="Work email"
+          aria-label="Email address"
+          required
+        />
+        <button type="submit" aria-label="Subscribe" disabled={status === "submitting"}>
+          {status === "submitting" ? (
+            <LoaderCircle className="spinner" size={16} />
+          ) : (
+            <ArrowRight size={16} />
+          )}
+        </button>
+      </div>
+      <small>Monthly arrivals, producer notes, and buying windows.</small>
+      {message && <p role="alert">{message}</p>}
+    </form>
+  );
+}
+
 function Footer({ onOpenFinder }) {
   return (
     <footer className="site-footer">
@@ -2074,6 +2463,7 @@ function Footer({ onOpenFinder }) {
             Find your coffee <Sparkles size={16} />
           </button>
         </div>
+        <NewsletterForm />
         <div>
           <h3>Source</h3>
           <Link to="/coffees">Our coffees</Link>
@@ -2119,10 +2509,44 @@ function NotFoundPage() {
   );
 }
 
+function Toast({ message, onDismiss }) {
+  if (!message) return null;
+  return (
+    <div className="app-toast" role="status">
+      <CheckCircle2 size={17} />
+      <span>{message}</span>
+      <button type="button" onClick={onDismiss} aria-label="Dismiss message">
+        <X size={15} />
+      </button>
+    </div>
+  );
+}
+
 export default function App() {
   const [finderOpen, setFinderOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
   const [sampleDrawerOpen, setSampleDrawerOpen] = useState(false);
-  const [selectedSamples, setSelectedSamples] = useState([]);
+  const [notice, setNotice] = useState("");
+  const [selectedSamples, setSelectedSamples] = usePersistentState("coffendi-samples", []);
+  const [compareIds, setCompareIds] = usePersistentState("coffendi-compare", []);
+
+  useEffect(() => {
+    if (!notice) return undefined;
+    const timeout = window.setTimeout(() => setNotice(""), 3_000);
+    return () => window.clearTimeout(timeout);
+  }, [notice]);
+
+  useEffect(() => {
+    const openSearch = (event) => {
+      if ((event.metaKey || event.ctrlKey) && event.key.toLowerCase() === "k") {
+        event.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+    window.addEventListener("keydown", openSearch);
+    return () => window.removeEventListener("keydown", openSearch);
+  }, []);
+
   const toggleSample = (id) => {
     setSelectedSamples((current) =>
       current.includes(id)
@@ -2135,6 +2559,18 @@ export default function App() {
     setSelectedSamples((current) => (current.includes(id) ? current : [...current, id]));
   };
 
+  const toggleCompare = (id) => {
+    setCompareIds((current) => {
+      if (current.includes(id)) return current.filter((coffeeId) => coffeeId !== id);
+      if (current.length >= 3) {
+        setNotice("Compare up to three coffees at a time.");
+        return current;
+      }
+      setNotice("Coffee added to comparison.");
+      return [...current, id];
+    });
+  };
+
   return (
     <>
       <ScrollToTop />
@@ -2142,6 +2578,7 @@ export default function App() {
         sampleCount={selectedSamples.length}
         onOpenSamples={() => setSampleDrawerOpen(true)}
         onOpenFinder={() => setFinderOpen(true)}
+        onOpenSearch={() => setSearchOpen(true)}
       />
       <Routes>
         <Route
@@ -2150,6 +2587,8 @@ export default function App() {
             <HomePage
               selectedSamples={selectedSamples}
               onToggleSample={toggleSample}
+              compareIds={compareIds}
+              onToggleCompare={toggleCompare}
               onOpenFinder={() => setFinderOpen(true)}
             />
           }
@@ -2160,7 +2599,20 @@ export default function App() {
             <CoffeesPage
               selectedSamples={selectedSamples}
               onToggleSample={toggleSample}
+              compareIds={compareIds}
+              onToggleCompare={toggleCompare}
               onOpenFinder={() => setFinderOpen(true)}
+            />
+          }
+        />
+        <Route
+          path="/coffees/:coffeeId"
+          element={
+            <CoffeeDetailPage
+              selectedSamples={selectedSamples}
+              onToggleSample={toggleSample}
+              compareIds={compareIds}
+              onToggleCompare={toggleCompare}
             />
           }
         />
@@ -2186,6 +2638,7 @@ export default function App() {
       </Routes>
       <Footer onOpenFinder={() => setFinderOpen(true)} />
       <MobileDock onOpenFinder={() => setFinderOpen(true)} />
+      <SearchPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
       <FinderDrawer
         open={finderOpen}
         onClose={() => setFinderOpen(false)}
@@ -2200,7 +2653,16 @@ export default function App() {
         onClose={() => setSampleDrawerOpen(false)}
         selectedIds={selectedSamples}
         onRemove={toggleSample}
+        onComplete={() => setSelectedSamples([])}
       />
+      <CompareTray
+        ids={compareIds}
+        onRemove={toggleCompare}
+        onClear={() => setCompareIds([])}
+        onAddSample={addSample}
+        sampleIds={selectedSamples}
+      />
+      <Toast message={notice} onDismiss={() => setNotice("")} />
     </>
   );
 }

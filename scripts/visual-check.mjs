@@ -8,9 +8,16 @@ const browser = await chromium.launch();
 const checks = [
   { name: "desktop-home", path: "/", width: 1440, height: 1000 },
   { name: "desktop-coffees", path: "/coffees", width: 1440, height: 1000 },
+  {
+    name: "desktop-detail",
+    path: "/coffees/ethiopia-bensa",
+    width: 1440,
+    height: 1000,
+  },
   { name: "desktop-origins", path: "/origins", width: 1440, height: 1000 },
   { name: "mobile-home", path: "/", width: 390, height: 844 },
   { name: "mobile-coffees", path: "/coffees", width: 390, height: 844 },
+  { name: "mobile-detail", path: "/coffees/ethiopia-bensa", width: 390, height: 844 },
   { name: "mobile-availability", path: "/availability", width: 390, height: 844 },
 ];
 
@@ -71,6 +78,40 @@ for (const check of checks) {
       path: new URL("desktop-origin-map.png", outputDir).pathname,
       fullPage: false,
     });
+  }
+
+  if (check.name === "desktop-coffees") {
+    await page.getByRole("button", { name: "Search coffees and pages" }).click();
+    await page.getByRole("searchbox", { name: "Search Coffendi" }).fill("Kenya");
+    await page.waitForTimeout(250);
+    const searchDialog = page.getByRole("dialog", { name: "Search Coffendi" });
+    const searchResult = searchDialog.getByRole("link", { name: /Kirinyaga Kii AA/ });
+    if (!(await searchResult.isVisible())) {
+      failures.push("desktop-coffees: Kenya search did not return Kirinyaga Kii AA");
+    }
+    await page.screenshot({
+      path: new URL("desktop-search.png", outputDir).pathname,
+      fullPage: false,
+    });
+    await page.keyboard.press("Escape");
+
+    await page.getByRole("button", { name: "Add Bensa Bombe to comparison" }).click();
+    await page.getByRole("button", { name: "Add El Vergel Java to comparison" }).click();
+    await page.getByRole("button", { name: /Compare 2/ }).click();
+    await page.waitForTimeout(450);
+    const compareDialog = page.getByRole("dialog", { name: "Compare coffees" });
+    if (!(await compareDialog.isVisible())) {
+      failures.push("desktop-coffees: comparison dialog did not open");
+    }
+    await page.screenshot({
+      path: new URL("desktop-compare.png", outputDir).pathname,
+      fullPage: false,
+    });
+    await page.keyboard.press("Escape");
+    await page.waitForTimeout(250);
+    if ((await compareDialog.getAttribute("class"))?.includes("is-open")) {
+      failures.push("desktop-coffees: Escape did not close the comparison dialog");
+    }
   }
 
   if (check.name === "mobile-coffees") {

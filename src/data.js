@@ -42,7 +42,7 @@ export const coffees = [
     certification: ["Verified traceable"],
     harvest: "2025/26",
     altitude: "1,650 masl",
-    image: "/images/coffee-farmer.jpg",
+    image: "/images/red-cherries.jpg",
     coordinates: [-75.23, 4.44],
   },
   {
@@ -65,7 +65,7 @@ export const coffees = [
     certification: ["Rainforest Alliance"],
     harvest: "2025/26",
     altitude: "1,150 masl",
-    image: "/images/sun-drying.jpg",
+    image: "/images/green-beans-sack.jpg",
     coordinates: [-47.88, -18.91],
   },
   {
@@ -111,7 +111,7 @@ export const coffees = [
     certification: ["Verified traceable"],
     harvest: "2025/26",
     altitude: "1,650–1,800 masl",
-    image: "/images/drying-beds.jpg",
+    image: "/images/cherry-harvest.jpg",
     coordinates: [37.3, -0.66],
   },
   {
@@ -134,7 +134,7 @@ export const coffees = [
     certification: ["Organic", "Women produced"],
     harvest: "2025/26",
     altitude: "1,750–1,800 masl",
-    image: "/images/coffee-farmer.jpg",
+    image: "/images/green-cherries.jpg",
     coordinates: [29.38, -2.07],
   },
   {
