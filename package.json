@@ -1,0 +1,30 @@
+{
+  "name": "coffendi-origin-platform",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "vite build",
+    "preview": "vite preview --host 0.0.0.0"
+  },
+  "dependencies": {
+    "d3-geo": "^3.1.1",
+    "lucide-react": "^0.468.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
+    "react-router-dom": "^6.28.0",
+    "topojson-client": "^3.1.0",
+    "world-atlas": "^2.0.2"
+  },
+  "devDependencies": {
+    "@napi-rs/canvas": "^0.1.80",
+    "@playwright/test": "^1.61.1",
+    "@vitejs/plugin-react": "^4.3.4",
+    "pdfjs-dist": "^5.4.530",
+    "vite": "^6.0.5"
+  }
+}
