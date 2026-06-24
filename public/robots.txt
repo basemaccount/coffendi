@@ -1,2 +1,4 @@
 User-agent: *
 Allow: /
+
+Sitemap: https://coffendi.vercel.app/sitemap.xml
