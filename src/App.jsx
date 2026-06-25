@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { Suspense, lazy, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowDown,
   ArrowRight,
@@ -51,11 +51,27 @@ import CompareTray from "./components/CompareTray";
 import { coffees, origins, stories, supplySteps } from "./data";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
+import {
+  makendiCatalogMeta,
+  makendiOriginSummary,
+  makendiSearchIndex,
+} from "./makendiSummary";
 
 const mapCountries = feature(worldData, worldData.objects.countries).features;
+const MakendiAtlasPage = lazy(() =>
+  import("./components/MakendiAtlasPage").then((module) => ({
+    default: module.MakendiAtlasPage,
+  })),
+);
+const MakendiGradePage = lazy(() =>
+  import("./components/MakendiAtlasPage").then((module) => ({
+    default: module.MakendiGradePage,
+  })),
+);
 
 const mainNav = [
   { label: "Coffees", to: "/coffees" },
+  { label: "Atlas", to: "/atlas" },
   { label: "Origins", to: "/origins" },
   { label: "For Roasters", to: "/roasters" },
   { label: "Our Impact", to: "/sustainability" },
@@ -70,9 +86,13 @@ function ScrollToTop() {
     const coffee = pathname.startsWith("/coffees/")
       ? coffees.find((item) => pathname.endsWith(item.id))
       : null;
+    const atlasGrade = pathname.startsWith("/atlas/")
+      ? makendiSearchIndex.find((item) => pathname.endsWith(item.id))
+      : null;
     const routeTitles = {
       "/": "Coffendi — Coffee with a clear origin",
       "/coffees": "Green Coffee Portfolio — Coffendi",
+      "/atlas": "Makendi Grade Atlas — Coffendi",
       "/origins": "Coffee Origins — Coffendi",
       "/availability": "Price & Availability — Coffendi",
       "/sustainability": "Responsible Sourcing — Coffendi",
@@ -81,9 +101,11 @@ function ScrollToTop() {
       "/quality": "Quality & Cupping — Coffendi",
       "/contact": "Contact Coffendi",
     };
-    document.title = coffee
-      ? `${coffee.name} · ${coffee.country} — Coffendi`
-      : routeTitles[pathname] || "Coffendi";
+    document.title = atlasGrade
+      ? `${atlasGrade.shortGrade} · ${atlasGrade.country} — Coffendi Atlas`
+      : coffee
+        ? `${coffee.name} · ${coffee.country} — Coffendi`
+        : routeTitles[pathname] || "Coffendi";
   }, [pathname]);
 
   return null;
@@ -113,9 +135,9 @@ function Header({ sampleCount, onOpenSamples, onOpenFinder, onOpenSearch }) {
     <>
       <div className="market-bar">
         <span className="pulse-dot" />
-        New crop Ethiopia and Colombia now available in Hamburg
-        <Link to="/availability">
-          View arrivals <ArrowRight size={14} />
+        Makendi 117-grade source atlas is now live for roaster briefs
+        <Link to="/atlas">
+          Explore atlas <ArrowRight size={14} />
         </Link>
       </div>
       <header className="site-header">
@@ -264,7 +286,15 @@ function SearchPalette({ open, onClose }) {
         .includes(normalized),
     )
     .slice(0, normalized ? 6 : 4);
+  const atlasResults = makendiSearchIndex
+    .filter((grade) =>
+      grade.searchText
+        .toLowerCase()
+        .includes(normalized),
+    )
+    .slice(0, normalized ? 5 : 3);
   const pageResults = [
+    ["Makendi grade atlas", "/atlas", "117 source profiles across 38 origins"],
     ["Price & availability", "/availability", "Live positions and warehouse stock"],
     ["Origin map", "/origins", "Regions, partners, and harvest windows"],
     ["Quality & cupping", "/quality", "Protocols, grading, and physical analysis"],
@@ -327,7 +357,24 @@ function SearchPalette({ open, onClose }) {
               ))}
             </div>
           )}
-          {!coffeeResults.length && !pageResults.length && (
+          {atlasResults.length > 0 && (
+            <div>
+              <p>Atlas</p>
+              {atlasResults.map((grade) => (
+                <Link key={grade.id} to={`/atlas/${grade.id}`}>
+                  <img src={grade.image} alt="" loading="lazy" decoding="async" />
+                  <span>
+                    <strong>{grade.shortGrade}</strong>
+                    <small>
+                      {grade.country} · {grade.coffeeType} · {grade.processDisplay}
+                    </small>
+                  </span>
+                  <ArrowRight size={16} />
+                </Link>
+              ))}
+            </div>
+          )}
+          {!coffeeResults.length && !pageResults.length && !atlasResults.length && (
             <div className="search-empty">
               <Bean size={25} />
               <strong>No result for “{query}”</strong>
@@ -350,6 +397,17 @@ function SectionHeading({ eyebrow, title, copy, action }) {
       </div>
       {action}
     </div>
+  );
+}
+
+function RouteLoading({ label }) {
+  return (
+    <main className="route-loading">
+      <div className="shell">
+        <LoaderCircle className="spinner" size={22} />
+        <span>{label}</span>
+      </div>
+    </main>
   );
 }
 
@@ -623,6 +681,48 @@ function HomePage({
           <Link to="/availability">
             Full availability <ArrowUpRight size={18} />
           </Link>
+        </div>
+      </section>
+
+      <section className="section section--white home-atlas-preview">
+        <div className="shell home-atlas-grid">
+          <div className="home-atlas-copy">
+            <p className="eyebrow">Makendi source atlas</p>
+            <h2>Turn a 117-page origin catalog into a usable sourcing brief.</h2>
+            <p>
+              The full Makendi V5 grade set is now searchable by origin, coffee type,
+              process, grade class, defect tolerance, cup direction, and intended use.
+            </p>
+            <div className="home-atlas-stats">
+              <div>
+                <strong>{makendiCatalogMeta.recordCount}</strong>
+                <span>grade profiles</span>
+              </div>
+              <div>
+                <strong>{makendiCatalogMeta.originCount}</strong>
+                <span>producing origins</span>
+              </div>
+              <div>
+                <strong>{makendiCatalogMeta.coffeeTypes.length}</strong>
+                <span>coffee types</span>
+              </div>
+            </div>
+            <Link className="button button--dark" to="/atlas">
+              Explore the atlas <ArrowRight size={17} />
+            </Link>
+          </div>
+          <div className="home-atlas-stack">
+            {makendiOriginSummary.slice(0, 4).map((origin) => (
+              <Link key={origin.country} to={`/atlas?origin=${encodeURIComponent(origin.country)}`}>
+                <img src={origin.image} alt="" loading="lazy" decoding="async" />
+                <span>
+                  <img src={origin.flag} alt="" loading="lazy" decoding="async" />
+                  {origin.country}
+                </span>
+                <strong>{origin.gradeCount} profiles</strong>
+              </Link>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -1105,6 +1205,21 @@ function OriginsPage() {
             copy="Active origins connect producer relationships with live landed and forward positions."
           />
           <OriginMap />
+        </div>
+      </section>
+      <section className="section section--white origin-atlas-callout">
+        <div className="shell origin-atlas-callout__inner">
+          <div>
+            <p className="eyebrow">Beyond live positions</p>
+            <h2>Compare {makendiCatalogMeta.recordCount} grade profiles from the Makendi source deck.</h2>
+            <p>
+              Use the atlas when you are planning a replacement, building a blend, or
+              exploring grades before a priced position is released.
+            </p>
+          </div>
+          <Link className="button button--dark" to="/atlas">
+            Open grade atlas <ArrowRight size={17} />
+          </Link>
         </div>
       </section>
       <section className="section section--cream">
@@ -2211,7 +2326,30 @@ function FinderDrawer({ open, onClose, onAddSample }) {
 }
 
 function SampleDrawer({ open, onClose, selectedIds, onRemove, onComplete }) {
-  const selected = coffees.filter((coffee) => selectedIds.includes(coffee.id));
+  const sampleCatalog = useMemo(
+    () => [
+      ...coffees.map((coffee) => ({
+        id: coffee.id,
+        name: coffee.name,
+        country: coffee.country,
+        process: coffee.process,
+        scoreLabel: `${coffee.score} pts`,
+        image: coffee.image,
+        kind: "Live lot",
+      })),
+      ...makendiSearchIndex.map((grade) => ({
+        id: grade.id,
+        name: grade.shortGrade,
+        country: grade.country,
+        process: grade.processDisplay,
+        scoreLabel: `Source #${String(grade.sourceNumber).padStart(3, "0")}`,
+        image: grade.image,
+        kind: "Atlas profile",
+      })),
+    ],
+    [],
+  );
+  const selected = sampleCatalog.filter((coffee) => selectedIds.includes(coffee.id));
   const [status, setStatus] = useState("idle");
   const [reference, setReference] = useState("");
   const [error, setError] = useState("");
@@ -2277,10 +2415,10 @@ function SampleDrawer({ open, onClose, selectedIds, onRemove, onComplete }) {
                 <article key={coffee.id}>
                   <img src={coffee.image} alt="" loading="lazy" decoding="async" />
                   <div>
-                    <span>{coffee.country}</span>
+                    <span>{coffee.kind} · {coffee.country}</span>
                     <h3>{coffee.name}</h3>
                     <p>
-                      {coffee.process} · {coffee.score} pts
+                      {coffee.process} · {coffee.scoreLabel}
                     </p>
                   </div>
                   <button
@@ -2468,6 +2606,7 @@ function Footer({ onOpenFinder }) {
           <h3>Source</h3>
           <Link to="/coffees">Our coffees</Link>
           <Link to="/availability">Price & availability</Link>
+          <Link to="/atlas">Makendi grade atlas</Link>
           <Link to="/origins">Origin map</Link>
           <Link to="/roasters">For roasters</Link>
         </div>
@@ -2614,6 +2753,28 @@ export default function App() {
               compareIds={compareIds}
               onToggleCompare={toggleCompare}
             />
+          }
+        />
+        <Route
+          path="/atlas"
+          element={
+            <Suspense fallback={<RouteLoading label="Loading Makendi atlas" />}>
+              <MakendiAtlasPage
+                selectedSamples={selectedSamples}
+                onToggleSample={toggleSample}
+              />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/atlas/:gradeId"
+          element={
+            <Suspense fallback={<RouteLoading label="Loading atlas profile" />}>
+              <MakendiGradePage
+                selectedSamples={selectedSamples}
+                onToggleSample={toggleSample}
+              />
+            </Suspense>
           }
         />
         <Route path="/origins" element={<OriginsPage />} />

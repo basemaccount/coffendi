@@ -21,8 +21,20 @@ with the verification port used in this workspace.
 ## Build
 
 ```bash
+npm run import:makendi
+npm run build:sitemap
 npm run build
 ```
+
+`import:makendi` reads the local Makendi delivery from
+`MAKENDI_SOURCE_ROOT`, defaulting to
+`/mnt/c/Users/progr/Downloads/MAKENDI_FINAL_V5_COMPLETE_EDITABLE`, generates
+`src/makendiCatalog.js`, `src/makendiSummary.js`, and optimized web images in
+`public/makendi`. The full catalog is lazy-loaded on `/atlas` so the main app
+bundle stays below Vite's chunk warning threshold.
+
+`build:sitemap` regenerates `public/sitemap.xml` from the live coffee lots and
+all 117 Makendi atlas profile URLs.
 
 ## Deploy
 
@@ -42,7 +54,8 @@ node scripts/visual-check.mjs
 ```
 
 The check covers desktop and mobile routes, screenshots, browser console
-errors, and horizontal overflow.
+errors, horizontal overflow, the coffee comparison flow, the finder flow, and
+the Makendi atlas search/detail/filter states.
 
 With `.env.local` pulled from the linked Vercel project, validate the private
 submission APIs and Blob persistence with:

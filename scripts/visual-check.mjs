@@ -1,13 +1,23 @@
 import fs from "node:fs";
 import { chromium } from "@playwright/test";
+import { makendiSearchIndex } from "../src/makendiSummary.js";
 
 const outputDir = new URL("../test-output/", import.meta.url);
 fs.mkdirSync(outputDir, { recursive: true });
 
 const browser = await chromium.launch();
+const atlasDetailId =
+  makendiSearchIndex.find((item) => item.country === "Brazil")?.id || makendiSearchIndex[0].id;
 const checks = [
   { name: "desktop-home", path: "/", width: 1440, height: 1000 },
   { name: "desktop-coffees", path: "/coffees", width: 1440, height: 1000 },
+  { name: "desktop-atlas", path: "/atlas", width: 1440, height: 1000 },
+  {
+    name: "desktop-atlas-detail",
+    path: `/atlas/${atlasDetailId}`,
+    width: 1440,
+    height: 1000,
+  },
   {
     name: "desktop-detail",
     path: "/coffees/ethiopia-bensa",
@@ -17,6 +27,8 @@ const checks = [
   { name: "desktop-origins", path: "/origins", width: 1440, height: 1000 },
   { name: "mobile-home", path: "/", width: 390, height: 844 },
   { name: "mobile-coffees", path: "/coffees", width: 390, height: 844 },
+  { name: "mobile-atlas", path: "/atlas", width: 390, height: 844 },
+  { name: "mobile-atlas-detail", path: `/atlas/${atlasDetailId}`, width: 390, height: 844 },
   { name: "mobile-detail", path: "/coffees/ethiopia-bensa", width: 390, height: 844 },
   { name: "mobile-availability", path: "/availability", width: 390, height: 844 },
 ];
@@ -114,11 +126,47 @@ for (const check of checks) {
     }
   }
 
+  if (check.name === "desktop-atlas") {
+    await page.locator("#atlas-results").scrollIntoViewIfNeeded();
+    await page.getByPlaceholder("Search origin, grade, process, defect spec, or tasting note").fill("Vietnam robusta");
+    await page.waitForTimeout(250);
+    const visibleCards = await page.locator(".atlas-card").count();
+    if (!visibleCards) {
+      failures.push("desktop-atlas: search did not return atlas cards");
+    }
+    await page.screenshot({
+      path: new URL("desktop-atlas-search.png", outputDir).pathname,
+      fullPage: false,
+    });
+    await page.getByRole("button", { name: /Add to brief/ }).first().click();
+    await page.getByRole("button", { name: /Sample request/ }).click();
+    await page.waitForTimeout(300);
+    const drawer = page.getByRole("dialog", { name: "Sample request" });
+    if (!(await drawer.isVisible())) {
+      failures.push("desktop-atlas: atlas profile was not added to the sample drawer");
+    }
+    await page.screenshot({
+      path: new URL("desktop-atlas-brief.png", outputDir).pathname,
+      fullPage: false,
+    });
+    await page.keyboard.press("Escape");
+  }
+
   if (check.name === "mobile-coffees") {
     await page.getByRole("button", { name: "Filters", exact: true }).click();
     await page.waitForTimeout(350);
     await page.screenshot({
       path: new URL("mobile-filters.png", outputDir).pathname,
+      fullPage: false,
+    });
+  }
+
+  if (check.name === "mobile-atlas") {
+    await page.locator("#atlas-results").scrollIntoViewIfNeeded();
+    await page.getByRole("button", { name: "Filters", exact: true }).click();
+    await page.waitForTimeout(350);
+    await page.screenshot({
+      path: new URL("mobile-atlas-filters.png", outputDir).pathname,
       fullPage: false,
     });
   }

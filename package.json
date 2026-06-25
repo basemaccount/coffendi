@@ -9,6 +9,8 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "dev:full": "vercel dev",
+    "import:makendi": "node scripts/import-makendi.mjs",
+    "build:sitemap": "node scripts/build-sitemap.mjs",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:api": "node --env-file=.env.local scripts/test-api.mjs",
