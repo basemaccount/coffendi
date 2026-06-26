@@ -10,6 +10,7 @@ const atlasDetailId =
   makendiSearchIndex.find((item) => item.country === "Brazil")?.id || makendiSearchIndex[0].id;
 const checks = [
   { name: "desktop-home", path: "/", width: 1440, height: 1000 },
+  { name: "desktop-sourcing", path: "/sourcing", width: 1440, height: 1000 },
   { name: "desktop-coffees", path: "/coffees", width: 1440, height: 1000 },
   { name: "desktop-atlas", path: "/atlas", width: 1440, height: 1000 },
   {
@@ -26,6 +27,7 @@ const checks = [
   },
   { name: "desktop-origins", path: "/origins", width: 1440, height: 1000 },
   { name: "mobile-home", path: "/", width: 390, height: 844 },
+  { name: "mobile-sourcing", path: "/sourcing", width: 390, height: 844 },
   { name: "mobile-coffees", path: "/coffees", width: 390, height: 844 },
   { name: "mobile-atlas", path: "/atlas", width: 390, height: 844 },
   { name: "mobile-atlas-detail", path: `/atlas/${atlasDetailId}`, width: 390, height: 844 },
@@ -99,6 +101,11 @@ for (const check of checks) {
     await page.waitForTimeout(250);
     if (!(await page.locator(".compare-lab").isVisible())) {
       failures.push("mobile-home: compare lab did not open");
+    }
+    await page.getByRole("button", { name: /Send this sourcing brief/ }).click();
+    await page.waitForTimeout(250);
+    if (!(await page.getByLabel("Sourcing brief preview").isVisible())) {
+      failures.push("mobile-home: sourcing brief submit panel did not open");
     }
     await page.screenshot({
       path: new URL("mobile-ai-compare.png", outputDir).pathname,

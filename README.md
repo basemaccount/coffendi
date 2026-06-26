@@ -33,8 +33,9 @@ npm run build
 `public/makendi`. The full catalog is lazy-loaded on `/atlas` so the main app
 bundle stays below Vite's chunk warning threshold.
 
-`build:sitemap` regenerates `public/sitemap.xml` from the live coffee lots and
-all 117 Makendi atlas profile URLs.
+`build:sitemap` regenerates `public/sitemap.xml` from the main routes, the
+dedicated sourcing route, the live coffee lots, and all 117 Makendi atlas
+profile URLs.
 
 ## Sourcing desk
 
@@ -50,6 +51,11 @@ The app includes a client-side AI-style sourcing desk with three modes:
 
 Makendi atlas records keep missing commercial fields inquiry-led instead of
 inventing prices, shipment periods, or basis terms.
+
+The dedicated route is `/sourcing`, and the drawer version can be opened from
+the primary navigation, home page, coffee catalog, atlas, detail pages, and
+mobile dock. Generated briefs can be submitted directly to the inquiry API with
+the ranked shortlist attached.
 
 ## Deploy
 

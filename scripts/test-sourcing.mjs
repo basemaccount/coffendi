@@ -4,6 +4,7 @@ import { makendiSearchIndex } from "../src/makendiSummary.js";
 import {
   buildAssistantReply,
   buildSourcingItems,
+  formatSourcingBrief,
   recommendSourcingItems,
   summarizeComparison,
 } from "../src/lib/sourcing.js";
@@ -70,5 +71,11 @@ const comparison = summarizeComparison(atlasPlanning.slice(0, 2));
 assert.match(comparison.title, /shortlist/);
 assert.ok(comparison.rows.length >= 4);
 assert.ok(comparison.nextSteps.length >= 3);
+
+const briefText = formatSourcingBrief(reply.brief, reply.recommendations);
+assert.match(briefText, /Coffendi sourcing brief/);
+assert.match(briefText, /Recommended shortlist/);
+assert.match(briefText, /Commercial note/);
+assert.ok(briefText.length < 2_500);
 
 console.log("Sourcing recommendation, assistant, and comparison tests passed.");

@@ -59,6 +59,7 @@ import {
   buildAssistantReply,
   buildSourcingItems,
   defaultSourcingBrief,
+  formatSourcingBrief,
   recommendSourcingItems,
   scoreSourcingItem,
   sourcingCertifications,
@@ -86,6 +87,7 @@ const MakendiGradePage = lazy(() =>
 );
 
 const mainNav = [
+  { label: "Sourcing", to: "/sourcing" },
   { label: "Coffees", to: "/coffees" },
   { label: "Atlas", to: "/atlas" },
   { label: "Origins", to: "/origins" },
@@ -107,6 +109,7 @@ function ScrollToTop() {
       : null;
     const routeTitles = {
       "/": "Coffendi — Coffee with a clear origin",
+      "/sourcing": "AI Sourcing Desk — Coffendi",
       "/coffees": "Green Coffee Portfolio — Coffendi",
       "/atlas": "Makendi Grade Atlas — Coffendi",
       "/origins": "Coffee Origins — Coffendi",
@@ -749,6 +752,175 @@ function SourcingAssistBand({ onOpenFinder, variant = "light" }) {
   );
 }
 
+function AtlasOriginMatrix({ compact = false }) {
+  const [query, setQuery] = useState("");
+  const [sort, setSort] = useState("coverage");
+  const visibleOrigins = useMemo(() => {
+    const searchTerm = query.toLowerCase().trim();
+    const rows = makendiOriginSummary.filter((origin) =>
+      [origin.country, ...origin.processes].join(" ").toLowerCase().includes(searchTerm),
+    );
+    return rows.sort((a, b) => {
+      if (sort === "country") return a.country.localeCompare(b.country);
+      if (sort === "process") return b.processes.length - a.processes.length || a.country.localeCompare(b.country);
+      return b.gradeCount - a.gradeCount || a.country.localeCompare(b.country);
+    });
+  }, [query, sort]);
+  const rows = compact ? visibleOrigins.slice(0, 12) : visibleOrigins;
+
+  return (
+    <div className="atlas-origin-matrix">
+      <div className="atlas-origin-matrix__toolbar">
+        <label className="search-field">
+          <Search size={18} />
+          <input
+            type="search"
+            placeholder="Search 38 Makendi origins or processes"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+          />
+        </label>
+        <label className="sort-field">
+          <span>Sort</span>
+          <select value={sort} onChange={(event) => setSort(event.target.value)}>
+            <option value="coverage">Most profiles</option>
+            <option value="country">Country A-Z</option>
+            <option value="process">Process depth</option>
+          </select>
+        </label>
+      </div>
+      <div className="atlas-origin-matrix__grid">
+        {rows.map((origin) => (
+          <Link key={origin.country} to={`/atlas?origin=${encodeURIComponent(origin.country)}`}>
+            <img src={origin.image} alt="" loading="lazy" decoding="async" />
+            <span className="origin-matrix-flag">
+              <img src={origin.flag} alt="" loading="lazy" decoding="async" />
+              {origin.country}
+            </span>
+            <strong>{origin.gradeCount} profiles</strong>
+            <small>{origin.processes.slice(0, 3).join(" · ")}</small>
+            <i>
+              Open profiles <ArrowRight size={14} />
+            </i>
+          </Link>
+        ))}
+      </div>
+      {compact && visibleOrigins.length > rows.length && (
+        <Link className="button button--outline" to="/origins">
+          View all {makendiOriginSummary.length} origins <ArrowRight size={17} />
+        </Link>
+      )}
+    </div>
+  );
+}
+
+function SourcingPage({ onOpenFinder }) {
+  const recommended = useMemo(
+    () =>
+      recommendSourcingItems(
+        coffees,
+        makendiSearchIndex,
+        {
+          ...defaultSourcingBrief,
+          flavor: "Classic espresso",
+          use: "Espresso",
+          channel: "Live + atlas",
+        },
+        4,
+      ),
+    [],
+  );
+
+  return (
+    <main>
+      <PageHero
+        eyebrow="AI sourcing desk"
+        title="Source coffee from a brief, not a spreadsheet."
+        copy="Build a roaster-ready shortlist across live Coffendi inventory and 117 Makendi planning profiles, then send the brief with source-aware tradeoffs attached."
+        image="/images/green-beans-sack.jpg"
+        actions={
+          <>
+            <button className="button button--gold" type="button" onClick={onOpenFinder}>
+              Open sourcing desk <Bot size={17} />
+            </button>
+            <Link className="button button--glass" to="/atlas">
+              Browse Makendi atlas <ArrowRight size={17} />
+            </Link>
+          </>
+        }
+      />
+      <section className="section section--cream sourcing-command-section">
+        <div className="shell sourcing-command-grid">
+          <div>
+            <p className="eyebrow">How it works</p>
+            <h2>Three tools for one buying decision.</h2>
+            <p>
+              Match finds the closest coffees, Ask translates natural language into
+              buying criteria, and Compare shows commercial certainty against cup
+              fit before the team follows up.
+            </p>
+            <button className="button button--dark" type="button" onClick={onOpenFinder}>
+              Start a sourcing brief <Sparkles size={17} />
+            </button>
+          </div>
+          <div className="sourcing-command-cards">
+            {[
+              [Target, "Match", "Rank by budget, volume, flavor, process, source mode, and delivery point."],
+              [MessageCircle, "Ask", "Use free-form prompts like: washed East Africa, 20 bags, Hamburg, under $8."],
+              [GitCompareArrows, "Compare", "See tradeoffs between priced live lots and Makendi inquiry-led profiles."],
+            ].map(([Icon, title, text]) => (
+              <article key={title}>
+                <Icon size={22} />
+                <h3>{title}</h3>
+                <p>{text}</p>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="section section--white">
+        <div className="shell">
+          <SectionHeading
+            eyebrow="Example shortlist"
+            title="A live-plus-atlas espresso brief"
+            copy="These cards show how the desk distinguishes active stock from Makendi planning references."
+          />
+          <div className="sourcing-page-shortlist">
+            {recommended.map((item) => (
+              <article key={item.id}>
+                <img src={item.image} alt="" loading="lazy" decoding="async" />
+                <span>{item.sourceLabel}</span>
+                <h3>{item.name}</h3>
+                <p>{item.country} · {item.process} · {item.matchScore}% match</p>
+                <ul>
+                  {item.reasons.slice(0, 3).map((reason) => (
+                    <li key={reason}>
+                      <Check size={14} /> {reason}
+                    </li>
+                  ))}
+                </ul>
+                <Link to={item.href}>
+                  Open profile <ArrowRight size={15} />
+                </Link>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+      <section className="section section--cream">
+        <div className="shell">
+          <SectionHeading
+            eyebrow="Origin intelligence"
+            title="Plan across all 38 Makendi origins"
+            copy="Use this matrix for replacement planning, blend components, and origin expansion before a priced position is released."
+          />
+          <AtlasOriginMatrix compact />
+        </div>
+      </section>
+    </main>
+  );
+}
+
 function HomePage({
   selectedSamples,
   onToggleSample,
@@ -1352,6 +1524,16 @@ function OriginsPage() {
           <Link className="button button--dark" to="/atlas">
             Open grade atlas <ArrowRight size={17} />
           </Link>
+        </div>
+      </section>
+      <section className="section section--cream">
+        <div className="shell">
+          <SectionHeading
+            eyebrow="Makendi origin coverage"
+            title="All 38 atlas origins in one planning matrix"
+            copy="Search by country or processing style, then open the matching Makendi grade profiles."
+          />
+          <AtlasOriginMatrix />
         </div>
       </section>
       <section className="section section--cream">
@@ -2439,6 +2621,111 @@ function CompareLab({ allItems, scoredItems, compareIds, setCompareIds, onAddSam
   );
 }
 
+function BriefSubmitPanel({ brief, recommendations }) {
+  const [open, setOpen] = useState(false);
+  const [status, setStatus] = useState("idle");
+  const [reference, setReference] = useState("");
+  const [error, setError] = useState("");
+  const briefText = useMemo(
+    () => formatSourcingBrief(brief, recommendations),
+    [brief, recommendations],
+  );
+
+  if (status === "success") {
+    return (
+      <div className="brief-submit brief-submit--success">
+        <CheckCircle2 size={24} />
+        <div>
+          <strong>Brief sent to Coffendi</strong>
+          <p>Reference {reference}. A sourcing specialist can follow up with availability and sample timing.</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <section className="brief-submit">
+      <button className="brief-submit__toggle" type="button" onClick={() => setOpen((current) => !current)}>
+        <span>
+          <Send size={16} />
+          Send this sourcing brief
+        </span>
+        <ChevronDown className={open ? "is-open" : ""} size={17} />
+      </button>
+      {open && (
+        <form
+          className="brief-submit__form"
+          onSubmit={async (event) => {
+            event.preventDefault();
+            setStatus("submitting");
+            setError("");
+            const form = new FormData(event.currentTarget);
+            try {
+              const result = await submitRequest("/api/inquiries", {
+                name: form.get("name"),
+                company: form.get("company"),
+                email: form.get("email"),
+                audience: "roaster",
+                volume: brief.volume,
+                country: form.get("country"),
+                message: briefText.slice(0, 2400),
+                brief: briefText.slice(0, 1900),
+                website: form.get("website"),
+                source: `${window.location.pathname}:sourcing-desk`,
+              });
+              setReference(result.reference);
+              setStatus("success");
+            } catch (submissionError) {
+              setError(submissionError.message);
+              setStatus("error");
+            }
+          }}
+        >
+          <label className="bot-field" aria-hidden="true">
+            Website
+            <input name="website" tabIndex="-1" autoComplete="off" />
+          </label>
+          <textarea className="brief-preview" readOnly rows="7" value={briefText} aria-label="Sourcing brief preview" />
+          <div className="brief-submit__grid">
+            <label className="field">
+              <span>Name</span>
+              <input name="name" placeholder="Your name" autoComplete="name" required />
+            </label>
+            <label className="field">
+              <span>Company</span>
+              <input name="company" placeholder="Roastery name" autoComplete="organization" required />
+            </label>
+            <label className="field">
+              <span>Work email</span>
+              <input name="email" type="email" placeholder="name@roastery.com" autoComplete="email" required />
+            </label>
+            <label className="field">
+              <span>Delivery country</span>
+              <input name="country" placeholder="Country" autoComplete="country-name" />
+            </label>
+          </div>
+          {error && (
+            <div className="form-alert" role="alert">
+              {error}
+            </div>
+          )}
+          <button className="button button--gold button--full" type="submit" disabled={status === "submitting"}>
+            {status === "submitting" ? (
+              <>
+                Sending brief <LoaderCircle className="spinner" size={17} />
+              </>
+            ) : (
+              <>
+                Send brief <Send size={17} />
+              </>
+            )}
+          </button>
+        </form>
+      )}
+    </section>
+  );
+}
+
 function FinderDrawer({ open, onClose, onAddSample }) {
   const [mode, setMode] = useState("match");
   const [form, setForm] = useState(defaultSourcingBrief);
@@ -2679,6 +2966,7 @@ function FinderDrawer({ open, onClose, onAddSample }) {
                   Send full inquiry <Send size={16} />
                 </Link>
               </div>
+              <BriefSubmitPanel brief={form} recommendations={visibleResults} />
             </div>
           </div>
         )}
@@ -2735,6 +3023,7 @@ function FinderDrawer({ open, onClose, onAddSample }) {
                 </article>
               ))}
             </div>
+            <BriefSubmitPanel brief={form} recommendations={visibleResults} />
           </div>
         )}
 
@@ -2747,6 +3036,12 @@ function FinderDrawer({ open, onClose, onAddSample }) {
               setCompareIds={setCompareDraftIds}
               onAddSample={onAddSample}
               brief={form}
+            />
+            <BriefSubmitPanel
+              brief={form}
+              recommendations={allItems
+                .filter((item) => compareDraftIds.includes(item.id))
+                .map((item) => scoreSourcingItem(item, form))}
             />
           </div>
         )}
@@ -3042,6 +3337,7 @@ function Footer({ onOpenFinder }) {
         <NewsletterForm />
         <div>
           <h3>Source</h3>
+          <Link to="/sourcing">AI sourcing desk</Link>
           <Link to="/coffees">Our coffees</Link>
           <Link to="/availability">Price & availability</Link>
           <Link to="/atlas">Makendi grade atlas</Link>
@@ -3169,6 +3465,10 @@ export default function App() {
               onOpenFinder={() => setFinderOpen(true)}
             />
           }
+        />
+        <Route
+          path="/sourcing"
+          element={<SourcingPage onOpenFinder={() => setFinderOpen(true)} />}
         />
         <Route
           path="/coffees"

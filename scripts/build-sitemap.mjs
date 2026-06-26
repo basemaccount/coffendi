@@ -6,6 +6,7 @@ const baseUrl = "https://coffendi.vercel.app";
 
 const routes = [
   ["/", "weekly", "1.0"],
+  ["/sourcing", "weekly", "0.95"],
   ["/coffees", "daily", "0.9"],
   ...coffees.map((coffee) => [`/coffees/${coffee.id}`, "weekly", "0.8"]),
   ["/atlas", "weekly", "0.9"],

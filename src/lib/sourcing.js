@@ -476,3 +476,37 @@ export function summarizeComparison(items) {
     ],
   };
 }
+
+export function formatSourcingBrief(briefInput, recommendations = []) {
+  const brief = normalizeSourcingBrief(briefInput);
+  const lines = [
+    "Coffendi sourcing brief",
+    `Budget: ${brief.budget}/lb`,
+    `Volume: ${brief.volume}`,
+    `Origin: ${brief.origin}`,
+    `Flavor direction: ${brief.flavor}`,
+    `Process: ${brief.process}`,
+    `Certification: ${brief.certification}`,
+    `Delivery warehouse: ${brief.delivery}`,
+    `Use case: ${brief.use}`,
+    `Source mode: ${brief.channel}`,
+  ];
+
+  if (recommendations.length) {
+    lines.push("", "Recommended shortlist:");
+    for (const item of recommendations.slice(0, 6)) {
+      lines.push(
+        `- ${item.name} | ${item.sourceLabel} | ${item.country} | ${item.process} | ${item.matchScore ?? "n/a"}% match | ${item.price}`,
+      );
+      if (item.reasons?.length) lines.push(`  Reasons: ${item.reasons.slice(0, 3).join("; ")}`);
+      if (item.cautions?.length) lines.push(`  Check: ${item.cautions.slice(0, 2).join("; ")}`);
+    }
+  }
+
+  lines.push(
+    "",
+    "Commercial note: live lots can carry current stock and price context; Makendi atlas profiles are planning references until Coffendi confirms availability, shipment period, price, and basis.",
+  );
+
+  return lines.join("\n");
+}
