@@ -82,6 +82,28 @@ for (const check of checks) {
       path: new URL("mobile-matches.png", outputDir).pathname,
       fullPage: false,
     });
+    await page.locator(".sourcing-tabs button").nth(1).click();
+    await page
+      .getByPlaceholder(/Find a washed East African coffee/i)
+      .fill("Find a washed East African coffee for bright filter, 20 bags, Hamburg, under $8.");
+    await page.getByRole("button", { name: "Ask assistant" }).click();
+    await page.waitForTimeout(300);
+    if (!(await page.locator(".ai-message--assistant").last().isVisible())) {
+      failures.push("mobile-home: assistant did not produce a visible response");
+    }
+    await page.screenshot({
+      path: new URL("mobile-ai-assistant.png", outputDir).pathname,
+      fullPage: false,
+    });
+    await page.locator(".sourcing-tabs button").nth(2).click();
+    await page.waitForTimeout(250);
+    if (!(await page.locator(".compare-lab").isVisible())) {
+      failures.push("mobile-home: compare lab did not open");
+    }
+    await page.screenshot({
+      path: new URL("mobile-ai-compare.png", outputDir).pathname,
+      fullPage: false,
+    });
   }
 
   if (check.name === "desktop-origins") {

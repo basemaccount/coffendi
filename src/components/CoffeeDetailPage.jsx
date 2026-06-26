@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Award,
+  Bot,
   Check,
   CheckCircle2,
   Clipboard,
@@ -14,6 +15,7 @@ import {
   Share2,
   ShieldCheck,
   Ship,
+  Sparkles,
   Sprout,
   Warehouse,
 } from "lucide-react";
@@ -64,6 +66,7 @@ export default function CoffeeDetailPage({
   onToggleSample,
   compareIds,
   onToggleCompare,
+  onOpenFinder,
 }) {
   const { coffeeId } = useParams();
   const [copied, setCopied] = useState(false);
@@ -186,6 +189,11 @@ export default function CoffeeDetailPage({
                 <GitCompareArrows size={17} />
                 {compared ? "In comparison" : "Add to compare"}
               </button>
+              {onOpenFinder && (
+                <button className="button button--outline" type="button" onClick={onOpenFinder}>
+                  <Bot size={17} /> Ask for alternatives
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -363,6 +371,24 @@ export default function CoffeeDetailPage({
           </div>
         </div>
       </section>
+
+      {onOpenFinder && (
+        <section className="lot-ai-strip">
+          <div className="shell lot-ai-strip__inner">
+            <div>
+              <p className="eyebrow">Alternative finder</p>
+              <h2>Compare this lot with live and Makendi planning profiles.</h2>
+              <p>
+                Ask the sourcing desk for replacements by cup role, budget,
+                process, warehouse, or certification.
+              </p>
+            </div>
+            <button className="button button--gold" type="button" onClick={onOpenFinder}>
+              Open sourcing desk <Sparkles size={17} />
+            </button>
+          </div>
+        </section>
+      )}
 
       {related.length > 0 && (
         <section className="section section--white">

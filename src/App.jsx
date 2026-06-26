@@ -6,10 +6,12 @@ import {
   Award,
   BarChart3,
   Bean,
+  Bot,
   Check,
   CheckCircle2,
   ChevronDown,
   ClipboardCheck,
+  Compass,
   Coffee,
   Factory,
   Filter,
@@ -22,6 +24,7 @@ import {
   Mail,
   Map,
   MapPin,
+  MessageCircle,
   Menu,
   PackageCheck,
   Search,
@@ -31,6 +34,7 @@ import {
   SlidersHorizontal,
   Sparkles,
   Sprout,
+  Target,
   ThermometerSun,
   Users,
   Warehouse,
@@ -51,6 +55,18 @@ import CompareTray from "./components/CompareTray";
 import { coffees, origins, stories, supplySteps } from "./data";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
+import {
+  buildAssistantReply,
+  buildSourcingItems,
+  defaultSourcingBrief,
+  recommendSourcingItems,
+  scoreSourcingItem,
+  sourcingCertifications,
+  sourcingProcesses,
+  sourcingProfiles,
+  sourcingWarehouses,
+  summarizeComparison,
+} from "./lib/sourcing";
 import {
   makendiCatalogMeta,
   makendiOriginSummary,
@@ -242,6 +258,21 @@ function MobileDock({ onOpenFinder }) {
         <span>Contact</span>
       </NavLink>
     </nav>
+  );
+}
+
+function SourcingFloatingAction({ onOpenFinder }) {
+  return (
+    <button
+      className="sourcing-fab"
+      type="button"
+      onClick={onOpenFinder}
+      aria-label="Open AI sourcing desk"
+      title="AI sourcing desk"
+    >
+      <Bot size={18} />
+      <span>Sourcing desk</span>
+    </button>
   );
 }
 
@@ -517,6 +548,9 @@ function OriginMap({ compact = false }) {
   const [selectedCountry, setSelectedCountry] = useState(origins[0].country);
   const selected =
     origins.find((origin) => origin.country === selectedCountry) || origins[0];
+  const selectedAtlas = makendiOriginSummary.find(
+    (origin) => origin.country === selected.country,
+  );
   const projection = useMemo(
     () =>
       geoEqualEarth()
@@ -612,14 +646,106 @@ function OriginMap({ compact = false }) {
               <dt>Harvest</dt>
               <dd>{selected.harvest}</dd>
             </div>
+            <div>
+              <dt>Atlas</dt>
+              <dd>{selectedAtlas ? `${selectedAtlas.gradeCount} profiles` : "On request"}</dd>
+            </div>
           </dl>
           <p className="origin-profile">{selected.profile}</p>
-          <Link className="text-link" to={`/coffees?origin=${selected.country}`}>
-            View coffees from {selected.country} <ArrowRight size={16} />
-          </Link>
+          <div className="origin-detail__links">
+            <Link className="text-link" to={`/coffees?origin=${selected.country}`}>
+              View coffees <ArrowRight size={16} />
+            </Link>
+            {selectedAtlas && (
+              <Link className="text-link" to={`/atlas?origin=${encodeURIComponent(selected.country)}`}>
+                Atlas profiles <ArrowRight size={16} />
+              </Link>
+            )}
+          </div>
         </div>
       </article>
     </div>
+  );
+}
+
+function SourcingDeskPreview({ onOpenFinder }) {
+  const topOrigins = makendiOriginSummary.slice(0, 3);
+
+  return (
+    <section className="section section--dark sourcing-desk-preview">
+      <div className="shell sourcing-desk-preview__grid">
+        <div className="sourcing-desk-preview__copy">
+          <p className="eyebrow eyebrow--gold">AI sourcing desk</p>
+          <h2>Ask for a profile. Get a shortlist, tradeoffs, and next steps.</h2>
+          <p>
+            A source-aware assistant now ranks live Coffendi lots against all
+            {` ${makendiCatalogMeta.recordCount} `}Makendi grade profiles by cup,
+            process, budget, volume, delivery point, and certification needs.
+          </p>
+          <div className="sourcing-desk-preview__actions">
+            <button className="button button--gold" type="button" onClick={onOpenFinder}>
+              Open sourcing desk <Bot size={17} />
+            </button>
+            <Link className="button button--glass" to="/availability">
+              Check live stock <BarChart3 size={17} />
+            </Link>
+          </div>
+        </div>
+        <div className="sourcing-desk-preview__panel">
+          <div className="assistant-card">
+            <span>
+              <Bot size={18} /> Assistant brief
+            </span>
+            <p>Find a washed Ethiopia or Kenya for bright filter, 20 bags, Hamburg.</p>
+          </div>
+          <div className="assistant-stack">
+            {topOrigins.map((origin, index) => (
+              <Link key={origin.country} to={`/atlas?origin=${encodeURIComponent(origin.country)}`}>
+                <img src={origin.flag} alt="" loading="lazy" decoding="async" />
+                <span>0{index + 1}</span>
+                <strong>{origin.country}</strong>
+                <small>{origin.gradeCount} Makendi profiles</small>
+              </Link>
+            ))}
+          </div>
+          <div className="assistant-metric-row">
+            <div>
+              <strong>3 modes</strong>
+              <span>Match · Ask · Compare</span>
+            </div>
+            <div>
+              <strong>{coffees.length + makendiSearchIndex.length}</strong>
+              <span>searchable profiles</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function SourcingAssistBand({ onOpenFinder, variant = "light" }) {
+  return (
+    <section className={`sourcing-assist-band sourcing-assist-band--${variant}`}>
+      <div className="shell sourcing-assist-band__inner">
+        <div>
+          <p className="eyebrow">Sourcing intelligence</p>
+          <h2>Need a faster shortlist?</h2>
+          <p>
+            Use the assistant to match budget, volume, process, flavor direction,
+            delivery warehouse, live lots, and Makendi planning profiles.
+          </p>
+        </div>
+        <div className="sourcing-assist-band__actions">
+          <button className="button button--dark" type="button" onClick={onOpenFinder}>
+            Ask assistant <MessageCircle size={17} />
+          </button>
+          <Link className="button button--outline" to="/atlas">
+            Search atlas <Search size={17} />
+          </Link>
+        </div>
+      </div>
+    </section>
   );
 }
 
@@ -649,6 +775,9 @@ function HomePage({
             <Link className="button button--glass" to="/origins">
               View origins <Globe2 size={18} />
             </Link>
+            <button className="button button--glass" type="button" onClick={onOpenFinder}>
+              Ask AI sourcing desk <Bot size={18} />
+            </button>
           </div>
         </div>
         <a className="hero-scroll" href="#featured">
@@ -725,6 +854,8 @@ function HomePage({
           </div>
         </div>
       </section>
+
+      <SourcingDeskPreview onOpenFinder={onOpenFinder} />
 
       <section className="section section--cream" id="featured">
         <div className="shell">
@@ -1066,6 +1197,7 @@ function CoffeesPage({
           </button>
         }
       />
+      <SourcingAssistBand onOpenFinder={onOpenFinder} />
       <section className="section section--cream catalog-section">
         <div className="shell">
           <div className="catalog-toolbar">
@@ -1270,7 +1402,7 @@ function OriginsPage() {
   );
 }
 
-function AvailabilityPage({ selectedSamples, onToggleSample }) {
+function AvailabilityPage({ selectedSamples, onToggleSample, onOpenFinder }) {
   const [warehouse, setWarehouse] = useState("All");
   const visible =
     warehouse === "All"
@@ -1286,6 +1418,7 @@ function AvailabilityPage({ selectedSamples, onToggleSample }) {
         copy="Live-style inventory view for spot and incoming Coffendi coffees. Final terms are confirmed at contract."
         image="/images/sun-drying.jpg"
       />
+      <SourcingAssistBand onOpenFinder={onOpenFinder} variant="cream" />
       <section className="section section--cream availability-section">
         <div className="shell">
           <div className="availability-toolbar">
@@ -1426,6 +1559,34 @@ function SustainabilityPage() {
                 </article>
               );
             })}
+          </div>
+        </div>
+      </section>
+      <section className="section section--white trace-proof-section">
+        <div className="shell trace-proof-grid">
+          <div>
+            <p className="eyebrow">Traceability proof layer</p>
+            <h2>Source data is separated from commercial assumptions.</h2>
+            <p>
+              The Makendi atlas contributes origin, grade, processing, and cup
+              direction across {makendiCatalogMeta.recordCount} profiles. Price,
+              shipment period, and basis stay inquiry-led when the source table
+              does not provide them.
+            </p>
+          </div>
+          <div className="trace-proof-cards">
+            <article>
+              <strong>{makendiCatalogMeta.originCount}</strong>
+              <span>origins represented</span>
+            </article>
+            <article>
+              <strong>{makendiCatalogMeta.provenanceCounts.source_pdf}</strong>
+              <span>source PDF field flags</span>
+            </article>
+            <article>
+              <strong>{makendiCatalogMeta.assetWarnings}</strong>
+              <span>asset warnings kept visible</span>
+            </article>
           </div>
         </div>
       </section>
@@ -1803,6 +1964,28 @@ function StoriesPage() {
           </div>
         </div>
       </section>
+      <section className="section section--white story-atlas-section">
+        <div className="shell">
+          <SectionHeading
+            eyebrow="Makendi origin notebook"
+            title="Producer context from 38 sourcing countries"
+            copy="Representative farmer and country imagery from the Makendi delivery now helps roasters scan potential origin stories before priced lots are released."
+          />
+          <div className="story-atlas-grid">
+            {makendiOriginSummary.slice(0, 6).map((origin) => (
+              <Link key={origin.country} to={`/atlas?origin=${encodeURIComponent(origin.country)}`}>
+                <img src={origin.image} alt="" loading="lazy" decoding="async" />
+                <span>
+                  <img src={origin.flag} alt="" loading="lazy" decoding="async" />
+                  {origin.country}
+                </span>
+                <strong>{origin.gradeCount} profiles</strong>
+                <small>{origin.processes.slice(0, 3).join(" · ")}</small>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
       <section className="story-manifesto">
         <div className="shell">
           <p className="eyebrow eyebrow--gold">What we document</p>
@@ -1953,6 +2136,34 @@ function QualityPage() {
           </div>
         </div>
       </section>
+      <section className="section section--cream grade-intelligence-section">
+        <div className="shell grade-intelligence-grid">
+          <div>
+            <p className="eyebrow">Makendi grade intelligence</p>
+            <h2>Use grade language as a buying signal, not decoration.</h2>
+            <p>
+              The assistant reads grade classes, defect tolerances, screen
+              references, process names, and cup direction from the Makendi
+              source index. That lets a roaster compare live sensory data with
+              planning-grade alternatives before asking for terms.
+            </p>
+            <Link className="button button--dark" to="/atlas">
+              Open grade atlas <ArrowRight size={17} />
+            </Link>
+          </div>
+          <div className="grade-intelligence-stack">
+            {makendiSearchIndex.slice(0, 4).map((grade) => (
+              <Link key={grade.id} to={`/atlas/${grade.id}`}>
+                <span>#{String(grade.sourceNumber).padStart(3, "0")}</span>
+                <strong>{grade.shortGrade}</strong>
+                <small>
+                  {grade.country} · {grade.processDisplay} · {grade.tastingNotes.slice(0, 2).join(" / ")}
+                </small>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
       <section className="section section--white">
         <div className="shell cup-report">
           <SectionHeading
@@ -2097,18 +2308,160 @@ function ContactPage() {
   );
 }
 
+function SourcingItemCard({ item, onAddSample, onToggleCompare, compared }) {
+  return (
+    <article className="sourcing-item-card">
+      <img src={item.image} alt="" loading="lazy" decoding="async" />
+      <div>
+        <span className="sourcing-item-card__meta">
+          {item.sourceLabel} · {item.country} · {item.process}
+        </span>
+        <h3>
+          <Link to={item.href}>{item.name}</Link>
+        </h3>
+        <div className="sourcing-score-line">
+          <strong>{item.matchScore}%</strong>
+          <span>{item.matchLabel}</span>
+          <small>{item.price}</small>
+        </div>
+        <div className="flavor-list">
+          {item.flavor.slice(0, 4).map((note) => (
+            <span key={note}>{note}</span>
+          ))}
+        </div>
+        <ul className="sourcing-reasons">
+          {item.reasons.slice(0, 3).map((reason) => (
+            <li key={reason}>
+              <Check size={14} /> {reason}
+            </li>
+          ))}
+        </ul>
+        {item.cautions.length > 0 && (
+          <p className="sourcing-caution">{item.cautions[0]}</p>
+        )}
+        <div className="sourcing-item-card__actions">
+          <button className="button button--small button--dark" type="button" onClick={() => onAddSample(item.id)}>
+            <PackageCheck size={16} /> {item.actionLabel}
+          </button>
+          <button
+            className={`button button--small ${compared ? "button--selected" : "button--outline"}`}
+            type="button"
+            onClick={() => onToggleCompare(item.id)}
+          >
+            <GitCompareArrows size={16} /> {compared ? "Selected" : "Compare"}
+          </button>
+        </div>
+      </div>
+    </article>
+  );
+}
+
+function CompareLab({ allItems, scoredItems, compareIds, setCompareIds, onAddSample, brief }) {
+  const selected = compareIds
+    .map((id) => allItems.find((item) => item.id === id))
+    .filter(Boolean)
+    .map((item) => scoreSourcingItem(item, brief));
+  const summary = summarizeComparison(selected);
+
+  const toggle = (id) => {
+    setCompareIds((current) => {
+      if (current.includes(id)) return current.filter((itemId) => itemId !== id);
+      if (current.length >= 3) return current;
+      return [...current, id];
+    });
+  };
+
+  return (
+    <div className="compare-lab">
+      <div className="compare-lab__intro">
+        <GitCompareArrows size={20} />
+        <div>
+          <strong>{summary.title}</strong>
+          <p>{summary.copy}</p>
+        </div>
+      </div>
+      <div className="compare-pick-list">
+        {scoredItems.slice(0, 6).map((item) => (
+          <button
+            key={item.id}
+            className={compareIds.includes(item.id) ? "is-selected" : ""}
+            type="button"
+            onClick={() => toggle(item.id)}
+          >
+            <img src={item.image} alt="" loading="lazy" decoding="async" />
+            <span>
+              <strong>{item.name}</strong>
+              <small>{item.matchScore}% · {item.country}</small>
+            </span>
+            {compareIds.includes(item.id) ? <Check size={16} /> : <GitCompareArrows size={16} />}
+          </button>
+        ))}
+      </div>
+      {selected.length ? (
+        <>
+          <div className="compare-lab__rows">
+            {summary.rows.map(([label, value]) => (
+              <div key={label}>
+                <span>{label}</span>
+                <strong>{value}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="compare-lab__cards">
+            {selected.map((item) => (
+              <article key={item.id}>
+                <img src={item.image} alt="" loading="lazy" decoding="async" />
+                <span>{item.sourceLabel}</span>
+                <h3>{item.name}</h3>
+                <p>{item.reasons.slice(0, 2).join(" · ")}</p>
+                <button className="button button--small button--dark" type="button" onClick={() => onAddSample(item.id)}>
+                  <PackageCheck size={15} /> Add to brief
+                </button>
+              </article>
+            ))}
+          </div>
+          <ul className="compare-lab__next">
+            {summary.nextSteps.map((step) => (
+              <li key={step}>
+                <CheckCircle2 size={15} /> {step}
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <div className="empty-state empty-state--compact">
+          <GitCompareArrows size={27} />
+          <h3>Select two or three profiles</h3>
+          <p>The lab will show tradeoffs across origin, process, price certainty, and source type.</p>
+        </div>
+      )}
+    </div>
+  );
+}
+
 function FinderDrawer({ open, onClose, onAddSample }) {
-  const [form, setForm] = useState({
-    budget: "6–8",
-    volume: "20–60 bags",
-    origin: "Open",
-    flavor: "Fruit-forward",
-    process: "Open",
-    certification: "Any",
-    delivery: "Mersin",
-  });
+  const [mode, setMode] = useState("match");
+  const [form, setForm] = useState(defaultSourcingBrief);
   const [results, setResults] = useState(null);
-  const update = (key, value) => setForm((current) => ({ ...current, [key]: value }));
+  const [prompt, setPrompt] = useState("");
+  const [messages, setMessages] = useState([
+    {
+      role: "assistant",
+      text: "Tell me a target cup, budget, volume, process, origin, or warehouse. I will rank live lots and Makendi atlas profiles with source-aware tradeoffs.",
+      recommendations: [],
+    },
+  ]);
+  const [compareDraftIds, setCompareDraftIds] = useState([]);
+  const allItems = useMemo(() => buildSourcingItems(coffees, makendiSearchIndex), []);
+  const update = (key, value) => {
+    setForm((current) => ({ ...current, [key]: value }));
+    setResults(null);
+  };
+  const scoredItems = useMemo(
+    () => recommendSourcingItems(coffees, makendiSearchIndex, form, 8),
+    [form],
+  );
+  const visibleResults = results || scoredItems.slice(0, 4);
 
   useEffect(() => {
     document.body.classList.toggle("no-scroll", open);
@@ -2124,37 +2477,31 @@ function FinderDrawer({ open, onClose, onAddSample }) {
   }, [open, onClose]);
 
   const findMatches = () => {
-    const budgetMax = form.budget === "Under 6" ? 6 : form.budget === "6–8" ? 8 : 11;
-    const profileTerms = {
-      "Fruit-forward": ["fruit", "berry", "grape", "plum", "apricot", "pineapple"],
-      "Chocolate & nuts": ["chocolate", "cacao", "cocoa", "hazelnut", "almond", "praline"],
-      "Floral & bright": ["jasmine", "rose", "tea", "citrus", "grapefruit"],
-      Balanced: ["caramel", "toffee", "sugar", "apple"],
-    };
-    const scored = coffees
-      .map((coffee) => {
-        let score = 0;
-        if (coffee.priceValue <= budgetMax) score += 3;
-        if (form.origin === "Open" || coffee.country === form.origin) score += 2;
-        if (form.process === "Open" || coffee.process === form.process) score += 2;
-        if (
-          form.certification === "Any" ||
-          coffee.certification.includes(form.certification)
-        )
-          score += 2;
-        if (
-          coffee.flavor.some((note) =>
-            profileTerms[form.flavor].some((term) => note.toLowerCase().includes(term)),
-          )
-        )
-          score += 3;
-        if (coffee.warehouse === form.delivery) score += 1;
-        return { coffee, score };
-      })
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 3)
-      .map(({ coffee }) => coffee);
-    setResults(scored);
+    const nextResults = recommendSourcingItems(coffees, makendiSearchIndex, form, 6);
+    setResults(nextResults);
+    if (!compareDraftIds.length) setCompareDraftIds(nextResults.slice(0, 2).map((item) => item.id));
+  };
+
+  const askAssistant = (event) => {
+    event.preventDefault();
+    const question = prompt.trim();
+    if (!question) return;
+    const reply = buildAssistantReply(question, coffees, makendiSearchIndex, form);
+    setForm(reply.brief);
+    setResults(reply.recommendations);
+    setCompareDraftIds(reply.recommendations.slice(0, 2).map((item) => item.id));
+    setMessages((current) => [
+      ...current,
+      { role: "user", text: question, recommendations: [] },
+      {
+        role: "assistant",
+        text: reply.answer,
+        recommendations: reply.recommendations.slice(0, 3),
+        nextQuestions: reply.nextQuestions,
+      },
+    ]);
+    setPrompt("");
+    setMode("assistant");
   };
 
   return (
@@ -2169,19 +2516,39 @@ function FinderDrawer({ open, onClose, onAddSample }) {
       >
         <div className="drawer-header">
           <div>
-            <p className="eyebrow">Coffee matching</p>
-            <h2>Find your coffee</h2>
+            <p className="eyebrow">AI sourcing desk</p>
+            <h2>Find, ask, compare</h2>
           </div>
           <button className="icon-button" type="button" onClick={onClose} aria-label="Close">
             <X size={22} />
           </button>
         </div>
-        {!results ? (
+        <div className="sourcing-tabs" role="tablist" aria-label="Sourcing desk tools">
+          {[
+            ["match", "Match", Target],
+            ["assistant", "Ask", MessageCircle],
+            ["compare", "Compare", GitCompareArrows],
+          ].map(([value, label, Icon]) => (
+            <button
+              key={value}
+              className={mode === value ? "is-active" : ""}
+              type="button"
+              role="tab"
+              aria-selected={mode === value}
+              onClick={() => setMode(value)}
+            >
+              <Icon size={16} /> {label}
+            </button>
+          ))}
+        </div>
+
+        {mode === "match" && (
           <div className="finder-form">
-            <div className="finder-intro">
+            <div className="finder-intro finder-intro--rich">
               <Sparkles size={19} />
               <p>
-                Match your brief with Coffendi’s current and incoming positions.
+                The matcher scores live lots for immediate buying and Makendi atlas
+                profiles for planning, replacements, and blend development.
               </p>
             </div>
             <div className="finder-grid">
@@ -2189,7 +2556,7 @@ function FinderDrawer({ open, onClose, onAddSample }) {
                 <span>Target budget</span>
                 <select value={form.budget} onChange={(event) => update("budget", event.target.value)}>
                   <option>Under 6</option>
-                  <option>6–8</option>
+                  <option>6-8</option>
                   <option>8+</option>
                 </select>
               </label>
@@ -2197,7 +2564,7 @@ function FinderDrawer({ open, onClose, onAddSample }) {
                 <span>Volume</span>
                 <select value={form.volume} onChange={(event) => update("volume", event.target.value)}>
                   <option>Under 20 bags</option>
-                  <option>20–60 bags</option>
+                  <option>20-60 bags</option>
                   <option>60+ bags</option>
                 </select>
               </label>
@@ -2205,28 +2572,28 @@ function FinderDrawer({ open, onClose, onAddSample }) {
                 <span>Origin</span>
                 <select value={form.origin} onChange={(event) => update("origin", event.target.value)}>
                   <option>Open</option>
-                  {[...new Set(coffees.map((coffee) => coffee.country))].map((country) => (
-                    <option key={country}>{country}</option>
-                  ))}
+                  {[...new Set([...coffees.map((coffee) => coffee.country), ...makendiSearchIndex.map((grade) => grade.country)])]
+                    .sort()
+                    .map((country) => (
+                      <option key={country}>{country}</option>
+                    ))}
                 </select>
               </label>
               <label className="field">
                 <span>Flavor direction</span>
                 <select value={form.flavor} onChange={(event) => update("flavor", event.target.value)}>
-                  <option>Fruit-forward</option>
-                  <option>Chocolate & nuts</option>
-                  <option>Floral & bright</option>
-                  <option>Balanced</option>
+                  {sourcingProfiles.map((profile) => (
+                    <option key={profile}>{profile}</option>
+                  ))}
                 </select>
               </label>
               <label className="field">
                 <span>Process</span>
                 <select value={form.process} onChange={(event) => update("process", event.target.value)}>
                   <option>Open</option>
-                  <option>Washed</option>
-                  <option>Natural</option>
-                  <option>Honey</option>
-                  <option>Anaerobic</option>
+                  {sourcingProcesses.map((process) => (
+                    <option key={process}>{process}</option>
+                  ))}
                 </select>
               </label>
               <label className="field">
@@ -2236,10 +2603,27 @@ function FinderDrawer({ open, onClose, onAddSample }) {
                   onChange={(event) => update("certification", event.target.value)}
                 >
                   <option>Any</option>
-                  <option>Organic</option>
-                  <option>Fairtrade</option>
-                  <option>Rainforest Alliance</option>
-                  <option>Verified traceable</option>
+                  {sourcingCertifications.map((certification) => (
+                    <option key={certification}>{certification}</option>
+                  ))}
+                </select>
+              </label>
+              <label className="field">
+                <span>Preferred use</span>
+                <select value={form.use} onChange={(event) => update("use", event.target.value)}>
+                  <option>Filter coffee</option>
+                  <option>Espresso</option>
+                  <option>Milk drinks</option>
+                  <option>Blend base</option>
+                  <option>Cold brew</option>
+                </select>
+              </label>
+              <label className="field">
+                <span>Source mode</span>
+                <select value={form.channel} onChange={(event) => update("channel", event.target.value)}>
+                  <option>Live + atlas</option>
+                  <option>Live lots only</option>
+                  <option>Atlas planning only</option>
                 </select>
               </label>
               <label className="field field--wide">
@@ -2248,76 +2632,122 @@ function FinderDrawer({ open, onClose, onAddSample }) {
                   value={form.delivery}
                   onChange={(event) => update("delivery", event.target.value)}
                 >
-                  <option>Mersin</option>
-                  <option>Hamburg</option>
-                  <option>Rotterdam</option>
-                  <option>Antwerp</option>
+                  {sourcingWarehouses.map((warehouse) => (
+                    <option key={warehouse}>{warehouse}</option>
+                  ))}
                 </select>
               </label>
             </div>
             <button className="button button--gold button--full" type="button" onClick={findMatches}>
               Show my matches <Sparkles size={17} />
             </button>
-          </div>
-        ) : (
-          <div className="finder-results">
-            <div className="match-summary">
-              <CheckCircle2 size={23} />
-              <div>
-                <strong>{results.length} strong matches</strong>
-                <p>
-                  Based on {form.flavor.toLowerCase()}, {form.budget}/lb, and{" "}
-                  {form.volume.toLowerCase()}.
-                </p>
+            <div className="finder-results finder-results--inline">
+              <div className="match-summary">
+                <CheckCircle2 size={23} />
+                <div>
+                  <strong>{visibleResults.length} ranked recommendations</strong>
+                  <p>
+                    Based on {form.flavor.toLowerCase()}, {form.budget}/lb,{" "}
+                    {form.volume.toLowerCase()}, and {form.channel.toLowerCase()}.
+                  </p>
+                </div>
+              </div>
+              <div className="sourcing-result-list">
+                {visibleResults.map((item) => (
+                  <SourcingItemCard
+                    key={item.id}
+                    item={item}
+                    onAddSample={onAddSample}
+                    onToggleCompare={(id) =>
+                      setCompareDraftIds((current) =>
+                        current.includes(id)
+                          ? current.filter((itemId) => itemId !== id)
+                          : current.length >= 3
+                            ? current
+                            : [...current, id],
+                      )
+                    }
+                    compared={compareDraftIds.includes(item.id)}
+                  />
+                ))}
+              </div>
+              <div className="finder-result-actions">
+                <button className="text-button" type="button" onClick={() => setMode("compare")}>
+                  Compare shortlist <GitCompareArrows size={16} />
+                </button>
+                <Link className="button button--outline" to="/contact" onClick={onClose}>
+                  Send full inquiry <Send size={16} />
+                </Link>
               </div>
             </div>
-            <div className="match-list">
-              {results.map((coffee, index) => (
-                <article key={coffee.id}>
-                  <span className="match-rank">0{index + 1}</span>
+          </div>
+        )}
+
+        {mode === "assistant" && (
+          <div className="ai-assistant-panel">
+            <form className="ai-prompt-form" onSubmit={askAssistant}>
+              <label className="field">
+                <span>Ask the sourcing assistant</span>
+                <textarea
+                  value={prompt}
+                  onChange={(event) => setPrompt(event.target.value)}
+                  rows="3"
+                  placeholder="Example: Find a washed East African coffee for bright filter, 20 bags, Hamburg, under $8/lb."
+                />
+              </label>
+              <button className="button button--gold button--full" type="submit">
+                Ask assistant <Bot size={17} />
+              </button>
+            </form>
+            <div className="ai-quick-prompts">
+              {[
+                "Compare Brazil natural options for espresso blend base under $6.",
+                "Find Organic or Fairtrade washed coffees for 30 bags in Rotterdam.",
+                "Show fruit-forward Makendi planning profiles for filter.",
+              ].map((question) => (
+                <button
+                  key={question}
+                  type="button"
+                  onClick={() => setPrompt(question)}
+                >
+                  <Compass size={14} /> {question}
+                </button>
+              ))}
+            </div>
+            <div className="ai-chat-log">
+              {messages.map((message, index) => (
+                <article key={`${message.role}-${index}`} className={`ai-message ai-message--${message.role}`}>
+                  <span>{message.role === "assistant" ? <Bot size={16} /> : <Users size={16} />}</span>
                   <div>
-                    <p>
-                      {coffee.country} · {coffee.process}
-                    </p>
-                    <h3>{coffee.name}</h3>
-                    <div className="flavor-list">
-                      {coffee.flavor.map((note) => (
-                        <span key={note}>{note}</span>
-                      ))}
-                    </div>
-                    <dl>
-                      <div>
-                        <dt>Score</dt>
-                        <dd>{coffee.score}</dd>
+                    <p>{message.text}</p>
+                    {message.recommendations?.length > 0 && (
+                      <div className="ai-recommendation-strip">
+                        {message.recommendations.map((item) => (
+                          <button key={item.id} type="button" onClick={() => onAddSample(item.id)}>
+                            <strong>{item.matchScore}%</strong>
+                            <span>{item.name}</span>
+                            <small>{item.country} · {item.sourceLabel}</small>
+                          </button>
+                        ))}
                       </div>
-                      <div>
-                        <dt>Available</dt>
-                        <dd>{coffee.bags} bags</dd>
-                      </div>
-                      <div>
-                        <dt>Price</dt>
-                        <dd>{coffee.price}</dd>
-                      </div>
-                    </dl>
-                    <button
-                      className="button button--small button--dark"
-                      type="button"
-                      onClick={() => onAddSample(coffee.id)}
-                    >
-                      <PackageCheck size={16} /> Add sample
-                    </button>
+                    )}
                   </div>
                 </article>
               ))}
             </div>
-            <div className="finder-result-actions">
-              <button className="text-button" type="button" onClick={() => setResults(null)}>
-                <ArrowRight className="arrow-back" size={16} /> Change brief
-              </button>
-              <Link className="button button--outline" to="/contact" onClick={onClose}>
-                Send full inquiry <Send size={16} />
-              </Link>
-            </div>
+          </div>
+        )}
+
+        {mode === "compare" && (
+          <div className="finder-results">
+            <CompareLab
+              allItems={allItems}
+              scoredItems={visibleResults.length ? visibleResults : scoredItems}
+              compareIds={compareDraftIds}
+              setCompareIds={setCompareDraftIds}
+              onAddSample={onAddSample}
+              brief={form}
+            />
           </div>
         )}
       </aside>
@@ -2448,8 +2878,16 @@ function SampleDrawer({ open, onClose, selectedIds, onRemove, onComplete }) {
                     message: form.get("message"),
                     website: form.get("website"),
                     source: window.location.pathname,
+                    recommendationSource: "coffendi-sourcing-desk",
+                    brief: selected
+                      .map(
+                        (coffee) =>
+                          `${coffee.kind}: ${coffee.name} (${coffee.country}, ${coffee.process}, ${coffee.scoreLabel})`,
+                      )
+                      .join("\n"),
                     coffeeIds: selected.map((coffee) => coffee.id),
                     coffeeNames: selected.map((coffee) => coffee.name),
+                    coffeeKinds: selected.map((coffee) => coffee.kind),
                   });
                   setReference(result.reference);
                   setStatus("success");
@@ -2752,6 +3190,7 @@ export default function App() {
               onToggleSample={toggleSample}
               compareIds={compareIds}
               onToggleCompare={toggleCompare}
+              onOpenFinder={() => setFinderOpen(true)}
             />
           }
         />
@@ -2762,6 +3201,7 @@ export default function App() {
               <MakendiAtlasPage
                 selectedSamples={selectedSamples}
                 onToggleSample={toggleSample}
+                onOpenFinder={() => setFinderOpen(true)}
               />
             </Suspense>
           }
@@ -2773,6 +3213,7 @@ export default function App() {
               <MakendiGradePage
                 selectedSamples={selectedSamples}
                 onToggleSample={toggleSample}
+                onOpenFinder={() => setFinderOpen(true)}
               />
             </Suspense>
           }
@@ -2784,6 +3225,7 @@ export default function App() {
             <AvailabilityPage
               selectedSamples={selectedSamples}
               onToggleSample={toggleSample}
+              onOpenFinder={() => setFinderOpen(true)}
             />
           }
         />
@@ -2798,6 +3240,7 @@ export default function App() {
         <Route path="*" element={<NotFoundPage />} />
       </Routes>
       <Footer onOpenFinder={() => setFinderOpen(true)} />
+      <SourcingFloatingAction onOpenFinder={() => setFinderOpen(true)} />
       <MobileDock onOpenFinder={() => setFinderOpen(true)} />
       <SearchPalette open={searchOpen} onClose={() => setSearchOpen(false)} />
       <FinderDrawer

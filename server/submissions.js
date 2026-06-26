@@ -20,6 +20,7 @@ const schemas = {
       audience: [2, 30],
       volume: [0, 80],
       country: [0, 100],
+      brief: [0, 2_000],
       source: [0, 160],
       website: [0, 200],
     },
@@ -32,6 +33,8 @@ const schemas = {
       email: [5, 160],
       country: [2, 100],
       message: [0, 1_000],
+      brief: [0, 2_000],
+      recommendationSource: [0, 80],
       source: [0, 160],
       website: [0, 200],
     },
@@ -137,7 +140,7 @@ function validatePayload(kind, input) {
   const payload = {};
 
   for (const [field, [min, max]] of Object.entries(schema.fields)) {
-    const preserveLines = field === "message";
+    const preserveLines = field === "message" || field === "brief";
     const value = cleanText(input[field], preserveLines);
     if (value.length < min && schema.required.includes(field)) {
       errors[field] = "This field is required.";
@@ -165,6 +168,9 @@ function validatePayload(kind, input) {
     payload.coffeeIds = coffeeIds;
     payload.coffeeNames = Array.isArray(input.coffeeNames)
       ? input.coffeeNames.slice(0, 6).map((value) => cleanText(value).slice(0, 120))
+      : [];
+    payload.coffeeKinds = Array.isArray(input.coffeeKinds)
+      ? input.coffeeKinds.slice(0, 6).map((value) => cleanText(value).slice(0, 80))
       : [];
   }
 

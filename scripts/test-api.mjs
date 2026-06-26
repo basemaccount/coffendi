@@ -110,8 +110,11 @@ const sample = await invoke(sampleHandler, {
     country: "Türkiye",
     message: "Automated sample request persistence verification.",
     source: "automated-test",
+    recommendationSource: "coffendi-sourcing-desk",
+    brief: "Live lot: Bensa Bombe\nAtlas profile: Santos NY2",
     coffeeIds: ["ethiopia-bensa", "colombia-el-vergel"],
     coffeeNames: ["Bensa Bombe", "El Vergel Java"],
+    coffeeKinds: ["Live lot", "Atlas profile"],
   },
 });
 assert.equal(sample.status, 201);

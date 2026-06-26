@@ -36,6 +36,21 @@ bundle stays below Vite's chunk warning threshold.
 `build:sitemap` regenerates `public/sitemap.xml` from the live coffee lots and
 all 117 Makendi atlas profile URLs.
 
+## Sourcing desk
+
+The app includes a client-side AI-style sourcing desk with three modes:
+
+- Match: ranks live Coffendi lots and Makendi atlas profiles by budget, volume,
+  origin, flavor profile, process, certification, delivery warehouse, and use
+  case.
+- Ask: translates free-form roaster prompts into a sourcing brief and returns
+  source-aware recommendations.
+- Compare: summarizes shortlist tradeoffs across live stock and unpriced atlas
+  planning profiles.
+
+Makendi atlas records keep missing commercial fields inquiry-led instead of
+inventing prices, shipment periods, or basis terms.
+
 ## Deploy
 
 The project is configured for Vercel in `vercel.json`. The catch-all rewrite
@@ -54,8 +69,15 @@ node scripts/visual-check.mjs
 ```
 
 The check covers desktop and mobile routes, screenshots, browser console
-errors, horizontal overflow, the coffee comparison flow, the finder flow, and
-the Makendi atlas search/detail/filter states.
+errors, horizontal overflow, the coffee comparison flow, the sourcing desk
+match/assistant/compare states, and the Makendi atlas search/detail/filter
+states.
+
+Validate the sourcing recommendation helpers with:
+
+```bash
+npm run test:sourcing
+```
 
 With `.env.local` pulled from the linked Vercel project, validate the private
 submission APIs and Blob persistence with:

@@ -3,6 +3,7 @@ import {
   ArrowLeft,
   ArrowRight,
   Bean,
+  Bot,
   Check,
   CheckCircle2,
   Filter,
@@ -98,7 +99,7 @@ function AtlasCard({ grade, selected, onToggleSample }) {
   );
 }
 
-function AtlasHero() {
+function AtlasHero({ onOpenFinder }) {
   const featured = makendiGrades.find((grade) => grade.country === "Brazil") || makendiGrades[0];
   return (
     <section className="atlas-hero">
@@ -118,6 +119,11 @@ function AtlasHero() {
             <a className="button button--gold" href="#atlas-results">
               Search profiles <Search size={17} />
             </a>
+            {onOpenFinder && (
+              <button className="button button--glass" type="button" onClick={onOpenFinder}>
+                Ask sourcing desk <Bot size={17} />
+              </button>
+            )}
             <Link className="button button--glass" to="/contact">
               Request sourcing support <ArrowRight size={17} />
             </Link>
@@ -146,7 +152,7 @@ function AtlasHero() {
   );
 }
 
-export function MakendiAtlasPage({ selectedSamples, onToggleSample }) {
+export function MakendiAtlasPage({ selectedSamples, onToggleSample, onOpenFinder }) {
   const location = useLocation();
   const initialOrigin = new URLSearchParams(location.search).get("origin") || "All";
   const [filters, setFilters] = useState({ ...defaultAtlasFilters, origin: initialOrigin });
@@ -268,7 +274,7 @@ export function MakendiAtlasPage({ selectedSamples, onToggleSample }) {
 
   return (
     <main>
-      <AtlasHero />
+      <AtlasHero onOpenFinder={onOpenFinder} />
       <section className="section section--cream atlas-origin-strip">
         <div className="shell">
           <div className="section-heading">
@@ -435,7 +441,7 @@ function GradeNotFound() {
   );
 }
 
-export function MakendiGradePage({ selectedSamples, onToggleSample }) {
+export function MakendiGradePage({ selectedSamples, onToggleSample, onOpenFinder }) {
   const { gradeId } = useParams();
   const grade = makendiGrades.find((item) => item.id === gradeId);
 
@@ -506,6 +512,11 @@ export function MakendiGradePage({ selectedSamples, onToggleSample }) {
               <Link className="button button--glass" to="/contact">
                 Ask about availability <ArrowRight size={17} />
               </Link>
+              {onOpenFinder && (
+                <button className="button button--glass" type="button" onClick={onOpenFinder}>
+                  Ask assistant <Bot size={17} />
+                </button>
+              )}
             </div>
           </div>
         </div>
