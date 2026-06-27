@@ -1492,15 +1492,51 @@ function PageHero({ eyebrow, title, copy, image, actions, compact = false }) {
   );
 }
 
-function OriginsPage() {
+function OriginsPage({ onOpenFinder }) {
   return (
     <main>
       <PageHero
         eyebrow="Global sourcing network"
-        title="Every origin has a point of view."
-        copy="Explore regions, harvest calendars, partner mills, and available Coffendi lots across the coffee belt."
-        image="/images/coffee-farmer.jpg"
+        title="Origin intelligence, backed by Coffendi and Makendi."
+        copy="Explore live lots, Makendi grade coverage, producer context, warehouses, and sourcing paths across the coffee belt."
+        image="/images/coffendi-makendi-origin.jpg"
+        actions={
+          <>
+            <button className="button button--gold" type="button" onClick={onOpenFinder}>
+              Ask AI about origins <Bot size={17} />
+            </button>
+            <Link className="button button--glass" to="/atlas">
+              Open Makendi atlas <ArrowRight size={17} />
+            </Link>
+          </>
+        }
       />
+      <section className="origin-brand-strip">
+        <div className="shell origin-brand-strip__inner">
+          <div>
+            <span className="live-label">
+              <i /> Source-backed
+            </span>
+            <strong>{makendiCatalogMeta.recordCount}</strong>
+            <small>Makendi grade profiles</small>
+          </div>
+          <div>
+            <strong>{makendiCatalogMeta.originCount}</strong>
+            <small>atlas origins</small>
+          </div>
+          <div>
+            <strong>{origins.reduce((total, origin) => total + origin.lots, 0)}</strong>
+            <small>live Coffendi lots</small>
+          </div>
+          <div>
+            <strong>4</strong>
+            <small>warehouse lanes</small>
+          </div>
+          <button type="button" onClick={onOpenFinder}>
+            Build origin brief <Sparkles size={17} />
+          </button>
+        </div>
+      </section>
       <section className="section section--white">
         <div className="shell">
           <SectionHeading
@@ -3518,7 +3554,7 @@ export default function App() {
             </Suspense>
           }
         />
-        <Route path="/origins" element={<OriginsPage />} />
+        <Route path="/origins" element={<OriginsPage onOpenFinder={() => setFinderOpen(true)} />} />
         <Route
           path="/availability"
           element={
