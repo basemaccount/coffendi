@@ -22,7 +22,7 @@ import {
   Leaf,
   LoaderCircle,
   Mail,
-  Map,
+  Map as MapIcon,
   MapPin,
   MessageCircle,
   Menu,
@@ -40,7 +40,7 @@ import {
   Warehouse,
   X,
 } from "lucide-react";
-import { geoEqualEarth, geoPath } from "d3-geo";
+import { geoCentroid, geoEqualEarth, geoPath } from "d3-geo";
 import {
   Link,
   NavLink,
@@ -95,6 +95,126 @@ const mainNav = [
   { label: "Our Impact", to: "/sustainability" },
   { label: "Stories", to: "/stories" },
 ];
+
+const originCountryAliases = {
+  "Papua N.G.": "Papua New Guinea",
+};
+
+const originDisplayNames = {
+  "Dominican Rep.": "Dominican Republic",
+  "Papua N.G.": "Papua New Guinea",
+};
+
+const originFeatureByName = new Map(
+  mapCountries.map((country) => [country.properties.name, country]),
+);
+
+function normalizeOriginCopy(value) {
+  return String(value || "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLowerCase();
+}
+
+function uniqueValues(values) {
+  return [...new Set(values.filter(Boolean))];
+}
+
+function getOriginFeature(country) {
+  return originFeatureByName.get(originCountryAliases[country] || country);
+}
+
+function buildWebsiteOrigins() {
+  const liveOriginByCountry = new Map(origins.map((origin) => [origin.country, origin]));
+  const atlasOriginByCountry = new Map(
+    makendiOriginSummary.map((origin) => [origin.country, origin]),
+  );
+  const coffeesByCountry = coffees.reduce((groups, coffee) => {
+    const group = groups.get(coffee.country) || [];
+    group.push(coffee);
+    groups.set(coffee.country, group);
+    return groups;
+  }, new Map());
+
+  const buildEntry = (country, atlas, live) => {
+    const liveCoffees = coffeesByCountry.get(country) || [];
+    const countryFeature = getOriginFeature(country);
+    const featureCoordinates = countryFeature ? geoCentroid(countryFeature) : null;
+    const coordinates = live?.coordinates || featureCoordinates;
+
+    if (!coordinates) return null;
+
+    const processes = uniqueValues([
+      ...liveCoffees.map((coffee) => coffee.process),
+      ...(atlas?.processes || []),
+    ]);
+    const warehouses = uniqueValues(liveCoffees.map((coffee) => coffee.warehouse));
+    const coffeeNames = liveCoffees.map((coffee) => coffee.name);
+    const liveScores = liveCoffees.map((coffee) => coffee.score).filter(Boolean);
+    const averageScore = liveScores.length
+      ? (liveScores.reduce((total, score) => total + score, 0) / liveScores.length).toFixed(1)
+      : null;
+    const displayCountry = originDisplayNames[country] || country;
+    const gradeCount = atlas?.gradeCount || 0;
+    const region =
+      live?.region ||
+      (processes.length ? `${processes.slice(0, 3).join(" · ")} programs` : "Sourcing brief ready");
+    const profile =
+      live?.profile ||
+      `${gradeCount} Makendi source profiles${processes.length ? ` across ${processes.slice(0, 3).join(", ")}` : ""}`;
+    const searchText = normalizeOriginCopy(
+      [
+        country,
+        displayCountry,
+        region,
+        profile,
+        processes.join(" "),
+        warehouses.join(" "),
+        coffeeNames.join(" "),
+        live ? "live available spot warehouse bags harvest" : "atlas source profile planning",
+      ].join(" "),
+    );
+
+    return {
+      country,
+      displayCountry,
+      featureName: countryFeature?.properties.name || country,
+      coordinates,
+      image: atlas?.image || live?.image || "/images/drying-beds.jpg",
+      flag: atlas?.flag,
+      region,
+      profile,
+      harvest: live?.harvest || "Route plan",
+      lots: live?.lots || liveCoffees.length || 0,
+      bags: live?.bags || liveCoffees.reduce((total, coffee) => total + coffee.bags, 0),
+      gradeCount,
+      heroGradeId: atlas?.heroGradeId,
+      processes,
+      warehouses,
+      coffeeNames,
+      averageScore,
+      isLive: Boolean(live || liveCoffees.length),
+      hasAtlas: Boolean(atlas),
+      searchText,
+    };
+  };
+
+  const atlasEntries = makendiOriginSummary
+    .map((atlas) => buildEntry(atlas.country, atlas, liveOriginByCountry.get(atlas.country)))
+    .filter(Boolean);
+
+  const liveOnlyEntries = origins
+    .filter((origin) => !atlasOriginByCountry.has(origin.country))
+    .map((origin) => buildEntry(origin.country, null, origin))
+    .filter(Boolean);
+
+  return [...atlasEntries, ...liveOnlyEntries].sort(
+    (a, b) =>
+      Number(b.isLive) - Number(a.isLive) ||
+      b.gradeCount - a.gradeCount ||
+      a.displayCountry.localeCompare(b.displayCountry),
+  );
+}
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -249,7 +369,7 @@ function MobileDock({ onOpenFinder }) {
         <span>Coffees</span>
       </NavLink>
       <NavLink to="/origins">
-        <Map size={19} />
+        <MapIcon size={19} />
         <span>Origins</span>
       </NavLink>
       <button type="button" onClick={onOpenFinder}>
@@ -548,12 +668,13 @@ function SupplyTimeline({ condensed = false }) {
 }
 
 function OriginMap({ compact = false }) {
-  const [selectedCountry, setSelectedCountry] = useState(origins[0].country);
-  const selected =
-    origins.find((origin) => origin.country === selectedCountry) || origins[0];
-  const selectedAtlas = makendiOriginSummary.find(
-    (origin) => origin.country === selected.country,
-  );
+  const websiteOrigins = useMemo(() => buildWebsiteOrigins(), []);
+  const defaultCountry =
+    websiteOrigins.find((origin) => origin.country === "Brazil")?.country ||
+    websiteOrigins[0]?.country;
+  const [selectedCountry, setSelectedCountry] = useState(defaultCountry);
+  const [mapMode, setMapMode] = useState("all");
+  const [originSearch, setOriginSearch] = useState("");
   const projection = useMemo(
     () =>
       geoEqualEarth()
@@ -562,106 +683,267 @@ function OriginMap({ compact = false }) {
     [compact],
   );
   const mapPath = geoPath(projection);
+  const visibleOrigins = useMemo(() => {
+    const query = normalizeOriginCopy(originSearch);
+
+    return websiteOrigins.filter((origin) => {
+      const matchesMode =
+        mapMode === "live" ? origin.isLive : mapMode === "atlas" ? origin.hasAtlas : true;
+      return matchesMode && (!query || origin.searchText.includes(query));
+    });
+  }, [mapMode, originSearch, websiteOrigins]);
+  const selected =
+    websiteOrigins.find((origin) => origin.country === selectedCountry) ||
+    visibleOrigins[0] ||
+    websiteOrigins[0];
+  const originByFeatureName = useMemo(
+    () => new Map(websiteOrigins.map((origin) => [origin.featureName, origin])),
+    [websiteOrigins],
+  );
+  const visibleFeatureNames = useMemo(
+    () => new Set(visibleOrigins.map((origin) => origin.featureName)),
+    [visibleOrigins],
+  );
+  const liveOriginCount = websiteOrigins.filter((origin) => origin.isLive).length;
+  const atlasOriginCount = websiteOrigins.filter((origin) => origin.hasAtlas).length;
+  const liveLotCount = websiteOrigins.reduce(
+    (total, origin) => total + (origin.isLive ? origin.lots : 0),
+    0,
+  );
+  const modeOptions = [
+    { id: "all", label: "All", count: websiteOrigins.length },
+    { id: "live", label: "Live", count: liveOriginCount },
+    { id: "atlas", label: "Atlas", count: atlasOriginCount },
+  ];
+
+  useEffect(() => {
+    if (!visibleOrigins.length) return;
+    if (!visibleOrigins.some((origin) => origin.country === selectedCountry)) {
+      setSelectedCountry(visibleOrigins[0].country);
+    }
+  }, [selectedCountry, visibleOrigins]);
+
+  if (!selected) return null;
 
   return (
     <div className={`origin-map-layout ${compact ? "origin-map-layout--compact" : ""}`}>
       <div className="map-canvas">
-        <svg viewBox="0 0 800 430" role="img" aria-label="Coffee origin map">
-          <g className="map-countries">
-            {mapCountries.map((country, index) => (
-              <path key={`${country.id}-${index}`} d={mapPath(country)} />
-            ))}
-          </g>
-          <g>
-            {origins.map((origin) => {
-              const [x, y] = projection(origin.coordinates);
-              const selectOrigin = () => setSelectedCountry(origin.country);
-              const labelPosition =
-                {
-                  Ethiopia: { x: 0, y: -15, anchor: "middle" },
-                  Kenya: { x: 13, y: 7, anchor: "start" },
-                  Rwanda: { x: -13, y: 7, anchor: "end" },
-                }[origin.country] || { x: 0, y: -14, anchor: "middle" };
-              return (
-                <g
-                  key={origin.country}
-                  className="map-marker"
-                  transform={`translate(${x} ${y})`}
-                  onClick={selectOrigin}
-                  onKeyDown={(event) => {
-                    if (event.key === "Enter" || event.key === " ") selectOrigin();
-                  }}
-                  role="button"
-                  tabIndex="0"
-                  aria-label={`Show ${origin.country}`}
+        {!compact && (
+          <div className="map-tools">
+            <label className="map-search">
+              <Search size={16} />
+              <input
+                type="search"
+                value={originSearch}
+                onChange={(event) => setOriginSearch(event.target.value)}
+                placeholder="Search country, process, warehouse"
+                aria-label="Search coffee origins"
+              />
+            </label>
+            <div className="map-mode-toggle" aria-label="Filter origins">
+              {modeOptions.map((option) => (
+                <button
+                  key={option.id}
+                  type="button"
+                  className={mapMode === option.id ? "is-active" : ""}
+                  onClick={() => setMapMode(option.id)}
+                  aria-pressed={mapMode === option.id}
                 >
-                <circle className="map-marker__hitbox" r={18} />
-                <circle
-                  r={selectedCountry === origin.country ? 8 : 6}
-                  fill={selectedCountry === origin.country ? "#c9902f" : "#245243"}
-                  stroke="#fffaf1"
-                  strokeWidth={3}
-                />
-                {!compact && (
-                  <text
-                    textAnchor={labelPosition.anchor}
-                    x={labelPosition.x}
-                    y={labelPosition.y}
-                    style={{
-                      fontFamily: "Manrope, sans-serif",
-                      fontSize: "11px",
-                      fontWeight: 800,
-                      fill: "#252b28",
+                  <span>{option.label}</span>
+                  <strong>{option.count}</strong>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+        <div className="map-stage">
+          <svg viewBox="0 0 800 430" role="img" aria-label="Coffee origin map">
+            <g className="map-countries">
+              {mapCountries.map((country, index) => {
+                const originForPath = originByFeatureName.get(country.properties.name);
+                const countryPath = mapPath(country);
+                const pathClassName = [
+                  originForPath ? "is-covered" : "",
+                  visibleFeatureNames.has(country.properties.name) ? "is-visible" : "",
+                  selected.featureName === country.properties.name ? "is-selected" : "",
+                ]
+                  .filter(Boolean)
+                  .join(" ");
+
+                if (!countryPath) return null;
+
+                return (
+                  <path
+                    key={`${country.id}-${index}`}
+                    d={countryPath}
+                    className={pathClassName}
+                    onClick={
+                      originForPath ? () => setSelectedCountry(originForPath.country) : undefined
+                    }
+                  />
+                );
+              })}
+            </g>
+            <g>
+              {visibleOrigins.map((origin) => {
+                const projected = projection(origin.coordinates);
+                if (!projected) return null;
+
+                const [x, y] = projected;
+                const isSelected = selected.country === origin.country;
+                const selectOrigin = () => setSelectedCountry(origin.country);
+                const labelPosition =
+                  {
+                    Ethiopia: { x: 0, y: -15, anchor: "middle" },
+                    Kenya: { x: 13, y: 8, anchor: "start" },
+                    Rwanda: { x: -13, y: 8, anchor: "end" },
+                    Uganda: { x: -13, y: -10, anchor: "end" },
+                  }[origin.country] || { x: 0, y: -15, anchor: "middle" };
+                const showLabel = !compact && (isSelected || origin.isLive);
+
+                return (
+                  <g
+                    key={origin.country}
+                    className={[
+                      "map-marker",
+                      origin.isLive ? "is-live" : "is-atlas",
+                      isSelected ? "is-selected" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
+                    transform={`translate(${x} ${y})`}
+                    onClick={selectOrigin}
+                    onKeyDown={(event) => {
+                      if (event.key === "Enter" || event.key === " ") {
+                        event.preventDefault();
+                        selectOrigin();
+                      }
                     }}
+                    role="button"
+                    tabIndex="0"
+                    aria-label={`Show ${origin.displayCountry}`}
                   >
-                    {origin.country}
-                  </text>
-                )}
-                </g>
-              );
-            })}
-          </g>
-        </svg>
-        <div className="map-legend">
-          <span>
-            <i />
-            Active origin
-          </span>
-          <span>{origins.reduce((total, origin) => total + origin.lots, 0)} lots</span>
+                    <title>{origin.displayCountry}</title>
+                    <circle className="map-marker__hitbox" r={origin.isLive ? 19 : 14} />
+                    {isSelected && <circle className="map-marker__pulse" r={12} />}
+                    {origin.isLive && <circle className="map-marker__halo" r={10} />}
+                    <circle className="map-marker__core" r={isSelected ? 7 : origin.isLive ? 5.5 : 4} />
+                    {showLabel && (
+                      <text
+                        textAnchor={labelPosition.anchor}
+                        x={labelPosition.x}
+                        y={labelPosition.y}
+                      >
+                        {origin.displayCountry}
+                      </text>
+                    )}
+                  </g>
+                );
+              })}
+            </g>
+          </svg>
+          {!visibleOrigins.length && (
+            <div className="map-empty">
+              <Search size={18} />
+              <strong>No origin found</strong>
+              <span>Try a country, process, or warehouse.</span>
+            </div>
+          )}
+          <div className="map-legend">
+            <span>
+              <i className="is-live" />
+              Live stock
+            </span>
+            <span>
+              <i />
+              Atlas origin
+            </span>
+            <span>{liveLotCount} live lots</span>
+          </div>
         </div>
+        {!compact && (
+          <div className="origin-chip-row" aria-label="Available website origins">
+            {visibleOrigins.slice(0, 18).map((origin) => (
+              <button
+                key={origin.country}
+                type="button"
+                className={selected.country === origin.country ? "is-active" : ""}
+                onClick={() => setSelectedCountry(origin.country)}
+                title={`${origin.displayCountry} · ${
+                  origin.isLive ? `${origin.lots} live lots` : `${origin.gradeCount} atlas profiles`
+                }`}
+              >
+                {origin.flag && <img src={origin.flag} alt="" loading="lazy" decoding="async" />}
+                <span>{origin.displayCountry}</span>
+              </button>
+            ))}
+            {visibleOrigins.length > 18 && (
+              <span className="origin-chip-row__more">+{visibleOrigins.length - 18} more</span>
+            )}
+          </div>
+        )}
       </div>
       <article className="origin-detail">
-        <img src={selected.image} alt="" loading="lazy" decoding="async" />
-        <div>
+        <figure className="origin-detail__media">
+          <img
+            src={selected.image}
+            alt={`${selected.displayCountry} coffee origin`}
+            loading={compact ? "lazy" : "eager"}
+            decoding={compact ? "async" : "sync"}
+          />
+          <figcaption>
+            {selected.flag && <img src={selected.flag} alt="" loading="lazy" decoding="async" />}
+            <span>{selected.isLive ? "Live buying lane" : "Atlas source lane"}</span>
+          </figcaption>
+        </figure>
+        <div className="origin-detail__body">
           <p className="eyebrow">Selected origin</p>
-          <h3>{selected.country}</h3>
+          <h3>{selected.displayCountry}</h3>
           <p>{selected.region}</p>
           <dl>
             <div>
               <dt>Live lots</dt>
-              <dd>{selected.lots}</dd>
+              <dd>{selected.isLive ? selected.lots : "Planning"}</dd>
             </div>
             <div>
               <dt>Bags</dt>
-              <dd>{selected.bags}</dd>
-            </div>
-            <div>
-              <dt>Harvest</dt>
-              <dd>{selected.harvest}</dd>
+              <dd>{selected.bags || "On request"}</dd>
             </div>
             <div>
               <dt>Atlas</dt>
-              <dd>{selectedAtlas ? `${selectedAtlas.gradeCount} profiles` : "On request"}</dd>
+              <dd>{selected.gradeCount ? `${selected.gradeCount} profiles` : "On request"}</dd>
+            </div>
+            <div>
+              <dt>{selected.averageScore ? "Avg score" : "Harvest"}</dt>
+              <dd>{selected.averageScore || selected.harvest}</dd>
             </div>
           </dl>
           <p className="origin-profile">{selected.profile}</p>
+          <div className="origin-detail__chips">
+            {selected.processes.slice(0, 4).map((process) => (
+              <span key={process}>{process}</span>
+            ))}
+          </div>
+          <p className="origin-route">
+            <Warehouse size={15} />
+            {selected.warehouses.length
+              ? selected.warehouses.join(" · ")
+              : "Warehouse lane quoted by request"}
+          </p>
           <div className="origin-detail__links">
-            <Link className="text-link" to={`/coffees?origin=${selected.country}`}>
-              View coffees <ArrowRight size={16} />
-            </Link>
-            {selectedAtlas && (
+            {selected.isLive && (
+              <Link className="text-link" to={`/coffees?origin=${encodeURIComponent(selected.country)}`}>
+                Live coffees <ArrowRight size={16} />
+              </Link>
+            )}
+            {selected.hasAtlas && (
               <Link className="text-link" to={`/atlas?origin=${encodeURIComponent(selected.country)}`}>
                 Atlas profiles <ArrowRight size={16} />
+              </Link>
+            )}
+            {selected.heroGradeId && (
+              <Link className="text-link" to={`/atlas/${selected.heroGradeId}`}>
+                Source profile <ArrowRight size={16} />
               </Link>
             )}
           </div>

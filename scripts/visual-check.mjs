@@ -31,6 +31,7 @@ const checks = [
   { name: "mobile-coffees", path: "/coffees", width: 390, height: 844 },
   { name: "mobile-atlas", path: "/atlas", width: 390, height: 844 },
   { name: "mobile-atlas-detail", path: `/atlas/${atlasDetailId}`, width: 390, height: 844 },
+  { name: "mobile-origins", path: "/origins", width: 390, height: 844 },
   { name: "mobile-detail", path: "/coffees/ethiopia-bensa", width: 390, height: 844 },
   { name: "mobile-availability", path: "/availability", width: 390, height: 844 },
 ];
@@ -115,8 +116,27 @@ for (const check of checks) {
 
   if (check.name === "desktop-origins") {
     await page.locator(".origin-map-layout").scrollIntoViewIfNeeded();
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll(".origin-detail__media > img")].every(
+        (image) => image.complete && image.naturalWidth > 0,
+      ),
+    );
+    const markerCount = await page.locator(".map-marker").count();
+    if (markerCount < 38) {
+      failures.push(`desktop-origins: expected at least 38 origin markers, found ${markerCount}`);
+    }
     await page.screenshot({
       path: new URL("desktop-origin-map.png", outputDir).pathname,
+      fullPage: false,
+    });
+    await page.getByLabel("Search coffee origins").fill("Vietnam");
+    await page.waitForTimeout(300);
+    const selectedOrigin = await page.locator(".origin-detail h3").textContent();
+    if (!selectedOrigin?.includes("Vietnam")) {
+      failures.push("desktop-origins: origin search did not select Vietnam");
+    }
+    await page.screenshot({
+      path: new URL("desktop-origin-map-search.png", outputDir).pathname,
       fullPage: false,
     });
   }
@@ -196,6 +216,23 @@ for (const check of checks) {
     await page.waitForTimeout(350);
     await page.screenshot({
       path: new URL("mobile-atlas-filters.png", outputDir).pathname,
+      fullPage: false,
+    });
+  }
+
+  if (check.name === "mobile-origins") {
+    await page.locator(".origin-map-layout").scrollIntoViewIfNeeded();
+    await page.waitForFunction(() =>
+      [...document.querySelectorAll(".origin-detail__media > img")].every(
+        (image) => image.complete && image.naturalWidth > 0,
+      ),
+    );
+    const mobileMarkerCount = await page.locator(".map-marker").count();
+    if (mobileMarkerCount < 38) {
+      failures.push(`mobile-origins: expected at least 38 origin markers, found ${mobileMarkerCount}`);
+    }
+    await page.screenshot({
+      path: new URL("mobile-origin-map.png", outputDir).pathname,
       fullPage: false,
     });
   }
