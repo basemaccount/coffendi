@@ -216,6 +216,109 @@ function buildWebsiteOrigins() {
   );
 }
 
+const originPlannerVolumes = ["Under 20 bags", "20-60 bags", "60+ bags"];
+const originPlannerChannels = ["Live + atlas", "Live stock", "Atlas planning"];
+const originPlannerProfileTerms = {
+  "Fruit-forward": ["fruit", "berry", "grape", "plum", "apricot", "pineapple", "tropical", "red fruit"],
+  "Chocolate & nuts": ["chocolate", "cacao", "cocoa", "hazelnut", "almond", "praline", "nut"],
+  "Floral & bright": ["jasmine", "rose", "tea", "citrus", "grapefruit", "floral", "clean"],
+  Balanced: ["caramel", "toffee", "sugar", "apple", "balanced", "clean"],
+  "Classic espresso": ["cocoa", "chocolate", "caramel", "nut", "body", "spice"],
+};
+
+function getPlannerVolumeMinimum(volume) {
+  if (volume === "Under 20 bags") return 1;
+  if (volume === "60+ bags") return 60;
+  return 20;
+}
+
+function scoreOriginForPlanner(origin, planner) {
+  if (planner.channel === "Live stock" && !origin.isLive) return null;
+  if (planner.channel === "Atlas planning" && !origin.hasAtlas) return null;
+
+  let score = 42;
+  const reasons = [];
+  const cautions = [];
+  const searchText = origin.searchText;
+  const volumeMinimum = getPlannerVolumeMinimum(planner.volume);
+  let laneMismatch = false;
+
+  if (origin.isLive) {
+    score += 14;
+    reasons.push(`${origin.lots} live lots`);
+  } else {
+    reasons.push("atlas planning lane");
+    cautions.push("confirm price and landing window");
+  }
+
+  if (origin.hasAtlas) {
+    score += Math.min(18, origin.gradeCount * 2);
+    reasons.push(`${origin.gradeCount} grade profiles`);
+  }
+
+  if (planner.delivery === "Any lane") {
+    score += origin.warehouses.length ? 8 : 4;
+  } else if (origin.warehouses.includes(planner.delivery)) {
+    score += 18;
+    reasons.push(`${planner.delivery} warehouse`);
+  } else if (!origin.isLive) {
+    score += 6;
+    cautions.push(`${planner.delivery} quoted by request`);
+  } else {
+    score -= 18;
+    laneMismatch = true;
+    cautions.push(`not currently in ${planner.delivery}`);
+  }
+
+  if (origin.isLive) {
+    if (planner.volume === "Under 20 bags") {
+      score += origin.bags <= 80 ? 12 : 6;
+      reasons.push("works for smaller draws");
+    } else if (origin.bags >= volumeMinimum) {
+      score += 14;
+      reasons.push(`${origin.bags} bags available`);
+    } else {
+      score -= 10;
+      cautions.push(`only ${origin.bags} bags shown`);
+    }
+  } else if (planner.channel !== "Live stock") {
+    score += 5;
+  }
+
+  const profileHits = (originPlannerProfileTerms[planner.profile] || []).filter((term) =>
+    searchText.includes(normalizeOriginCopy(term)),
+  );
+  if (profileHits.length) {
+    score += 16;
+    reasons.push(`${planner.profile} fit`);
+  }
+
+  if (planner.process === "Open") {
+    score += origin.processes.length ? 5 : 0;
+  } else if (
+    origin.processes.some((process) =>
+      normalizeOriginCopy(process).includes(normalizeOriginCopy(planner.process)),
+    )
+  ) {
+    score += 14;
+    reasons.push(`${planner.process} process`);
+  } else {
+    score -= 8;
+    cautions.push(`${planner.process} needs sourcing check`);
+  }
+
+  if (origin.averageScore) score += Math.max(0, Number(origin.averageScore) - 84) * 2;
+
+  if (laneMismatch) score = Math.min(score, 74);
+
+  return {
+    ...origin,
+    plannerScore: Math.max(0, Math.min(99, Math.round(score))),
+    plannerReasons: uniqueValues(reasons).slice(0, 4),
+    plannerCautions: uniqueValues(cautions).slice(0, 2),
+  };
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -949,6 +1052,197 @@ function OriginMap({ compact = false }) {
           </div>
         </div>
       </article>
+    </div>
+  );
+}
+
+function OriginPlanner({ onOpenFinder }) {
+  const websiteOrigins = useMemo(() => buildWebsiteOrigins(), []);
+  const [planner, setPlanner] = useState({
+    delivery: "Any lane",
+    volume: "20-60 bags",
+    profile: "Fruit-forward",
+    process: "Open",
+    channel: "Live + atlas",
+  });
+
+  const updatePlanner = (key, value) => {
+    setPlanner((current) => ({ ...current, [key]: value }));
+  };
+
+  const recommendations = useMemo(
+    () =>
+      websiteOrigins
+        .map((origin) => scoreOriginForPlanner(origin, planner))
+        .filter(Boolean)
+        .sort(
+          (a, b) =>
+            b.plannerScore - a.plannerScore ||
+            Number(b.isLive) - Number(a.isLive) ||
+            b.gradeCount - a.gradeCount ||
+            a.displayCountry.localeCompare(b.displayCountry),
+        )
+        .slice(0, 4),
+    [planner, websiteOrigins],
+  );
+  const topOrigin = recommendations[0];
+  const liveRecommendationCount = recommendations.filter((origin) => origin.isLive).length;
+  const briefCopy = topOrigin
+    ? `${planner.volume}, ${planner.profile.toLowerCase()}, ${
+        planner.process === "Open" ? "open process" : planner.process.toLowerCase()
+      }, ${planner.delivery === "Any lane" ? "best available warehouse" : planner.delivery}. Start with ${
+        topOrigin.displayCountry
+      }.`
+    : "Open sourcing brief with flexible origin and process requirements.";
+
+  return (
+    <div className="origin-planner" id="origin-planner">
+      <aside className="origin-planner__panel">
+        <p className="eyebrow">Roaster origin planner</p>
+        <h2>Turn origin coverage into a buying shortlist.</h2>
+        <p>
+          Rank live Coffendi positions against Makendi planning origins by lane,
+          volume, process, and cup direction.
+        </p>
+        <div className="origin-planner__controls">
+          <label className="origin-planner-control">
+            <span>Delivery lane</span>
+            <select
+              value={planner.delivery}
+              onChange={(event) => updatePlanner("delivery", event.target.value)}
+            >
+              <option>Any lane</option>
+              {sourcingWarehouses.map((warehouse) => (
+                <option key={warehouse}>{warehouse}</option>
+              ))}
+            </select>
+          </label>
+          <label className="origin-planner-control">
+            <span>Volume</span>
+            <select
+              value={planner.volume}
+              onChange={(event) => updatePlanner("volume", event.target.value)}
+            >
+              {originPlannerVolumes.map((volume) => (
+                <option key={volume}>{volume}</option>
+              ))}
+            </select>
+          </label>
+          <label className="origin-planner-control">
+            <span>Cup direction</span>
+            <select
+              value={planner.profile}
+              onChange={(event) => updatePlanner("profile", event.target.value)}
+            >
+              {sourcingProfiles.map((profile) => (
+                <option key={profile}>{profile}</option>
+              ))}
+            </select>
+          </label>
+          <label className="origin-planner-control">
+            <span>Process</span>
+            <select
+              value={planner.process}
+              onChange={(event) => updatePlanner("process", event.target.value)}
+            >
+              <option>Open</option>
+              {sourcingProcesses.map((process) => (
+                <option key={process}>{process}</option>
+              ))}
+            </select>
+          </label>
+        </div>
+        <div className="origin-planner__channels" role="group" aria-label="Origin planning channel">
+          {originPlannerChannels.map((channel) => (
+            <button
+              key={channel}
+              type="button"
+              className={planner.channel === channel ? "is-active" : ""}
+              onClick={() => updatePlanner("channel", channel)}
+              aria-pressed={planner.channel === channel}
+            >
+              {channel}
+            </button>
+          ))}
+        </div>
+        <div className="origin-planner__brief">
+          <Bot size={18} />
+          <div>
+            <strong>Assistant-ready brief</strong>
+            <span>{briefCopy}</span>
+          </div>
+        </div>
+        <button className="button button--gold" type="button" onClick={onOpenFinder}>
+          Open AI sourcing desk <Sparkles size={17} />
+        </button>
+      </aside>
+      <div className="origin-planner__results">
+        <div className="origin-planner__summary">
+          <span>
+            <SlidersHorizontal size={16} />
+            {recommendations.length} ranked origins
+          </span>
+          <span>{liveRecommendationCount} with live stock</span>
+        </div>
+        <div className="origin-recommendation-grid">
+          {recommendations.map((origin, index) => (
+            <article key={origin.country} className="origin-recommendation-card">
+              <div className="origin-recommendation-card__media">
+                <img src={origin.image} alt="" loading="lazy" decoding="async" />
+                <span>0{index + 1}</span>
+              </div>
+              <div className="origin-recommendation-card__body">
+                <div className="origin-recommendation-card__top">
+                  <div>
+                    <p className="eyebrow">{origin.isLive ? "Live lane" : "Atlas lane"}</p>
+                    <h3>{origin.displayCountry}</h3>
+                  </div>
+                  {origin.flag && <img src={origin.flag} alt="" loading="lazy" decoding="async" />}
+                </div>
+                <p>{origin.region}</p>
+                <div className="origin-score">
+                  <div>
+                    <span style={{ width: `${origin.plannerScore}%` }} />
+                  </div>
+                  <strong>{origin.plannerScore}% fit</strong>
+                </div>
+                <dl>
+                  <div>
+                    <dt>{origin.isLive ? "Bags" : "Atlas"}</dt>
+                    <dd>{origin.isLive ? origin.bags : `${origin.gradeCount} profiles`}</dd>
+                  </div>
+                  <div>
+                    <dt>Lane</dt>
+                    <dd>{origin.warehouses[0] || "Quoted"}</dd>
+                  </div>
+                </dl>
+                <div className="origin-recommendation-card__reasons">
+                  {origin.plannerReasons.map((reason) => (
+                    <span key={reason}>{reason}</span>
+                  ))}
+                  {origin.plannerCautions.map((caution) => (
+                    <span key={caution} className="is-caution">
+                      {caution}
+                    </span>
+                  ))}
+                </div>
+                <div className="origin-recommendation-card__links">
+                  {origin.isLive && (
+                    <Link to={`/coffees?origin=${encodeURIComponent(origin.country)}`}>
+                      Live lots <ArrowRight size={15} />
+                    </Link>
+                  )}
+                  {origin.hasAtlas && (
+                    <Link to={`/atlas?origin=${encodeURIComponent(origin.country)}`}>
+                      Atlas <ArrowRight size={15} />
+                    </Link>
+                  )}
+                </div>
+              </div>
+            </article>
+          ))}
+        </div>
+      </div>
     </div>
   );
 }
@@ -1827,6 +2121,11 @@ function OriginsPage({ onOpenFinder }) {
             copy="Active origins connect producer relationships with live landed and forward positions."
           />
           <OriginMap />
+        </div>
+      </section>
+      <section className="section section--cream origin-planner-section">
+        <div className="shell">
+          <OriginPlanner onOpenFinder={onOpenFinder} />
         </div>
       </section>
       <section className="section section--white origin-atlas-callout">

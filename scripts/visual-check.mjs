@@ -139,6 +139,27 @@ for (const check of checks) {
       path: new URL("desktop-origin-map-search.png", outputDir).pathname,
       fullPage: false,
     });
+    await page.locator("#origin-planner").evaluate((element) => {
+      window.scrollTo({
+        top: element.getBoundingClientRect().top + window.scrollY - 82,
+        behavior: "instant",
+      });
+    });
+    const plannerCards = await page.locator(".origin-recommendation-card").count();
+    if (!plannerCards) {
+      failures.push("desktop-origins: origin planner did not render recommendations");
+    }
+    await page.locator("#origin-planner select").nth(0).selectOption("Hamburg");
+    await page.locator("#origin-planner select").nth(3).selectOption("Washed");
+    await page.locator("#origin-planner").getByRole("button", { name: "Live stock" }).click();
+    await page.waitForTimeout(300);
+    if (!(await page.locator(".origin-recommendation-card").first().isVisible())) {
+      failures.push("desktop-origins: planner filters removed all visible cards");
+    }
+    await page.screenshot({
+      path: new URL("desktop-origin-planner.png", outputDir).pathname,
+      fullPage: false,
+    });
   }
 
   if (check.name === "desktop-coffees") {
@@ -233,6 +254,19 @@ for (const check of checks) {
     }
     await page.screenshot({
       path: new URL("mobile-origin-map.png", outputDir).pathname,
+      fullPage: false,
+    });
+    await page.locator("#origin-planner").evaluate((element) => {
+      window.scrollTo({
+        top: element.getBoundingClientRect().top + window.scrollY - 72,
+        behavior: "instant",
+      });
+    });
+    if (!(await page.locator(".origin-recommendation-card").first().isVisible())) {
+      failures.push("mobile-origins: origin planner card is not visible");
+    }
+    await page.screenshot({
+      path: new URL("mobile-origin-planner.png", outputDir).pathname,
       fullPage: false,
     });
   }
