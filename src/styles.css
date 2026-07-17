@@ -1874,6 +1874,10 @@ p {
   color: var(--clay);
 }
 
+.format-switcher__hint {
+  display: none;
+}
+
 .format-switcher {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -2008,6 +2012,7 @@ p {
   border-radius: 50% 50% 7px 7px;
   box-shadow: 0 28px 75px rgba(60, 30, 18, 0.2);
   object-fit: cover;
+  transition: box-shadow var(--duration-base) ease, transform 900ms var(--ease-soft);
 }
 
 .product-detail__index {
@@ -3021,6 +3026,7 @@ p {
   outline: none;
   background: rgba(255, 248, 235, 0.06);
   color: var(--cream);
+  transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease, background-color var(--duration-fast) ease;
 }
 
 .form-grid input,
@@ -3043,6 +3049,14 @@ p {
 .form-grid textarea:focus {
   border-color: #e5b577;
   box-shadow: 0 0 0 3px rgba(229, 181, 119, 0.15);
+}
+
+.form-grid label > span {
+  transition: color var(--duration-fast) ease;
+}
+
+.form-grid label:focus-within > span {
+  color: #efbd7e;
 }
 
 .form-grid .consent-field {
@@ -3247,6 +3261,7 @@ p {
   font-weight: 800;
   letter-spacing: 0.09em;
   text-transform: uppercase;
+  transition: color var(--duration-fast) ease;
 }
 
 .contact-form__grid input,
@@ -3258,6 +3273,7 @@ p {
   outline: 0;
   background: var(--paper);
   color: var(--ink);
+  transition: border-color var(--duration-fast) ease, box-shadow var(--duration-fast) ease, background-color var(--duration-fast) ease;
 }
 
 .contact-form__grid input,
@@ -3276,6 +3292,10 @@ p {
 .contact-form__grid textarea:focus {
   border-color: var(--clay);
   box-shadow: 0 0 0 3px rgba(146, 80, 45, 0.13);
+}
+
+.contact-form__grid label:focus-within > span {
+  color: var(--clay);
 }
 
 .contact-form__wide {
@@ -3770,6 +3790,26 @@ p {
 .motion-ready .route-intro .hero-note--middle { animation-delay: 380ms; }
 .motion-ready .route-intro .hero-note--bottom { animation-delay: 460ms; }
 
+.motion-ready .route-intro.page-hero::after {
+  animation: ambient-ring-in 900ms var(--ease-out) 120ms backwards;
+}
+
+.motion-ready .route-intro .product-detail__index {
+  animation: detail-index-in 680ms var(--ease-out) 360ms backwards;
+}
+
+.motion-ready .route-intro .sustainability-hero__orb svg {
+  animation: leaf-mark-in 720ms var(--ease-out) 320ms backwards;
+}
+
+.motion-ready .route-intro .bulk-hero__facts div > * {
+  animation: fact-mark-in 520ms var(--ease-out) backwards;
+}
+
+.motion-ready .route-intro .bulk-hero__facts div:nth-child(1) > * { animation-delay: 260ms; }
+.motion-ready .route-intro .bulk-hero__facts div:nth-child(2) > * { animation-delay: 330ms; }
+.motion-ready .route-intro .bulk-hero__facts div:nth-child(3) > * { animation-delay: 400ms; }
+
 .motion-ready .reveal-section .product-card.reveal-item .product-card__image img,
 .motion-ready .bulk-feature.reveal-section .bulk-feature__visual img {
   transform: scale(1.045);
@@ -3833,6 +3873,48 @@ p {
   }
   to {
     transform: translateY(0);
+  }
+}
+
+@keyframes ambient-ring-in {
+  from {
+    transform: scale(0.86) rotate(-5deg);
+  }
+  to {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes detail-index-in {
+  from {
+    transform: translateY(18px) scale(0.76) rotate(-12deg);
+  }
+  to {
+    transform: translateY(0) scale(1) rotate(0);
+  }
+}
+
+@keyframes leaf-mark-in {
+  from {
+    transform: scale(0.72) rotate(-20deg);
+  }
+  to {
+    transform: scale(1) rotate(0);
+  }
+}
+
+@keyframes fact-mark-in {
+  from {
+    transform: translateY(9px) scale(0.94);
+  }
+  to {
+    transform: translateY(0) scale(1);
+  }
+}
+
+@keyframes swipe-hint {
+  50% {
+    transform: translateX(4px);
   }
 }
 
@@ -3904,6 +3986,11 @@ p {
   .product-card:hover .product-card__number {
     background: var(--cream);
     transform: translateY(-3px) rotate(-4deg);
+  }
+
+  .product-detail__media:hover img {
+    box-shadow: 0 34px 88px rgba(60, 30, 18, 0.25);
+    transform: scale(1.008);
   }
 }
 
@@ -4110,6 +4197,11 @@ p {
 
   .contact-form__submit .button {
     width: 100%;
+  }
+
+  .contact-options > .text-link {
+    width: 100%;
+    justify-content: space-between;
   }
 
   .brief-review dl {
@@ -4533,10 +4625,30 @@ p {
     scroll-snap-type: inline mandatory;
   }
 
+  .format-switcher__hint {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 7px;
+    margin: 0 2px 11px;
+    color: var(--clay);
+    font-size: 10px;
+    font-weight: 800;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+  }
+
+  .format-switcher__hint svg {
+    width: 14px;
+    height: 14px;
+    animation: swipe-hint 1.8s var(--ease-out) infinite;
+  }
+
   .format-switcher a {
     min-height: 76px;
     border-left: 1px solid var(--line);
     scroll-snap-align: start;
+    scroll-snap-stop: always;
   }
 
   .format-switcher a:first-child {

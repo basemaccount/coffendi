@@ -151,6 +151,11 @@ for (const check of checks) {
   }
 
   if (check.name === "mobile-shop") {
+    if (!(await page.locator(".format-switcher__hint").isVisible())) failures.push("mobile-shop: horizontal format guidance was not visible");
+    const formatSwitcher = page.locator(".format-switcher");
+    await formatSwitcher.evaluate((element) => element.scrollTo({ left: element.scrollWidth, behavior: "instant" }));
+    if (await formatSwitcher.evaluate((element) => element.scrollLeft) === 0) failures.push("mobile-shop: format selector was not horizontally scrollable");
+    await formatSwitcher.evaluate((element) => element.scrollTo({ left: 0, behavior: "instant" }));
     await page.getByRole("button", { name: /Add to (cart|selection)/ }).first().click();
     const mobileCart = page.getByRole("dialog", { name: /Cart/ });
     await mobileCart.waitFor({ state: "visible" });

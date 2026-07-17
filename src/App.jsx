@@ -179,6 +179,8 @@ function ScrollManager() {
 
 const REVEAL_ITEM_SELECTOR = [
   ".product-card",
+  ".shop-intro__note",
+  ".format-switcher",
   ".format-story__steps li",
   ".learning-card",
   ".faq-grid details",
@@ -189,10 +191,12 @@ const REVEAL_ITEM_SELECTOR = [
   ".bulk-route__grid article",
   ".form-group",
   ".contact-options > *",
+  ".contact-form",
   ".product-specifications__grid > div",
   ".preparation-grid li",
   ".next-products__grid > a",
   ".checkout-items article",
+  ".checkout-summary",
 ].join(",");
 
 function MotionManager() {
@@ -912,6 +916,7 @@ function ShopPage({ onAdd, cartQuantities }) {
       />
       <section className="shop-intro page-shell">
         <div className="shop-intro__note"><Sparkles aria-hidden="true" /><span>Every format starts with brewed coffee extract. The drying route makes the visible difference.</span></div>
+        <p className="format-switcher__hint">Swipe to compare all three formats <ArrowRight aria-hidden="true" /></p>
         <nav className="format-switcher" aria-label="Choose an instant coffee format">
           {products.map((product) => {
             const Icon = processIcons[product.id];
