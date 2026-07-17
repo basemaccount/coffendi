@@ -282,22 +282,32 @@ function Header({ cartCount, onOpenCart }) {
   const [scrolled, setScrolled] = useState(() => window.scrollY > 18);
   const menuButton = useRef(null);
   const mobileNavigation = useRef(null);
+  const scrollProgress = useRef(null);
   const menuWasOpen = useRef(false);
   const location = useLocation();
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
   useEffect(() => {
     let frame = 0;
-    const handleScroll = () => {
+    const updateScrollState = () => {
+      const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
+      const progress = scrollRange > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollRange)) : 0;
+      scrollProgress.current?.style.setProperty("--scroll-progress", progress);
+      setScrolled(window.scrollY > 18);
+    };
+    const scheduleScrollUpdate = () => {
       if (frame) return;
       frame = requestAnimationFrame(() => {
-        setScrolled(window.scrollY > 18);
+        updateScrollState();
         frame = 0;
       });
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    updateScrollState();
+    window.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
+    window.addEventListener("resize", scheduleScrollUpdate);
     return () => {
-      window.removeEventListener("scroll", handleScroll);
+      window.removeEventListener("scroll", scheduleScrollUpdate);
+      window.removeEventListener("resize", scheduleScrollUpdate);
       cancelAnimationFrame(frame);
     };
   }, []);
@@ -376,7 +386,7 @@ function Header({ cartCount, onOpenCart }) {
           >
             <ShoppingBag size={19} aria-hidden="true" />
             <span className="cart-button__label">Cart</span>
-            <span className="cart-count" aria-hidden="true">{cartCount}</span>
+            <span key={cartCount} className="cart-count" aria-hidden="true">{cartCount}</span>
           </button>
           <button
             ref={menuButton}
@@ -392,6 +402,7 @@ function Header({ cartCount, onOpenCart }) {
             </span>
           </button>
         </div>
+        <span ref={scrollProgress} className="scroll-progress" aria-hidden="true" />
       </header>
 
       <div
@@ -745,7 +756,13 @@ function HomePage({ onAdd, cartQuantities }) {
           </div>
         </div>
         <div className="hero__marquee" aria-hidden="true">
-          <span>SPRAY DRIED</span><i>✦</i><span>AGGLOMERATED</span><i>✦</i><span>FREEZE DRIED</span><i>✦</i><span>INSTANTLY COFFENDI</span>
+          <div className="hero__marquee-track">
+            {[0, 1].map((group) => (
+              <div className="hero__marquee-group" key={group}>
+                <span>SPRAY DRIED</span><i>✦</i><span>AGGLOMERATED</span><i>✦</i><span>FREEZE DRIED</span><i>✦</i><span>INSTANTLY COFFENDI</span><i>✦</i>
+              </div>
+            ))}
+          </div>
         </div>
       </section>
 

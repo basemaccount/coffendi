@@ -16,6 +16,8 @@ const checks = [
   { name: "desktop-privacy", path: "/privacy", width: 1440, height: 1000 },
   { name: "desktop-contact", path: "/contact", width: 1440, height: 1000 },
   { name: "desktop-cart-recovery", path: "/checkout", width: 1440, height: 1000, malformedCart: true },
+  { name: "tablet-home", path: "/", width: 1024, height: 900 },
+  { name: "tablet-shop", path: "/shop", width: 768, height: 900 },
   { name: "mobile-home", path: "/", width: 390, height: 844 },
   { name: "mobile-shop", path: "/shop", width: 390, height: 844 },
   { name: "mobile-product", path: "/products/freeze-dried", width: 390, height: 844 },
@@ -32,6 +34,8 @@ const checks = [
 const browser = await chromium.launch();
 const failures = [];
 const firstViewportTargets = {
+  "tablet-home": ".hero__visual",
+  "tablet-shop": ".format-switcher",
   "mobile-home": ".hero__actions .button--dark",
   "compact-home": ".hero__actions .button--dark",
   "mobile-shop": ".product-card",
@@ -46,7 +50,10 @@ const firstViewportTargets = {
 
 async function waitForMotion(page, timeout = 1_600) {
   await page.waitForFunction(
-    () => document.getAnimations().every((animation) => ["finished", "idle"].includes(animation.playState)),
+    () => document.getAnimations().every((animation) => {
+      const iterations = animation.effect?.getTiming?.().iterations;
+      return iterations === Infinity || ["finished", "idle"].includes(animation.playState);
+    }),
     undefined,
     { timeout },
   ).catch(() => {});
@@ -89,6 +96,23 @@ for (const check of checks) {
     if (targetTop >= check.height) failures.push(`${check.name}: key content began below the first viewport (${Math.round(targetTop)}px)`);
   }
   console.log(`${check.name}: ${dimensions.clientWidth}x${check.height}, scrollWidth=${dimensions.scrollWidth}, title="${dimensions.title}"`);
+
+  if (check.name === "desktop-home") {
+    if (await page.locator(".hero__marquee-group").count() !== 2) failures.push("desktop-home: format ribbon did not contain two seamless groups");
+    const marqueeRunning = await page.locator(".hero__marquee-track").evaluate((element) => (
+      element.getAnimations().some((animation) => animation.effect?.getTiming?.().iterations === Infinity)
+    ));
+    if (!marqueeRunning) failures.push("desktop-home: editorial format ribbon was not moving");
+    await page.evaluate(() => window.scrollTo(0, Math.min(800, document.documentElement.scrollHeight - innerHeight)));
+    await page.waitForFunction(() => Number.parseFloat(document.querySelector(".scroll-progress")?.style.getPropertyValue("--scroll-progress") || "0") > 0);
+    await page.locator(".faq-section").scrollIntoViewIfNeeded();
+    await waitForMotion(page);
+    await page.locator(".faq-grid summary").first().click();
+    const faqMotion = await page.locator(".faq-grid details p").first().evaluate((element) => (
+      element.getAnimations().some((animation) => animation.animationName === "faq-answer-in")
+    ));
+    if (!faqMotion) failures.push("desktop-home: FAQ answer did not receive disclosure motion");
+  }
 
   if (check.name === "desktop-shop") {
     const addButton = page.getByRole("button", { name: /Add to (cart|selection)/ }).first();
@@ -222,9 +246,11 @@ await reducedMotionPage.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
 const reducedMotionState = await reducedMotionPage.evaluate(() => ({
   motionReady: document.documentElement.classList.contains("motion-ready"),
   hiddenSections: [...document.querySelectorAll(".reveal-section")].filter((section) => getComputedStyle(section).opacity === "0").length,
+  infiniteAnimations: document.getAnimations().filter((animation) => animation.effect?.getTiming?.().iterations === Infinity).length,
 }));
 if (reducedMotionState.motionReady) failures.push("reduced-motion: animated motion system remained enabled");
 if (reducedMotionState.hiddenSections) failures.push(`reduced-motion: ${reducedMotionState.hiddenSections} sections remained hidden`);
+if (reducedMotionState.infiniteAnimations) failures.push(`reduced-motion: ${reducedMotionState.infiniteAnimations} continuous animations remained enabled`);
 await reducedMotionContext.close();
 
 await browser.close();
