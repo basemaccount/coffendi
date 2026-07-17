@@ -44,6 +44,14 @@ const firstViewportTargets = {
   "mobile-checkout": ".checkout-items",
 };
 
+async function waitForMotion(page, timeout = 1_600) {
+  await page.waitForFunction(
+    () => document.getAnimations().every((animation) => ["finished", "idle"].includes(animation.playState)),
+    undefined,
+    { timeout },
+  ).catch(() => {});
+}
+
 for (const check of checks) {
   const context = await browser.newContext({ viewport: { width: check.width, height: check.height }, deviceScaleFactor: 1 });
   if (check.cart) {
@@ -62,6 +70,7 @@ for (const check of checks) {
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") pageErrors.push(message.text()); });
   await page.goto(`${baseUrl}${check.path}`, { waitUntil: "networkidle" });
+  await waitForMotion(page);
   await page.screenshot({ path: new URL(`${check.name}.png`, outputDir).pathname, fullPage: false });
   const dimensions = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
@@ -91,6 +100,7 @@ for (const check of checks) {
     if (!(await cart.getByRole("button", { name: "Close cart" }).evaluate((element) => document.activeElement === element))) failures.push("desktop-shop: focus did not move into the cart dialog");
     await cart.getByRole("button", { name: /Increase Spray dried coffee quantity/ }).click();
     if ((await cart.getByRole("status", { name: "Quantity" }).textContent()) !== "2") failures.push("desktop-shop: cart quantity did not increment");
+    await waitForMotion(page);
     await page.screenshot({ path: new URL("desktop-cart.png", outputDir).pathname, fullPage: false });
     await page.keyboard.press("Escape");
     if (await cart.isVisible()) failures.push("desktop-shop: Escape did not close the cart");
@@ -108,12 +118,23 @@ for (const check of checks) {
     await page.waitForFunction(() => document.activeElement?.closest("#mobile-navigation") !== null);
     const focusedNavigationLabel = await page.evaluate(() => document.activeElement?.textContent?.trim() || "");
     if (!focusedNavigationLabel.includes("Shop")) failures.push("mobile-home: focus did not move to the first navigation link");
-    await page.waitForTimeout(220);
+    await waitForMotion(page);
     await page.screenshot({ path: new URL("mobile-navigation.png", outputDir).pathname, fullPage: false });
     await page.keyboard.press("Escape");
     if (await page.getByRole("navigation", { name: "Mobile navigation" }).isVisible()) failures.push("mobile-home: Escape did not close navigation");
     await page.waitForFunction(() => document.activeElement?.getAttribute("aria-label") === "Open navigation");
     if (await page.locator("#main-content").evaluate((element) => element.inert)) failures.push("mobile-home: main content stayed inert after navigation closed");
+  }
+
+  if (check.name === "mobile-shop") {
+    await page.getByRole("button", { name: /Add to (cart|selection)/ }).first().click();
+    const mobileCart = page.getByRole("dialog", { name: /Cart/ });
+    await mobileCart.waitFor({ state: "visible" });
+    await waitForMotion(page);
+    const drawerBounds = await mobileCart.evaluate((element) => element.getBoundingClientRect().toJSON());
+    if (drawerBounds.top <= 0 || Math.abs(drawerBounds.bottom - check.height) > 1) failures.push("mobile-shop: cart did not settle as a bottom sheet");
+    await page.screenshot({ path: new URL("mobile-cart.png", outputDir).pathname, fullPage: false });
+    await page.keyboard.press("Escape");
   }
 
   if (check.name === "desktop-bulk") {
@@ -123,6 +144,7 @@ for (const check of checks) {
     if (!(await page.getByLabel(/I agree that Coffendi/).getAttribute("required") !== null)) failures.push("desktop-bulk: privacy consent was not required");
     if (await page.locator(".form-group").count() !== 3) failures.push("desktop-bulk: commercial brief was not divided into three clear groups");
     await page.locator(".bulk-form").scrollIntoViewIfNeeded();
+    await waitForMotion(page);
     await page.screenshot({ path: new URL("desktop-bulk-brief.png", outputDir).pathname, fullPage: false });
   }
 
@@ -144,6 +166,7 @@ for (const check of checks) {
     await page.waitForFunction((element) => document.activeElement === element, multiAddButtonHandle);
     if (await purchaseControls.getByRole("spinbutton").inputValue() !== "1") failures.push("desktop-freeze: product purchase quantity did not reset after adding");
     await page.locator(".preparation-section").scrollIntoViewIfNeeded();
+    await waitForMotion(page);
     await page.screenshot({ path: new URL("desktop-preparation.png", outputDir).pathname, fullPage: false });
   }
 
@@ -157,18 +180,21 @@ for (const check of checks) {
     const mobileBuyBar = page.locator(".mobile-buy-bar");
     if (await mobileBuyBar.isVisible()) failures.push("mobile-product: buy bar obscured the initial product view");
     await page.locator(".product-explainer").scrollIntoViewIfNeeded();
-    await page.waitForTimeout(100);
+    await page.waitForFunction(() => document.querySelector(".mobile-buy-bar")?.classList.contains("is-visible"));
+    await waitForMotion(page);
     if (!(await mobileBuyBar.isVisible())) failures.push("mobile-product: contextual buy bar did not appear after the primary purchase action was passed");
     await page.screenshot({ path: new URL("mobile-product-buy-bar.png", outputDir).pathname, fullPage: false });
   }
 
   if (check.name === "mobile-bulk") {
     await page.locator(".bulk-form").scrollIntoViewIfNeeded();
+    await waitForMotion(page);
     await page.screenshot({ path: new URL("mobile-bulk-brief.png", outputDir).pathname, fullPage: false });
   }
 
   if (check.name === "mobile-learn") {
     await page.locator(".comparison-section").scrollIntoViewIfNeeded();
+    await waitForMotion(page);
     const mobileComparisonWidth = await page.locator(".comparison-row:not(.comparison-row--header)").first().evaluate((element) => element.getBoundingClientRect().width);
     if (mobileComparisonWidth > check.width - 34 + 1) failures.push("mobile-learn: comparison card exceeded the mobile content width");
     if (await page.locator('.comparison-row [data-label="Appearance"]').count() !== 3) failures.push("mobile-learn: comparison cards lacked mobile attribute labels");
@@ -181,6 +207,25 @@ for (const check of checks) {
   }
   await context.close();
 }
+
+const reducedMotionContext = await browser.newContext({
+  viewport: { width: 390, height: 844 },
+  reducedMotion: "reduce",
+});
+const reducedMotionPage = await reducedMotionContext.newPage();
+await reducedMotionPage.route("**/api/commerce-status", (route) => route.fulfill({
+  status: 200,
+  contentType: "application/json",
+  body: JSON.stringify({ ok: true, ready: false, purchasePath: "inquiry", message: "Online checkout is being prepared." }),
+}));
+await reducedMotionPage.goto(`${baseUrl}/`, { waitUntil: "networkidle" });
+const reducedMotionState = await reducedMotionPage.evaluate(() => ({
+  motionReady: document.documentElement.classList.contains("motion-ready"),
+  hiddenSections: [...document.querySelectorAll(".reveal-section")].filter((section) => getComputedStyle(section).opacity === "0").length,
+}));
+if (reducedMotionState.motionReady) failures.push("reduced-motion: animated motion system remained enabled");
+if (reducedMotionState.hiddenSections) failures.push(`reduced-motion: ${reducedMotionState.hiddenSections} sections remained hidden`);
+await reducedMotionContext.close();
 
 await browser.close();
 if (failures.length) {

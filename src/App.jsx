@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   AlertTriangle,
@@ -28,8 +28,8 @@ import {
   X,
 } from "lucide-react";
 import {
-  Link,
-  NavLink,
+  Link as RouterLink,
+  NavLink as RouterNavLink,
   Navigate,
   Route,
   Routes,
@@ -64,6 +64,14 @@ const BULK_IMAGE_SRC_SET = [640, 960, 1280]
   .map((width) => `/images/instant-bulk-beans-${width}.webp ${width}w`)
   .concat("/images/instant-bulk-beans.webp 1600w")
   .join(", ");
+
+function Link(props) {
+  return <RouterLink viewTransition {...props} />;
+}
+
+function NavLink(props) {
+  return <RouterNavLink viewTransition {...props} />;
+}
 
 function selectionSearch(items) {
   const selection = items.map(({ product, quantity }) => `${product.id}:${quantity}`).join(",");
@@ -169,6 +177,89 @@ function ScrollManager() {
   return null;
 }
 
+const REVEAL_ITEM_SELECTOR = [
+  ".product-card",
+  ".format-story__steps li",
+  ".learning-card",
+  ".faq-grid details",
+  ".shop-service > div",
+  ".making-process li",
+  ".comparison-row:not(.comparison-row--header)",
+  ".pillar-grid article",
+  ".bulk-route__grid article",
+  ".form-group",
+  ".contact-options > *",
+  ".product-specifications__grid > div",
+  ".preparation-grid li",
+  ".next-products__grid > a",
+  ".checkout-items article",
+].join(",");
+
+function MotionManager() {
+  const { pathname, hash } = useLocation();
+
+  useLayoutEffect(() => {
+    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
+    const reduceMotion = motionPreference.matches;
+    const sections = [
+      ...document.querySelectorAll("#main-content > section, #main-content > .product-page > section"),
+    ];
+    const releaseTimers = [];
+    const releaseItems = (section, delay = 1_100) => {
+      const timer = window.setTimeout(() => {
+        section.querySelectorAll(".reveal-item").forEach((item) => {
+          item.classList.remove("reveal-item");
+          item.style.removeProperty("--reveal-order");
+        });
+      }, delay);
+      releaseTimers.push(timer);
+    };
+    const observer = !reduceMotion && "IntersectionObserver" in window
+      ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting) return;
+          entry.target.classList.add("is-revealed");
+          releaseItems(entry.target);
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: "0px 0px -8%", threshold: 0.08 })
+      : null;
+
+    sections.forEach((section, sectionIndex) => {
+      section.classList.add(sectionIndex === 0 ? "route-intro" : "reveal-section");
+      section.querySelectorAll(REVEAL_ITEM_SELECTOR).forEach((item, itemIndex) => {
+        item.classList.add("reveal-item");
+        item.style.setProperty("--reveal-order", Math.min(itemIndex, 7));
+      });
+
+      if (sectionIndex === 0 || !observer) {
+        section.classList.add("is-revealed");
+        releaseItems(section, reduceMotion ? 0 : 1_100);
+      }
+      else observer.observe(section);
+    });
+
+    const handleMotionPreference = (event) => {
+      document.documentElement.classList.toggle("motion-ready", !event.matches);
+      if (!event.matches) return;
+      observer?.disconnect();
+      sections.forEach((section) => {
+        section.classList.add("is-revealed");
+        releaseItems(section, 0);
+      });
+    };
+    motionPreference.addEventListener("change", handleMotionPreference);
+
+    return () => {
+      observer?.disconnect();
+      releaseTimers.forEach((timer) => window.clearTimeout(timer));
+      motionPreference.removeEventListener("change", handleMotionPreference);
+    };
+  }, [pathname, hash]);
+
+  return null;
+}
+
 function AnnouncementBar() {
   const purchaseMessage = CATALOG_READY ? "Retail-ready catalog · Dedicated bulk pathway" : "Retail catalog in preparation · Bulk briefs open";
   return (
@@ -188,12 +279,28 @@ function AnnouncementBar() {
 
 function Header({ cartCount, onOpenCart }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(() => window.scrollY > 18);
   const menuButton = useRef(null);
   const mobileNavigation = useRef(null);
   const menuWasOpen = useRef(false);
   const location = useLocation();
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+  useEffect(() => {
+    let frame = 0;
+    const handleScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        setScrolled(window.scrollY > 18);
+        frame = 0;
+      });
+    };
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      cancelAnimationFrame(frame);
+    };
+  }, []);
   useEffect(() => {
     const isolatedElements = [
       document.querySelector(".announcement"),
@@ -235,7 +342,7 @@ function Header({ cartCount, onOpenCart }) {
 
   return (
     <>
-      <header className="site-header">
+      <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
         <Link className="brand" to="/" aria-label="Coffendi home">
           <img
             src="/coffendi-logo-160.webp"
@@ -280,7 +387,9 @@ function Header({ cartCount, onOpenCart }) {
             aria-controls="mobile-navigation"
             aria-label={menuOpen ? "Close navigation" : "Open navigation"}
           >
-            {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            <span key={menuOpen ? "close" : "menu"} className="menu-button__icon">
+              {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
+            </span>
           </button>
         </div>
       </header>
@@ -1654,6 +1763,7 @@ export default function App() {
   return (
     <div className="app-shell">
       <ScrollManager />
+      <MotionManager />
       <div className="site-frame" inert={cartOpen} aria-hidden={cartOpen ? "true" : undefined}>
         <a className="skip-link" href="#main-content">Skip to main content</a>
         <AnnouncementBar />
