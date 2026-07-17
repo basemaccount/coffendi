@@ -4,7 +4,7 @@ import { chromium } from "@playwright/test";
 const outputDir = new URL("../test-output/", import.meta.url);
 fs.mkdirSync(outputDir, { recursive: true });
 const baseUrl = process.env.COFFENDI_BASE_URL || "http://127.0.0.1:4173";
-const checks = [
+const allChecks = [
   { name: "desktop-home", path: "/", width: 1440, height: 1000 },
   { name: "desktop-shop", path: "/shop", width: 1440, height: 1000 },
   { name: "desktop-spray", path: "/products/spray-dried", width: 1440, height: 1000 },
@@ -18,18 +18,27 @@ const checks = [
   { name: "desktop-cart-recovery", path: "/checkout", width: 1440, height: 1000, malformedCart: true },
   { name: "tablet-home", path: "/", width: 1024, height: 900 },
   { name: "tablet-shop", path: "/shop", width: 768, height: 900 },
-  { name: "mobile-home", path: "/", width: 390, height: 844 },
-  { name: "mobile-shop", path: "/shop", width: 390, height: 844 },
-  { name: "mobile-product", path: "/products/freeze-dried", width: 390, height: 844 },
-  { name: "mobile-bulk", path: "/bulk", width: 390, height: 844 },
-  { name: "mobile-learn", path: "/learn", width: 390, height: 844 },
-  { name: "mobile-sustainability", path: "/sustainability", width: 390, height: 844 },
-  { name: "mobile-shipping", path: "/shipping-returns", width: 390, height: 844 },
-  { name: "mobile-contact", path: "/contact", width: 390, height: 844 },
-  { name: "mobile-checkout", path: "/checkout", width: 390, height: 844, cart: true },
-  { name: "compact-home", path: "/", width: 320, height: 700 },
-  { name: "compact-product", path: "/products/agglomerated", width: 320, height: 700 },
+  { name: "mobile-home", path: "/", width: 390, height: 844, mobile: true },
+  { name: "mobile-shop", path: "/shop", width: 390, height: 844, mobile: true },
+  { name: "mobile-product", path: "/products/freeze-dried", width: 390, height: 844, mobile: true },
+  { name: "mobile-bulk", path: "/bulk", width: 390, height: 844, mobile: true },
+  { name: "mobile-learn", path: "/learn", width: 390, height: 844, mobile: true },
+  { name: "mobile-sustainability", path: "/sustainability", width: 390, height: 844, mobile: true },
+  { name: "mobile-shipping", path: "/shipping-returns", width: 390, height: 844, mobile: true },
+  { name: "mobile-contact", path: "/contact", width: 390, height: 844, mobile: true },
+  { name: "mobile-checkout", path: "/checkout", width: 390, height: 844, cart: true, mobile: true },
+  { name: "compact-home", path: "/", width: 320, height: 700, mobile: true },
+  { name: "compact-product", path: "/products/agglomerated", width: 320, height: 700, mobile: true },
+  { name: "compact-shop", path: "/shop", width: 320, height: 568, mobile: true },
+  { name: "landscape-home", path: "/", width: 844, height: 390, mobile: true },
+  { name: "landscape-product", path: "/products/freeze-dried", width: 844, height: 390, mobile: true },
 ];
+const visualFilter = process.env.COFFENDI_VISUAL_FILTER;
+const checks = visualFilter
+  ? allChecks.filter(({ name }) => name.includes(visualFilter))
+  : allChecks;
+
+if (!checks.length) throw new Error(`No visual checks matched COFFENDI_VISUAL_FILTER=${visualFilter}`);
 
 const browser = await chromium.launch();
 const failures = [];
@@ -38,7 +47,10 @@ const firstViewportTargets = {
   "tablet-shop": ".format-switcher",
   "mobile-home": ".hero__actions .button--dark",
   "compact-home": ".hero__actions .button--dark",
-  "mobile-shop": ".product-card",
+  "compact-shop": ".page-hero__jump",
+  "landscape-home": ".hero__actions .button--dark",
+  "landscape-product": ".product-detail__content h1",
+  "mobile-shop": ".page-hero__jump",
   "mobile-product": ".product-purchase > .button",
   "mobile-bulk": ".bulk-route",
   "mobile-learn": ".making-process",
@@ -60,7 +72,12 @@ async function waitForMotion(page, timeout = 1_600) {
 }
 
 for (const check of checks) {
-  const context = await browser.newContext({ viewport: { width: check.width, height: check.height }, deviceScaleFactor: 1 });
+  const context = await browser.newContext({
+    viewport: { width: check.width, height: check.height },
+    deviceScaleFactor: 1,
+    hasTouch: Boolean(check.mobile),
+    isMobile: Boolean(check.mobile),
+  });
   if (check.cart) {
     await context.addInitScript(() => localStorage.setItem("coffendi-instant-cart", JSON.stringify([{ id: "freeze-dried", quantity: 2 }])));
   }
@@ -151,6 +168,10 @@ for (const check of checks) {
   }
 
   if (check.name === "mobile-shop") {
+    await page.getByRole("button", { name: "Open navigation" }).click();
+    const shopNavigationLink = page.locator('#mobile-navigation a[href="/shop"]');
+    if (!(await shopNavigationLink.getAttribute("aria-current"))) failures.push("mobile-shop: current mobile navigation destination was not identified");
+    await page.keyboard.press("Escape");
     if (!(await page.locator(".format-switcher__hint").isVisible())) failures.push("mobile-shop: horizontal format guidance was not visible");
     const formatSwitcher = page.locator(".format-switcher");
     await formatSwitcher.evaluate((element) => element.scrollTo({ left: element.scrollWidth, behavior: "instant" }));
@@ -162,6 +183,7 @@ for (const check of checks) {
     await waitForMotion(page);
     const drawerBounds = await mobileCart.evaluate((element) => element.getBoundingClientRect().toJSON());
     if (drawerBounds.top <= 0 || Math.abs(drawerBounds.bottom - check.height) > 1) failures.push("mobile-shop: cart did not settle as a bottom sheet");
+    if (drawerBounds.height >= check.height * 0.82) failures.push("mobile-shop: one-item cart sheet was taller than its content required");
     await page.screenshot({ path: new URL("mobile-cart.png", outputDir).pathname, fullPage: false });
     await page.keyboard.press("Escape");
   }
@@ -213,6 +235,28 @@ for (const check of checks) {
     await waitForMotion(page);
     if (!(await mobileBuyBar.isVisible())) failures.push("mobile-product: contextual buy bar did not appear after the primary purchase action was passed");
     await page.screenshot({ path: new URL("mobile-product-buy-bar.png", outputDir).pathname, fullPage: false });
+    await page.locator(".site-footer").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(100);
+    await mobileBuyBar.waitFor({ state: "hidden" });
+    if (await mobileBuyBar.isVisible()) failures.push("mobile-product: contextual buy bar covered the footer");
+  }
+
+  if (check.name === "compact-shop") {
+    await page.getByRole("button", { name: /Add to (cart|selection)/ }).first().click();
+    const compactCart = page.getByRole("dialog", { name: /Cart/ });
+    await compactCart.waitFor({ state: "visible" });
+    await waitForMotion(page);
+    const compactBounds = await compactCart.evaluate((element) => element.getBoundingClientRect().toJSON());
+    if (compactBounds.top < 8 || Math.abs(compactBounds.bottom - check.height) > 1) failures.push("compact-shop: short-screen cart did not remain inside the usable viewport");
+    await page.screenshot({ path: new URL("compact-cart.png", outputDir).pathname, fullPage: false });
+  }
+
+  if (check.name === "landscape-home") {
+    if (await page.locator(".announcement").isVisible()) failures.push("landscape-home: announcement consumed the short mobile viewport");
+    await page.getByRole("button", { name: "Open navigation" }).click();
+    const finalNavItemBottom = await page.getByRole("link", { name: /05 Contact/ }).evaluate((element) => element.getBoundingClientRect().bottom);
+    if (finalNavItemBottom > check.height) failures.push("landscape-home: mobile navigation destinations exceeded the short viewport");
+    await page.keyboard.press("Escape");
   }
 
   if (check.name === "mobile-bulk") {

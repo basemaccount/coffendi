@@ -913,7 +913,11 @@ function ShopPage({ onAdd, cartQuantities }) {
         title="Choose your texture. Shape your cup."
         copy="Compare texture, cup direction and use case in one clear view. Final retail prices appear when the live merchant catalog is connected."
         marker="03 formats"
-      />
+      >
+        <a className="page-hero__jump" href="#format-spray-dried">
+          Start comparing <ArrowRight aria-hidden="true" />
+        </a>
+      </PageHero>
       <section className="shop-intro page-shell">
         <div className="shop-intro__note"><Sparkles aria-hidden="true" /><span>Every format starts with brewed coffee extract. The drying route makes the visible difference.</span></div>
         <p className="format-switcher__hint">Swipe to compare all three formats <ArrowRight aria-hidden="true" /></p>
@@ -954,11 +958,26 @@ function ProductPage({ onAdd, cartQuantities }) {
   useEffect(() => {
     const purchaseAction = purchaseActionRef.current;
     if (!purchaseAction || typeof IntersectionObserver === "undefined") return undefined;
-    const observer = new IntersectionObserver(([entry]) => {
-      setShowMobileBuy(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    const footer = document.querySelector(".site-footer");
+    let purchasePassed = false;
+    let footerVisible = false;
+    const updateBuyBar = () => setShowMobileBuy(purchasePassed && !footerVisible);
+    const purchaseObserver = new IntersectionObserver(([entry]) => {
+      purchasePassed = !entry.isIntersecting && entry.boundingClientRect.top < 0;
+      updateBuyBar();
     }, { rootMargin: "-84px 0px 0px", threshold: 0.1 });
-    observer.observe(purchaseAction);
-    return () => observer.disconnect();
+    const footerObserver = footer
+      ? new IntersectionObserver(([entry]) => {
+          footerVisible = entry.isIntersecting;
+          updateBuyBar();
+        }, { rootMargin: "0px 0px 72px" })
+      : null;
+    purchaseObserver.observe(purchaseAction);
+    if (footer) footerObserver.observe(footer);
+    return () => {
+      purchaseObserver.disconnect();
+      footerObserver?.disconnect();
+    };
   }, [productId]);
 
   useEffect(() => setPurchaseQuantity(1), [productId]);
@@ -1119,10 +1138,10 @@ function ProductPage({ onAdd, cartQuantities }) {
           ))}
         </div>
       </section>
-      <div className={`mobile-buy-bar ${showMobileBuy ? "is-visible" : ""}`} aria-label={`Buy ${product.name}`} aria-hidden={!showMobileBuy}>
+      <div className={`mobile-buy-bar ${showMobileBuy ? "is-visible" : ""}`} aria-label={`Buy ${product.name}`} aria-hidden={!showMobileBuy} inert={!showMobileBuy ? true : undefined}>
         <span><strong>{product.shortName}</strong><small>{cartQuantity ? `${cartQuantity} in cart` : formatPrice(product.priceCents)}</small></span>
         <button className="button button--cream" type="button" onClick={addSelectedQuantity}>
-          {purchaseQuantity > 1 ? `Add ${purchaseQuantity}` : cartQuantity ? "Add another" : product.priceCents ? "Add to cart" : "Select"} <ShoppingBag aria-hidden="true" />
+          {purchaseQuantity > 1 ? `Add ${purchaseQuantity}` : cartQuantity ? "Add another" : product.priceCents ? "Add to cart" : "Add to selection"} <ShoppingBag aria-hidden="true" />
         </button>
       </div>
     </div>
