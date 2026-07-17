@@ -33,7 +33,7 @@ const firstViewportTargets = {
   "mobile-home": ".hero__actions .button--dark",
   "compact-home": ".hero__actions .button--dark",
   "mobile-shop": ".product-card",
-  "mobile-product": ".product-detail__content > .button",
+  "mobile-product": ".product-purchase > .button",
   "mobile-bulk": ".bulk-route",
   "mobile-learn": ".making-process",
   "mobile-sustainability": ".sustainability-intro",
@@ -123,6 +123,18 @@ for (const check of checks) {
     if (!productSchema?.includes('"@type":"Product"')) failures.push("desktop-freeze: product structured data was missing");
     if (await page.locator(".preparation-grid li").count() !== 3) failures.push("desktop-freeze: preparation guidance was incomplete");
     if (await page.locator(".next-products__content small").count() !== 2) failures.push("desktop-freeze: alternative formats lacked comparison attributes");
+    const purchaseControls = page.locator(".product-purchase");
+    await purchaseControls.getByRole("button", { name: /Increase purchase quantity/ }).click();
+    await purchaseControls.getByRole("button", { name: /Increase purchase quantity/ }).click();
+    if (await purchaseControls.getByRole("spinbutton").inputValue() !== "3") failures.push("desktop-freeze: product purchase quantity did not increment to three");
+    const multiAddButton = purchaseControls.getByRole("button", { name: "Add 3 to cart" });
+    const multiAddButtonHandle = await multiAddButton.elementHandle();
+    await multiAddButton.click();
+    const productCart = page.getByRole("dialog", { name: /Cart/ });
+    if ((await productCart.getByRole("status", { name: "Quantity" }).textContent()) !== "3") failures.push("desktop-freeze: selected product quantity was not added to the cart");
+    await page.keyboard.press("Escape");
+    await page.waitForFunction((element) => document.activeElement === element, multiAddButtonHandle);
+    if (await purchaseControls.getByRole("spinbutton").inputValue() !== "1") failures.push("desktop-freeze: product purchase quantity did not reset after adding");
     await page.locator(".preparation-section").scrollIntoViewIfNeeded();
     await page.screenshot({ path: new URL("desktop-preparation.png", outputDir).pathname, fullPage: false });
   }
@@ -145,6 +157,14 @@ for (const check of checks) {
   if (check.name === "mobile-bulk") {
     await page.locator(".bulk-form").scrollIntoViewIfNeeded();
     await page.screenshot({ path: new URL("mobile-bulk-brief.png", outputDir).pathname, fullPage: false });
+  }
+
+  if (check.name === "mobile-learn") {
+    await page.locator(".comparison-section").scrollIntoViewIfNeeded();
+    const mobileComparisonWidth = await page.locator(".comparison-row:not(.comparison-row--header)").first().evaluate((element) => element.getBoundingClientRect().width);
+    if (mobileComparisonWidth > check.width - 34 + 1) failures.push("mobile-learn: comparison card exceeded the mobile content width");
+    if (await page.locator('.comparison-row [data-label="Appearance"]').count() !== 3) failures.push("mobile-learn: comparison cards lacked mobile attribute labels");
+    await page.screenshot({ path: new URL("mobile-comparison.png", outputDir).pathname, fullPage: false });
   }
 
   if (check.name === "desktop-learn") {

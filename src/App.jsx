@@ -695,6 +695,7 @@ function ProductPage({ onAdd, cartQuantities }) {
   const cartQuantity = cartQuantities[productId] || 0;
   const purchaseActionRef = useRef(null);
   const [showMobileBuy, setShowMobileBuy] = useState(false);
+  const [purchaseQuantity, setPurchaseQuantity] = useState(1);
   usePageMeta(
     product ? `${product.name} — Coffendi` : "Instant coffee — Coffendi",
     product
@@ -713,8 +714,18 @@ function ProductPage({ onAdd, cartQuantities }) {
     return () => observer.disconnect();
   }, [productId]);
 
+  useEffect(() => setPurchaseQuantity(1), [productId]);
+
   if (!product) return <Navigate to="/shop" replace />;
   const Icon = processIcons[product.id];
+  const updatePurchaseQuantity = (value) => {
+    const quantity = Number(value);
+    setPurchaseQuantity(Number.isFinite(quantity) ? Math.max(1, Math.min(20, Math.round(quantity))) : 1);
+  };
+  const addSelectedQuantity = () => {
+    onAdd(product.id, purchaseQuantity);
+    setPurchaseQuantity(1);
+  };
 
   const productSchema = {
     "@type": "Product",
@@ -769,9 +780,19 @@ function ProductPage({ onAdd, cartQuantities }) {
               <strong>{formatPrice(product.priceCents)}</strong>
               <span>Consumer pack · final size and availability shown at checkout</span>
             </div>
-            <button ref={purchaseActionRef} className="button button--dark button--large" type="button" onClick={() => onAdd(product.id)}>
-              {cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
-            </button>
+            <div className="product-purchase">
+              <div className="product-purchase__quantity">
+                <span id={`purchase-quantity-label-${product.id}`}>Quantity</span>
+                <div className="quantity-control quantity-control--purchase" role="group" aria-labelledby={`purchase-quantity-label-${product.id}`}>
+                  <button type="button" onClick={() => updatePurchaseQuantity(purchaseQuantity - 1)} disabled={purchaseQuantity === 1} aria-label={`Decrease purchase quantity for ${product.name}`} aria-controls={`purchase-quantity-${product.id}`}><Minus aria-hidden="true" /></button>
+                  <input id={`purchase-quantity-${product.id}`} type="number" min="1" max="20" step="1" inputMode="numeric" value={purchaseQuantity} onChange={(event) => updatePurchaseQuantity(event.target.value)} aria-label={`Purchase quantity for ${product.name}`} />
+                  <button type="button" onClick={() => updatePurchaseQuantity(purchaseQuantity + 1)} disabled={purchaseQuantity === 20} aria-label={`Increase purchase quantity for ${product.name}`} aria-controls={`purchase-quantity-${product.id}`}><Plus aria-hidden="true" /></button>
+                </div>
+              </div>
+              <button ref={purchaseActionRef} className="button button--dark button--large" type="button" onClick={addSelectedQuantity}>
+                {purchaseQuantity > 1 ? `Add ${purchaseQuantity} to cart` : cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
+              </button>
+            </div>
             {cartQuantity > 0 && <p className="product-in-cart" aria-live="polite"><Check aria-hidden="true" /> {cartQuantity} {cartQuantity === 1 ? "pack" : "packs"} currently in your cart</p>}
             <Link className="text-link" to={`/bulk?product=${product.id}`}>Need this in bulk? Build a commercial brief <ArrowRight aria-hidden="true" /></Link>
             <ul className="purchase-notes" aria-label="Purchase information">
@@ -821,8 +842,8 @@ function ProductPage({ onAdd, cartQuantities }) {
       </section>
       <div className={`mobile-buy-bar ${showMobileBuy ? "is-visible" : ""}`} aria-label={`Buy ${product.name}`} aria-hidden={!showMobileBuy}>
         <span><strong>{product.shortName}</strong><small>{cartQuantity ? `${cartQuantity} in cart` : formatPrice(product.priceCents)}</small></span>
-        <button className="button button--cream" type="button" onClick={() => onAdd(product.id)}>
-          {cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
+        <button className="button button--cream" type="button" onClick={addSelectedQuantity}>
+          {purchaseQuantity > 1 ? `Add ${purchaseQuantity}` : cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -870,11 +891,11 @@ function LearnPage() {
       <section id="compare-formats" className="comparison-section">
         <div className="page-shell">
           <SectionHeading eyebrow="Compare the formats" title="A quick view of what changes." />
-          <div className="comparison-table" role="region" aria-label="Instant coffee format comparison" tabIndex="0">
-            <div className="comparison-row comparison-row--header"><span>Format</span><span>Appearance</span><span>Process cue</span><span>Typical positioning</span></div>
+          <div className="comparison-table" role="table" aria-label="Instant coffee format comparison" tabIndex="0">
+            <div className="comparison-row comparison-row--header" role="row"><span role="columnheader">Format</span><span role="columnheader">Appearance</span><span role="columnheader">Process cue</span><span role="columnheader">Typical positioning</span><span role="columnheader">Explore</span></div>
             {products.map((product) => (
-              <div className="comparison-row" key={product.id}>
-                <strong>{product.shortName}</strong><span>{product.format}</span><span>{product.processLabel}</span><span>{product.profile}</span>
+              <div className="comparison-row" role="row" key={product.id}>
+                <strong role="rowheader"><Link to={`/products/${product.id}`}>{product.shortName}</Link></strong><span role="cell" data-label="Appearance">{product.format}</span><span role="cell" data-label="Process cue">{product.processLabel}</span><span role="cell" data-label="Typical positioning">{product.profile}</span><span className="comparison-row__action" role="cell"><Link to={`/products/${product.id}`} aria-label={`Explore ${product.name}`}>View product <ArrowRight aria-hidden="true" /></Link></span>
               </div>
             ))}
           </div>
@@ -1081,7 +1102,7 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
   return (
     <section className="checkout-page page-shell">
       <div className="checkout-page__heading"><p className="eyebrow">Secure checkout</p><h1>Review your instant-coffee selection.</h1><p>Final live pricing, delivery, taxes and availability are presented before payment.</p></div>
-      <ol className="checkout-steps" aria-label="Checkout progress"><li className="is-active"><span>1</span>Review</li><li><span>2</span>Delivery</li><li><span>3</span>Payment</li></ol>
+      <ol className="checkout-steps" aria-label="Checkout progress"><li className="is-active" aria-current="step"><span>1</span>Review</li><li><span>2</span>Delivery</li><li><span>3</span>Payment</li></ol>
       <div className="checkout-layout">
         <div className="checkout-items">
           {items.map(({ product, quantity }) => (
@@ -1284,13 +1305,14 @@ export default function App() {
     if (JSON.stringify(cart) !== JSON.stringify(normalizedCart)) setCart(normalizedCart);
   }, [cart, normalizedCart, setCart]);
 
-  const addToCart = useCallback((id) => {
+  const addToCart = useCallback((id, amount = 1) => {
+    const quantityToAdd = Number.isInteger(amount) ? Math.max(1, Math.min(20, amount)) : 1;
     cartReturnFocus.current = document.activeElement;
     setCart((current) => {
       const safeCart = normalizeCart(current);
       const existing = safeCart.find((item) => item.id === id);
-      if (existing) return safeCart.map((item) => item.id === id ? { ...item, quantity: Math.min(item.quantity + 1, 20) } : item);
-      return [...safeCart, { id, quantity: 1 }];
+      if (existing) return safeCart.map((item) => item.id === id ? { ...item, quantity: Math.min(item.quantity + quantityToAdd, 20) } : item);
+      return [...safeCart, { id, quantity: quantityToAdd }];
     });
     setCartOpen(true);
   }, [setCart]);

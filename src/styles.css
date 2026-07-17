@@ -1823,8 +1823,68 @@ p {
   font-size: 11px;
 }
 
-.product-detail__content > .button {
+.product-purchase {
+  max-width: 480px;
+  display: grid;
+  grid-template-columns: 126px minmax(0, 1fr);
+  align-items: end;
+  gap: 12px;
   margin-top: 22px;
+}
+
+.product-purchase__quantity {
+  display: grid;
+  gap: 7px;
+}
+
+.product-purchase__quantity > span {
+  color: #5b2715;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.quantity-control--purchase {
+  grid-template-columns: 38px 48px 38px;
+  margin-top: 0;
+  border-color: rgba(70, 37, 25, 0.25);
+  background: rgba(255, 248, 235, 0.32);
+}
+
+.quantity-control--purchase:focus-within {
+  border-color: var(--clay);
+  box-shadow: 0 0 0 3px rgba(146, 80, 45, 0.16);
+}
+
+.quantity-control--purchase input {
+  width: 48px;
+  height: 38px;
+  padding: 0;
+  border: 0;
+  outline: 0;
+  background: transparent;
+  color: var(--espresso);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+  appearance: textfield;
+}
+
+.quantity-control--purchase input::-webkit-inner-spin-button,
+.quantity-control--purchase input::-webkit-outer-spin-button {
+  margin: 0;
+  appearance: none;
+}
+
+.quantity-control--purchase button:disabled {
+  cursor: not-allowed;
+  opacity: 0.35;
+}
+
+.product-purchase > .button {
+  min-width: 0;
+  min-height: 57px;
 }
 
 .product-detail__content > .text-link {
@@ -2171,9 +2231,9 @@ p {
 }
 
 .comparison-row {
-  min-width: 850px;
+  min-width: 960px;
   display: grid;
-  grid-template-columns: 0.7fr 1fr 1.2fr 1.35fr;
+  grid-template-columns: 0.7fr 1fr 1.2fr 1.35fr 0.55fr;
   border-bottom: 1px solid rgba(70, 37, 25, 0.14);
 }
 
@@ -2197,6 +2257,26 @@ p {
   font-family: var(--serif);
   font-size: 19px;
   font-weight: 400;
+}
+
+.comparison-row__action {
+  display: flex;
+  align-items: center;
+}
+
+.comparison-row__action a {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: var(--cacao);
+  font-size: 11px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.comparison-row__action svg {
+  width: 15px;
+  height: 15px;
 }
 
 .comparison-row--header > * {
@@ -3653,8 +3733,15 @@ p {
     margin-top: 28px;
   }
 
-  .product-detail__content > .button {
+  .product-purchase {
+    max-width: none;
+    grid-template-columns: 126px minmax(0, 1fr);
+    gap: 10px;
+  }
+
+  .product-purchase > .button {
     width: 100%;
+    padding-inline: 14px;
   }
 
   .purchase-notes {
@@ -3792,6 +3879,77 @@ p {
 
   .section-index a {
     flex: 0 0 auto;
+    font-size: 12px;
+  }
+
+  .comparison-table {
+    overflow: visible;
+    border: 0;
+  }
+
+  .comparison-row--header {
+    position: absolute;
+    width: 1px;
+    min-width: 1px;
+    height: 1px;
+    display: block;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .comparison-row:not(.comparison-row--header) {
+    min-width: 0;
+    grid-template-columns: 1fr 1fr;
+    margin-top: 14px;
+    overflow: hidden;
+    border: 1px solid rgba(70, 37, 25, 0.18);
+    border-radius: var(--radius);
+    background: rgba(255, 250, 242, 0.62);
+  }
+
+  .comparison-row--header + .comparison-row {
+    margin-top: 0;
+  }
+
+  .comparison-row:not(.comparison-row--header) > * {
+    padding: 18px;
+    border-top: 1px solid rgba(70, 37, 25, 0.14);
+    border-left: 0;
+  }
+
+  .comparison-row:not(.comparison-row--header) > strong {
+    grid-column: 1 / -1;
+    border-top: 0;
+    background: rgba(255, 248, 235, 0.72);
+    font-size: 25px;
+  }
+
+  .comparison-row:not(.comparison-row--header) > span:nth-of-type(2) {
+    border-left: 1px solid rgba(70, 37, 25, 0.14);
+  }
+
+  .comparison-row:not(.comparison-row--header) > span:nth-of-type(3),
+  .comparison-row:not(.comparison-row--header) > .comparison-row__action {
+    grid-column: 1 / -1;
+  }
+
+  .comparison-row:not(.comparison-row--header) > span:not(.comparison-row__action)::before {
+    display: block;
+    margin-bottom: 7px;
+    color: var(--clay);
+    content: attr(data-label);
+    font-size: 9px;
+    font-weight: 800;
+    letter-spacing: 0.09em;
+    text-transform: uppercase;
+  }
+
+  .comparison-row__action a {
+    width: 100%;
+    min-height: 44px;
+    justify-content: space-between;
     font-size: 12px;
   }
 
