@@ -369,6 +369,11 @@ function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, 
               ))}
             </div>
             <div className="cart-drawer__footer">
+              <ul className="cart-checkpoints" aria-label="Reviewed before payment">
+                <li><Check aria-hidden="true" /> Pack & availability</li>
+                <li><Truck aria-hidden="true" /> Delivery & taxes</li>
+                <li><ShieldCheck aria-hidden="true" /> Secure payment</li>
+              </ul>
               <div className="cart-total">
                 <span>{priced ? "Subtotal" : "Retail pricing"}</span>
                 <strong>{priced ? formatPrice(subtotal) : "Confirmed securely at checkout"}</strong>
@@ -417,10 +422,10 @@ function SectionHeading({ eyebrow, title, copy, action }) {
   );
 }
 
-function ProductCard({ product, onAdd }) {
+function ProductCard({ product, onAdd, cartQuantity = 0 }) {
   const Icon = processIcons[product.id];
   return (
-    <article id={`format-${product.id}`} className={`product-card product-card--${product.tone}`}>
+    <article id={`format-${product.id}`} className={`product-card product-card--${product.tone} ${cartQuantity ? "is-in-cart" : ""}`}>
       <Link className="product-card__image" to={`/products/${product.id}`}>
         <img src={product.image} alt={product.alt} loading="lazy" width="680" height="680" />
         <span className="product-card__number">{product.number}</span>
@@ -429,14 +434,17 @@ function ProductCard({ product, onAdd }) {
       <div className="product-card__content">
         <p>{product.descriptor}</p>
         <h3><Link to={`/products/${product.id}`}>{product.name}</Link></h3>
-        <span className="product-card__price">{formatPrice(product.priceCents)}</span>
+        <div className="product-card__status">
+          <span className="product-card__price">{formatPrice(product.priceCents)}</span>
+          {cartQuantity > 0 && <span className="product-card__cart-state"><Check aria-hidden="true" /> In cart · {cartQuantity}</span>}
+        </div>
         <dl className="product-card__facts">
           <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
           <div><dt>Choose it for</dt><dd>{product.decisionCue}</dd></div>
         </dl>
         <div className="product-card__actions">
-          <button className="button button--dark" type="button" onClick={() => onAdd(product.id)}>
-            Add to cart <Plus aria-hidden="true" />
+          <button className="button button--dark" type="button" onClick={() => onAdd(product.id)} aria-label={cartQuantity ? `Add another ${product.name} to cart` : `Add to cart: ${product.name}`}>
+            {cartQuantity ? "Add another" : "Add to cart"} <Plus aria-hidden="true" />
           </button>
           <Link className="circle-link" to={`/products/${product.id}`} aria-label={`Learn about ${product.name}`}>
             <ArrowRight aria-hidden="true" />
@@ -447,7 +455,7 @@ function ProductCard({ product, onAdd }) {
   );
 }
 
-function HomePage({ onAdd }) {
+function HomePage({ onAdd, cartQuantities }) {
   usePageMeta(
     "Coffendi — Instant coffee, clearly considered",
     "Discover spray dried, agglomerated and freeze dried instant coffee for individual purchase and bulk supply.",
@@ -533,7 +541,7 @@ function HomePage({ onAdd }) {
           action={<Link className="text-link" to="/learn">Compare the processes <ArrowRight aria-hidden="true" /></Link>}
         />
         <div className="product-grid">
-          {products.map((product) => <ProductCard key={product.id} product={product} onAdd={onAdd} />)}
+          {products.map((product) => <ProductCard key={product.id} product={product} onAdd={onAdd} cartQuantity={cartQuantities[product.id] || 0} />)}
         </div>
       </section>
 
@@ -647,7 +655,7 @@ function HomePage({ onAdd }) {
   );
 }
 
-function ShopPage({ onAdd }) {
+function ShopPage({ onAdd, cartQuantities }) {
   usePageMeta(
     "Shop instant coffee — Coffendi",
     "Compare and shop Coffendi spray dried, agglomerated and freeze dried instant coffee.",
@@ -669,7 +677,7 @@ function ShopPage({ onAdd }) {
           })}
         </nav>
         <div className="product-grid">
-          {products.map((product) => <ProductCard key={product.id} product={product} onAdd={onAdd} />)}
+          {products.map((product) => <ProductCard key={product.id} product={product} onAdd={onAdd} cartQuantity={cartQuantities[product.id] || 0} />)}
         </div>
       </section>
       <section className="shop-service page-shell">
@@ -681,9 +689,10 @@ function ShopPage({ onAdd }) {
   );
 }
 
-function ProductPage({ onAdd }) {
+function ProductPage({ onAdd, cartQuantities }) {
   const { productId } = useParams();
   const product = getProduct(productId);
+  const cartQuantity = cartQuantities[productId] || 0;
   const purchaseActionRef = useRef(null);
   const [showMobileBuy, setShowMobileBuy] = useState(false);
   usePageMeta(
@@ -761,9 +770,14 @@ function ProductPage({ onAdd }) {
               <span>Consumer pack · final size and availability shown at checkout</span>
             </div>
             <button ref={purchaseActionRef} className="button button--dark button--large" type="button" onClick={() => onAdd(product.id)}>
-              Add to cart <ShoppingBag aria-hidden="true" />
+              {cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
             </button>
+            {cartQuantity > 0 && <p className="product-in-cart" aria-live="polite"><Check aria-hidden="true" /> {cartQuantity} {cartQuantity === 1 ? "pack" : "packs"} currently in your cart</p>}
             <Link className="text-link" to={`/bulk?product=${product.id}`}>Need this in bulk? Build a commercial brief <ArrowRight aria-hidden="true" /></Link>
+            <ul className="purchase-notes" aria-label="Purchase information">
+              <li><PackageCheck aria-hidden="true" /> Pack and availability reviewed before payment</li>
+              <li><ShieldCheck aria-hidden="true" /> Secure hosted payment boundary</li>
+            </ul>
             <dl className="product-facts">
               <div><dt>Format</dt><dd>{product.format}</dd></div>
               <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
@@ -783,23 +797,32 @@ function ProductPage({ onAdd }) {
           <div><strong>Well suited to</strong><p>{product.idealFor}</p></div>
         </div>
       </section>
+      <section className="preparation-section">
+        <div className="page-shell">
+          <SectionHeading eyebrow="Make it yours" title="A simple cup, with room to adjust." copy="The confirmed pack remains the final source for dose and preparation instructions." />
+          <ol className="preparation-grid">
+            <li><span>01</span><Coffee aria-hidden="true" /><h3>Start with the pack</h3><p>Use the dose and serving size supplied with the confirmed retail product.</p></li>
+            <li><span>02</span><Droplets aria-hidden="true" /><h3>Add fresh water</h3><p>Use fresh hot water below a rolling boil and add it gradually for easier strength control.</p></li>
+            <li><span>03</span><Sparkles aria-hidden="true" /><h3>Stir, taste, refine</h3><p>Stir until dissolved, then adjust water, milk or ice to suit the cup you want.</p></li>
+          </ol>
+        </div>
+      </section>
       <section className="next-products page-shell">
         <SectionHeading eyebrow="Keep comparing" title="The other forms in the collection." />
         <div className="next-products__grid">
           {products.filter((item) => item.id !== product.id).map((item) => (
             <Link key={item.id} to={`/products/${item.id}`}>
               <img src={item.image} alt="" loading="lazy" />
-              <span>{item.number}</span>
-              <h3>{item.name}</h3>
+              <div className="next-products__content"><span>{item.number}</span><h3>{item.name}</h3><p>{item.format}</p><small>{item.cupDirection}</small></div>
               <ArrowRight aria-hidden="true" />
             </Link>
           ))}
         </div>
       </section>
       <div className={`mobile-buy-bar ${showMobileBuy ? "is-visible" : ""}`} aria-label={`Buy ${product.name}`} aria-hidden={!showMobileBuy}>
-        <span><strong>{product.shortName}</strong><small>{formatPrice(product.priceCents)}</small></span>
+        <span><strong>{product.shortName}</strong><small>{cartQuantity ? `${cartQuantity} in cart` : formatPrice(product.priceCents)}</small></span>
         <button className="button button--cream" type="button" onClick={() => onAdd(product.id)}>
-          Add to cart <ShoppingBag aria-hidden="true" />
+          {cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -970,19 +993,34 @@ function BulkInquiryForm() {
   return (
     <form className="bulk-form" onSubmit={handleSubmit}>
       <div className="form-heading"><span>Commercial brief</span><h2>Tell us what the product needs to do.</h2><p>No unsupported price, lead-time or certification promise will be attached to your request.</p></div>
-      <div className="form-grid">
-        <label><span>Format</span><select name="product" value={form.product} onChange={update}><option value="">Recommend a format</option>{products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></label>
-        <label><span>Indicative volume</span><select name="volume" value={form.volume} onChange={update}><option value="">Select a range</option><option>Under 500 kg</option><option>500 kg–2 tonnes</option><option>2–10 tonnes</option><option>10+ tonnes</option><option>Still planning</option></select></label>
-        <label><span>Packaging route</span><select name="packaging" value={form.packaging} onChange={update}><option value="">Select a route</option><option>Bulk carton</option><option>Industrial sack / super sack</option><option>Retail or private label</option><option>Food service</option><option>Open to recommendation</option></select></label>
-        <label><span>Destination country</span><input name="country" value={form.country} onChange={update} autoComplete="country-name" required /></label>
-        <label><span>Name</span><input name="name" value={form.name} onChange={update} autoComplete="name" required /></label>
-        <label><span>Company</span><input name="company" value={form.company} onChange={update} autoComplete="organization" required /></label>
-        <label className="form-grid__wide"><span>Work email</span><input type="email" name="email" value={form.email} onChange={update} autoComplete="email" required /></label>
-        <label className="form-grid__wide"><span>Target cup, application or other requirements</span><textarea name="message" value={form.message} onChange={update} rows="5" placeholder="For example: a smooth milk-friendly profile for 200 g retail jars, destined for…" /></label>
-        <label className="consent-field form-grid__wide"><input type="checkbox" name="consent" checked={form.consent} onChange={update} required /><span>I agree that Coffendi may use this information to respond to my commercial request, as described in the <Link to="/privacy">privacy notice</Link>.</span></label>
-        <label className="bot-field" aria-hidden="true"><span>Website</span><input name="website" value={form.website} onChange={update} tabIndex="-1" autoComplete="off" /></label>
+      <div className="bulk-form__body">
+        <fieldset className="form-group">
+          <legend><span>01</span>Product & route</legend>
+          <div className="form-grid">
+            <label><span>Format</span><select name="product" value={form.product} onChange={update}><option value="">Recommend a format</option>{products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></label>
+            <label><span>Indicative volume</span><select name="volume" value={form.volume} onChange={update}><option value="">Select a range</option><option>Under 500 kg</option><option>500 kg–2 tonnes</option><option>2–10 tonnes</option><option>10+ tonnes</option><option>Still planning</option></select></label>
+            <label><span>Packaging route</span><select name="packaging" value={form.packaging} onChange={update}><option value="">Select a route</option><option>Bulk carton</option><option>Industrial sack / super sack</option><option>Retail or private label</option><option>Food service</option><option>Open to recommendation</option></select></label>
+            <label><span>Destination country</span><input name="country" value={form.country} onChange={update} autoComplete="country-name" required /></label>
+          </div>
+        </fieldset>
+        <fieldset className="form-group">
+          <legend><span>02</span>Your details</legend>
+          <div className="form-grid">
+            <label><span>Name</span><input name="name" value={form.name} onChange={update} autoComplete="name" required /></label>
+            <label><span>Company</span><input name="company" value={form.company} onChange={update} autoComplete="organization" required /></label>
+            <label className="form-grid__wide"><span>Work email</span><input type="email" name="email" value={form.email} onChange={update} autoComplete="email" required /></label>
+          </div>
+        </fieldset>
+        <fieldset className="form-group">
+          <legend><span>03</span>Product direction</legend>
+          <div className="form-grid">
+            <label className="form-grid__wide"><span>Target cup, application or other requirements</span><textarea name="message" value={form.message} onChange={update} rows="5" placeholder="For example: a smooth milk-friendly profile for 200 g retail jars, destined for…" /></label>
+            <label className="consent-field form-grid__wide"><input type="checkbox" name="consent" checked={form.consent} onChange={update} required /><span>I agree that Coffendi may use this information to respond to my commercial request, as described in the <Link to="/privacy">privacy notice</Link>.</span></label>
+            <label className="bot-field" aria-hidden="true"><span>Website</span><input name="website" value={form.website} onChange={update} tabIndex="-1" autoComplete="off" /></label>
+          </div>
+        </fieldset>
+        <div className="form-submit"><button className="button button--cream button--large" type="submit" disabled={status.state === "loading"}>{status.state === "loading" ? "Sending…" : "Send bulk brief"}<ArrowRight aria-hidden="true" /></button><p aria-live="polite" className={`form-status form-status--${status.state}`}>{status.message}</p></div>
       </div>
-      <div className="form-submit"><button className="button button--cream button--large" type="submit" disabled={status.state === "loading"}>{status.state === "loading" ? "Sending…" : "Send bulk brief"}<ArrowRight aria-hidden="true" /></button><p aria-live="polite" className={`form-status form-status--${status.state}`}>{status.message}</p></div>
     </form>
   );
 }
@@ -1237,6 +1275,10 @@ export default function App() {
     [normalizedCart],
   );
   const cartCount = normalizedCart.reduce((total, item) => total + item.quantity, 0);
+  const cartQuantities = useMemo(
+    () => Object.fromEntries(normalizedCart.map((item) => [item.id, item.quantity])),
+    [normalizedCart],
+  );
 
   useEffect(() => {
     if (JSON.stringify(cart) !== JSON.stringify(normalizedCart)) setCart(normalizedCart);
@@ -1271,9 +1313,9 @@ export default function App() {
         <Header cartCount={cartCount} onOpenCart={openCart} />
         <main id="main-content" tabIndex="-1">
           <Routes>
-            <Route path="/" element={<HomePage onAdd={addToCart} />} />
-            <Route path="/shop" element={<ShopPage onAdd={addToCart} />} />
-            <Route path="/products/:productId" element={<ProductPage onAdd={addToCart} />} />
+            <Route path="/" element={<HomePage onAdd={addToCart} cartQuantities={cartQuantities} />} />
+            <Route path="/shop" element={<ShopPage onAdd={addToCart} cartQuantities={cartQuantities} />} />
+            <Route path="/products/:productId" element={<ProductPage onAdd={addToCart} cartQuantities={cartQuantities} />} />
             <Route path="/learn" element={<LearnPage />} />
             <Route path="/sustainability" element={<SustainabilityPage />} />
             <Route path="/bulk" element={<BulkPage />} />

@@ -75,6 +75,7 @@ for (const check of checks) {
 
   if (check.name === "desktop-shop") {
     const addButton = page.getByRole("button", { name: /Add to cart/ }).first();
+    const addButtonHandle = await addButton.elementHandle();
     await addButton.click();
     const cart = page.getByRole("dialog", { name: /Cart/ });
     if (!(await cart.isVisible())) failures.push("desktop-shop: cart did not open after adding a product");
@@ -85,8 +86,11 @@ for (const check of checks) {
     await page.screenshot({ path: new URL("desktop-cart.png", outputDir).pathname, fullPage: false });
     await page.keyboard.press("Escape");
     if (await cart.isVisible()) failures.push("desktop-shop: Escape did not close the cart");
-    await page.waitForFunction((element) => document.activeElement === element, await addButton.elementHandle());
+    await page.waitForFunction((element) => document.activeElement === element, addButtonHandle);
     if (await page.locator(".site-frame").evaluate((element) => element.inert)) failures.push("desktop-shop: background stayed inert after cart closed");
+    if (!(await page.locator(".product-card").first().getAttribute("class"))?.includes("is-in-cart")) failures.push("desktop-shop: product card did not reflect its in-cart state");
+    if (!(await page.locator(".product-card__cart-state").first().textContent())?.includes("2")) failures.push("desktop-shop: product card did not expose the updated cart quantity");
+    await page.screenshot({ path: new URL("desktop-shop-in-cart.png", outputDir).pathname, fullPage: false });
   }
 
   if (check.name === "mobile-home") {
@@ -109,6 +113,7 @@ for (const check of checks) {
     await page.getByLabel("Indicative volume").selectOption({ label: "2–10 tonnes" });
     await page.getByLabel("Packaging route").selectOption({ label: "Retail or private label" });
     if (!(await page.getByLabel(/I agree that Coffendi/).getAttribute("required") !== null)) failures.push("desktop-bulk: privacy consent was not required");
+    if (await page.locator(".form-group").count() !== 3) failures.push("desktop-bulk: commercial brief was not divided into three clear groups");
     await page.locator(".bulk-form").scrollIntoViewIfNeeded();
     await page.screenshot({ path: new URL("desktop-bulk-brief.png", outputDir).pathname, fullPage: false });
   }
@@ -116,6 +121,10 @@ for (const check of checks) {
   if (check.name === "desktop-freeze") {
     const productSchema = await page.locator('script[type="application/ld+json"]').textContent();
     if (!productSchema?.includes('"@type":"Product"')) failures.push("desktop-freeze: product structured data was missing");
+    if (await page.locator(".preparation-grid li").count() !== 3) failures.push("desktop-freeze: preparation guidance was incomplete");
+    if (await page.locator(".next-products__content small").count() !== 2) failures.push("desktop-freeze: alternative formats lacked comparison attributes");
+    await page.locator(".preparation-section").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: new URL("desktop-preparation.png", outputDir).pathname, fullPage: false });
   }
 
   if (check.name === "desktop-cart-recovery") {
@@ -130,6 +139,12 @@ for (const check of checks) {
     await page.locator(".product-explainer").scrollIntoViewIfNeeded();
     await page.waitForTimeout(100);
     if (!(await mobileBuyBar.isVisible())) failures.push("mobile-product: contextual buy bar did not appear after the primary purchase action was passed");
+    await page.screenshot({ path: new URL("mobile-product-buy-bar.png", outputDir).pathname, fullPage: false });
+  }
+
+  if (check.name === "mobile-bulk") {
+    await page.locator(".bulk-form").scrollIntoViewIfNeeded();
+    await page.screenshot({ path: new URL("mobile-bulk-brief.png", outputDir).pathname, fullPage: false });
   }
 
   if (check.name === "desktop-learn") {
