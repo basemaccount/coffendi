@@ -23,10 +23,23 @@ const checks = [
   { name: "mobile-sustainability", path: "/sustainability", width: 390, height: 844 },
   { name: "mobile-shipping", path: "/shipping-returns", width: 390, height: 844 },
   { name: "mobile-checkout", path: "/checkout", width: 390, height: 844, cart: true },
+  { name: "compact-home", path: "/", width: 320, height: 700 },
+  { name: "compact-product", path: "/products/agglomerated", width: 320, height: 700 },
 ];
 
 const browser = await chromium.launch();
 const failures = [];
+const firstViewportTargets = {
+  "mobile-home": ".hero__actions .button--dark",
+  "compact-home": ".hero__actions .button--dark",
+  "mobile-shop": ".product-card",
+  "mobile-product": ".product-detail__content > .button",
+  "mobile-bulk": ".bulk-route",
+  "mobile-learn": ".making-process",
+  "mobile-sustainability": ".sustainability-intro",
+  "mobile-shipping": ".policy-status",
+  "mobile-checkout": ".checkout-items",
+};
 
 for (const check of checks) {
   const context = await browser.newContext({ viewport: { width: check.width, height: check.height }, deviceScaleFactor: 1 });
@@ -53,6 +66,11 @@ for (const check of checks) {
   if (dimensions.brokenImages) failures.push(`${check.name}: ${dimensions.brokenImages} broken images`);
   if (!dimensions.canonical.endsWith(check.path === "/" ? "/" : check.path)) failures.push(`${check.name}: canonical URL did not match the route`);
   if (pageErrors.length) failures.push(`${check.name}: ${pageErrors.join(" | ")}`);
+  const firstViewportTarget = firstViewportTargets[check.name];
+  if (firstViewportTarget) {
+    const targetTop = await page.locator(firstViewportTarget).first().evaluate((element) => element.getBoundingClientRect().top);
+    if (targetTop >= check.height) failures.push(`${check.name}: key content began below the first viewport (${Math.round(targetTop)}px)`);
+  }
   console.log(`${check.name}: ${dimensions.clientWidth}x${check.height}, scrollWidth=${dimensions.scrollWidth}, title="${dimensions.title}"`);
 
   if (check.name === "desktop-shop") {
@@ -106,8 +124,12 @@ for (const check of checks) {
     if (storedCart !== "[]") failures.push("desktop-cart-recovery: malformed stored cart was not repaired");
   }
 
-  if (check.name === "mobile-product" && !(await page.locator(".mobile-buy-bar").isVisible())) {
-    failures.push("mobile-product: persistent buy bar was not visible");
+  if (check.name === "mobile-product") {
+    const mobileBuyBar = page.locator(".mobile-buy-bar");
+    if (await mobileBuyBar.isVisible()) failures.push("mobile-product: buy bar obscured the initial product view");
+    await page.locator(".product-explainer").scrollIntoViewIfNeeded();
+    await page.waitForTimeout(100);
+    if (!(await mobileBuyBar.isVisible())) failures.push("mobile-product: contextual buy bar did not appear after the primary purchase action was passed");
   }
 
   if (check.name === "desktop-learn") {

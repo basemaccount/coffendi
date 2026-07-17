@@ -35,7 +35,7 @@ for (const check of checks) {
   await page.evaluate(() => document.fonts.ready);
 
   const results = await new AxeBuilder({ page })
-    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"])
+    .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])
     .analyze();
   const actionable = results.violations.filter((violation) =>
     ["critical", "serious", "moderate"].includes(violation.impact),
@@ -55,5 +55,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log("\nAccessibility checks passed at WCAG 2.1 A/AA for all audited routes.");
+  console.log("\nAccessibility checks passed at WCAG 2.2 A/AA for all audited routes.");
 }

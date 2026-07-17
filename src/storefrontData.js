@@ -22,6 +22,8 @@ export const products = [
     story:
       "Concentrated coffee extract is atomised into a stream of heated air. The fine droplets dry rapidly into an even powder that is straightforward to dose, blend and pack.",
     profile: "A practical canvas for balanced, classic and milk-friendly coffee profiles.",
+    cupDirection: "Balanced & milk-friendly",
+    decisionCue: "Versatility & efficiency",
     format: "Fine, uniform powder",
     idealFor: "Everyday cups, food service, vending, mixes and recipe development",
     processLabel: "Atomised and dried with hot air",
@@ -41,6 +43,8 @@ export const products = [
     story:
       "Fine soluble coffee particles are carefully moistened and brought together into larger clusters, then dried again to create their distinctive porous granulated structure.",
     profile: "A polished middle ground between fine powder and premium freeze-dried crystals.",
+    cupDirection: "Smooth & familiar",
+    decisionCue: "Everyday premium",
     format: "Rounded, porous granules",
     idealFor: "Retail jars, hospitality, office coffee and private-label concepts",
     processLabel: "Fine particles clustered into granules",
@@ -60,6 +64,8 @@ export const products = [
     story:
       "Coffee extract is frozen before water is removed under vacuum by sublimation. The low-temperature drying route produces the format’s recognisable airy crystals.",
     profile: "The premium choice when aroma, visual texture and a refined cup are the priority.",
+    cupDirection: "Aromatic & refined",
+    decisionCue: "Premium presentation",
     format: "Large, irregular crystals",
     idealFor: "Premium retail, gifting, hospitality and elevated private-label ranges",
     processLabel: "Frozen, then dried under vacuum",

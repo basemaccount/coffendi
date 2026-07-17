@@ -122,7 +122,9 @@ function AnnouncementBar() {
         <span className="announcement__detail">Retail-ready experience · Dedicated bulk pathway</span>
       </p>
       <Link to="/bulk">
-        Plan a bulk order <ArrowRight size={14} aria-hidden="true" />
+        <span className="announcement__desktop-link">Plan a bulk order</span>
+        <span className="announcement__mobile-link">Bulk & private label</span>
+        <ArrowRight size={14} aria-hidden="true" />
       </Link>
     </div>
   );
@@ -372,9 +374,14 @@ function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, 
                 <strong>{priced ? formatPrice(subtotal) : "Confirmed securely at checkout"}</strong>
               </div>
               <p>Shipping, taxes and final availability are reviewed before payment.</p>
-              <Link className="button button--dark button--full" to="/checkout" onClick={onClose}>
-                Continue to checkout <ArrowRight aria-hidden="true" />
-              </Link>
+              <div className="cart-drawer__footer-actions">
+                <Link className="button button--dark button--full" to="/checkout" onClick={onClose}>
+                  Continue to checkout <ArrowRight aria-hidden="true" />
+                </Link>
+                <Link className="button button--ghost button--full" to="/shop" onClick={onClose}>
+                  Continue shopping
+                </Link>
+              </div>
               <Link className="text-link text-link--center" to="/bulk" onClick={onClose}>
                 Need commercial quantities? Start a bulk brief
               </Link>
@@ -413,7 +420,7 @@ function SectionHeading({ eyebrow, title, copy, action }) {
 function ProductCard({ product, onAdd }) {
   const Icon = processIcons[product.id];
   return (
-    <article className={`product-card product-card--${product.tone}`}>
+    <article id={`format-${product.id}`} className={`product-card product-card--${product.tone}`}>
       <Link className="product-card__image" to={`/products/${product.id}`}>
         <img src={product.image} alt={product.alt} loading="lazy" width="680" height="680" />
         <span className="product-card__number">{product.number}</span>
@@ -423,6 +430,10 @@ function ProductCard({ product, onAdd }) {
         <p>{product.descriptor}</p>
         <h3><Link to={`/products/${product.id}`}>{product.name}</Link></h3>
         <span className="product-card__price">{formatPrice(product.priceCents)}</span>
+        <dl className="product-card__facts">
+          <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
+          <div><dt>Choose it for</dt><dd>{product.decisionCue}</dd></div>
+        </dl>
         <div className="product-card__actions">
           <button className="button button--dark" type="button" onClick={() => onAdd(product.id)}>
             Add to cart <Plus aria-hidden="true" />
@@ -646,11 +657,17 @@ function ShopPage({ onAdd }) {
       <PageHero
         eyebrow="The instant collection"
         title="Choose your texture. Shape your cup."
-        copy="Three distinct formats, presented clearly. Retail prices appear when the live merchant catalog is connected."
+        copy="Compare texture, cup direction and use case in one clear view. Final retail prices appear when the live merchant catalog is connected."
         marker="03 formats"
       />
       <section className="shop-intro page-shell">
         <div className="shop-intro__note"><Sparkles aria-hidden="true" /><span>Every format starts with brewed coffee extract. The drying route makes the visible difference.</span></div>
+        <nav className="format-switcher" aria-label="Choose an instant coffee format">
+          {products.map((product) => {
+            const Icon = processIcons[product.id];
+            return <a key={product.id} href={`#format-${product.id}`}><Icon aria-hidden="true" /><span><small>{product.format}</small><strong>{product.shortName}</strong></span><ArrowRight aria-hidden="true" /></a>;
+          })}
+        </nav>
         <div className="product-grid">
           {products.map((product) => <ProductCard key={product.id} product={product} onAdd={onAdd} />)}
         </div>
@@ -667,6 +684,8 @@ function ShopPage({ onAdd }) {
 function ProductPage({ onAdd }) {
   const { productId } = useParams();
   const product = getProduct(productId);
+  const purchaseActionRef = useRef(null);
+  const [showMobileBuy, setShowMobileBuy] = useState(false);
   usePageMeta(
     product ? `${product.name} — Coffendi` : "Instant coffee — Coffendi",
     product
@@ -674,6 +693,17 @@ function ProductPage({ onAdd }) {
       : "Explore Coffendi instant coffee.",
     product ? { type: "product", image: product.image } : {},
   );
+
+  useEffect(() => {
+    const purchaseAction = purchaseActionRef.current;
+    if (!purchaseAction || typeof IntersectionObserver === "undefined") return undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      setShowMobileBuy(!entry.isIntersecting && entry.boundingClientRect.top < 0);
+    }, { rootMargin: "-84px 0px 0px", threshold: 0.1 });
+    observer.observe(purchaseAction);
+    return () => observer.disconnect();
+  }, [productId]);
+
   if (!product) return <Navigate to="/shop" replace />;
   const Icon = processIcons[product.id];
 
@@ -730,14 +760,14 @@ function ProductPage({ onAdd }) {
               <strong>{formatPrice(product.priceCents)}</strong>
               <span>Consumer pack · final size and availability shown at checkout</span>
             </div>
-            <button className="button button--dark button--large" type="button" onClick={() => onAdd(product.id)}>
+            <button ref={purchaseActionRef} className="button button--dark button--large" type="button" onClick={() => onAdd(product.id)}>
               Add to cart <ShoppingBag aria-hidden="true" />
             </button>
             <Link className="text-link" to={`/bulk?product=${product.id}`}>Need this in bulk? Build a commercial brief <ArrowRight aria-hidden="true" /></Link>
             <dl className="product-facts">
               <div><dt>Format</dt><dd>{product.format}</dd></div>
-              <div><dt>Process</dt><dd>{product.processLabel}</dd></div>
-              <div><dt>Position</dt><dd>{product.profile}</dd></div>
+              <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
+              <div><dt>Choose it for</dt><dd>{product.decisionCue}</dd></div>
             </dl>
           </div>
         </div>
@@ -766,7 +796,7 @@ function ProductPage({ onAdd }) {
           ))}
         </div>
       </section>
-      <div className="mobile-buy-bar" aria-label={`Buy ${product.name}`}>
+      <div className={`mobile-buy-bar ${showMobileBuy ? "is-visible" : ""}`} aria-label={`Buy ${product.name}`} aria-hidden={!showMobileBuy}>
         <span><strong>{product.shortName}</strong><small>{formatPrice(product.priceCents)}</small></span>
         <button className="button button--cream" type="button" onClick={() => onAdd(product.id)}>
           Add to cart <ShoppingBag aria-hidden="true" />
@@ -776,12 +806,12 @@ function ProductPage({ onAdd }) {
   );
 }
 
-function PageHero({ eyebrow, title, copy, marker }) {
+function PageHero({ eyebrow, title, copy, marker, children }) {
   return (
     <section className="page-hero">
       <div className="page-shell page-hero__grid">
         <div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1></div>
-        <div><span>{marker}</span><p>{copy}</p></div>
+        <div><span>{marker}</span><p>{copy}</p>{children}</div>
       </div>
     </section>
   );
@@ -800,6 +830,11 @@ function LearnPage() {
         copy="A clear introduction to how roasted coffee becomes a soluble powder, granule or crystal."
         marker="Learn"
       />
+      <nav className="section-index page-shell" aria-label="On this page">
+        <span>Explore this guide</span>
+        <a href="#how-it-is-made">How it is made <ArrowRight aria-hidden="true" /></a>
+        <a href="#compare-formats">Compare formats <ArrowRight aria-hidden="true" /></a>
+      </nav>
       <section id="how-it-is-made" className="making-process page-shell">
         <SectionHeading eyebrow="From bean to soluble" title="Four stages before the kettle." />
         <ol>
@@ -839,14 +874,15 @@ function SustainabilityPage() {
     <>
       <section className="sustainability-hero">
         <div className="page-shell sustainability-hero__grid">
-          <div>
+          <div className="sustainability-hero__copy">
             <p className="eyebrow eyebrow--light">Sustainability</p>
             <h1>Progress should be specific enough to measure.</h1>
+            <a className="button button--cream" href="#sustainability-framework">See the framework <ArrowRight aria-hidden="true" /></a>
           </div>
           <div className="sustainability-hero__orb"><Leaf aria-hidden="true" /><span>Evidence before claims</span></div>
         </div>
       </section>
-      <section className="sustainability-intro page-shell">
+      <section id="sustainability-framework" className="sustainability-intro page-shell">
         <p className="eyebrow">Our approach</p>
         <div>
           <h2>A framework for the questions that matter most in soluble coffee.</h2>
@@ -960,7 +996,7 @@ function BulkPage() {
     <>
       <section className="bulk-hero">
         <div className="page-shell bulk-hero__grid">
-          <div><p className="eyebrow eyebrow--light">Bulk & business</p><h1>Scale starts with a better brief.</h1><p>For distributors, food-service teams, manufacturers and private-label planners.</p></div>
+          <div><p className="eyebrow eyebrow--light">Bulk & business</p><h1>Scale starts with a better brief.</h1><p>For distributors, food-service teams, manufacturers and private-label planners.</p><a className="button button--cream" href="#bulk-brief">Start your brief <ArrowRight aria-hidden="true" /></a></div>
           <div className="bulk-hero__facts"><div><Box aria-hidden="true" /><strong>3</strong><span>core formats</span></div><div><PackageCheck aria-hidden="true" /><strong>4</strong><span>packaging pathways</span></div><div><Truck aria-hidden="true" /><strong>1</strong><span>destination-led plan</span></div></div>
         </div>
       </section>
@@ -972,7 +1008,7 @@ function BulkPage() {
           <article><span>03</span><Coffee aria-hidden="true" /><h3>Food service</h3><p>For hospitality, office and vending applications with repeatable preparation needs.</p></article>
         </div>
       </section>
-      <section className="bulk-form-section"><div className="page-shell"><BulkInquiryForm /></div></section>
+      <section id="bulk-brief" className="bulk-form-section"><div className="page-shell"><BulkInquiryForm /></div></section>
     </>
   );
 }
@@ -1007,6 +1043,7 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
   return (
     <section className="checkout-page page-shell">
       <div className="checkout-page__heading"><p className="eyebrow">Secure checkout</p><h1>Review your instant-coffee selection.</h1><p>Final live pricing, delivery, taxes and availability are presented before payment.</p></div>
+      <ol className="checkout-steps" aria-label="Checkout progress"><li className="is-active"><span>1</span>Review</li><li><span>2</span>Delivery</li><li><span>3</span>Payment</li></ol>
       <div className="checkout-layout">
         <div className="checkout-items">
           {items.map(({ product, quantity }) => (
