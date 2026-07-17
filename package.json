@@ -20,6 +20,7 @@
     "test:security": "node scripts/security-check.mjs",
     "test:sourcing": "node scripts/test-sourcing.mjs",
     "test:a11y": "node scripts/accessibility-check.mjs",
+    "test:bundle": "node scripts/bundle-budget.mjs",
     "test:performance": "node scripts/performance-check.mjs",
     "test:visual": "node scripts/visual-check.mjs",
     "test:production": "node scripts/production-smoke.mjs"

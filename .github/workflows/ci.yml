@@ -40,6 +40,9 @@ jobs:
       - name: Build production application
         run: npm run build
 
+      - name: Enforce bundle budgets
+        run: npm run test:bundle
+
       - name: Run server-boundary tests
         run: |
           npm run test:checkout
@@ -72,4 +75,3 @@ jobs:
 
       - name: Run visual and responsive checks
         run: npm run test:visual
-

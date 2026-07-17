@@ -9,6 +9,12 @@ function readPrice(key) {
 
 export const storeCurrency = clientEnvironment.VITE_STORE_CURRENCY || "USD";
 
+function productImageSet(id, includeOriginal = false) {
+  const candidates = [320, 480, 640, 800, 960]
+    .map((width) => `/images/instant-${id}-${width}.webp ${width}w`);
+  return (includeOriginal ? candidates.concat(`/images/instant-${id}.webp 1254w`) : candidates).join(", ");
+}
+
 export const products = [
   {
     id: "spray-dried",
@@ -16,6 +22,9 @@ export const products = [
     name: "Spray dried coffee",
     shortName: "Spray dried",
     image: "/images/instant-spray-dried.webp",
+    thumbnailImage: "/images/instant-spray-dried-320.webp",
+    cardImageSrcSet: productImageSet("spray-dried"),
+    imageSrcSet: productImageSet("spray-dried", true),
     alt: "Fine spray-dried instant coffee powder in a cream ceramic bowl",
     priceCents: readPrice("VITE_PRICE_SPRAY_DRIED_CENTS"),
     descriptor: "Fine · adaptable · efficient",
@@ -38,6 +47,9 @@ export const products = [
     name: "Agglomerated coffee",
     shortName: "Agglomerated",
     image: "/images/instant-agglomerated.webp",
+    thumbnailImage: "/images/instant-agglomerated-320.webp",
+    cardImageSrcSet: productImageSet("agglomerated"),
+    imageSrcSet: productImageSet("agglomerated", true),
     alt: "Rounded porous agglomerated instant coffee granules in a smoked-glass bowl",
     priceCents: readPrice("VITE_PRICE_AGGLOMERATED_CENTS"),
     descriptor: "Granulated · inviting · easy to dose",
@@ -60,6 +72,9 @@ export const products = [
     name: "Freeze dried coffee",
     shortName: "Freeze dried",
     image: "/images/instant-freeze-dried.webp",
+    thumbnailImage: "/images/instant-freeze-dried-320.webp",
+    cardImageSrcSet: productImageSet("freeze-dried"),
+    imageSrcSet: productImageSet("freeze-dried", true),
     alt: "Large angular freeze-dried instant coffee crystals in an amber-glass bowl",
     priceCents: readPrice("VITE_PRICE_FREEZE_DRIED_CENTS"),
     descriptor: "Crystalline · aromatic · premium",

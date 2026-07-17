@@ -2,19 +2,22 @@ import { chromium } from "@playwright/test";
 
 const baseUrl = process.env.COFFENDI_BASE_URL || "http://127.0.0.1:4173";
 const checks = [
-  { name: "desktop-home", path: "/", width: 1440, height: 1000 },
-  { name: "desktop-shop", path: "/shop", width: 1440, height: 1000 },
-  { name: "desktop-product", path: "/products/freeze-dried", width: 1440, height: 1000 },
-  { name: "desktop-bulk", path: "/bulk", width: 1440, height: 1000 },
-  { name: "desktop-contact", path: "/contact", width: 1440, height: 1000 },
-  { name: "mobile-home", path: "/", width: 390, height: 844 },
+  { name: "desktop-home", path: "/", width: 1440, height: 1000, maxTransferKb: 600 },
+  { name: "desktop-shop", path: "/shop", width: 1440, height: 1000, maxTransferKb: 500 },
+  { name: "desktop-product", path: "/products/freeze-dried", width: 1440, height: 1000, maxTransferKb: 450 },
+  { name: "desktop-bulk", path: "/bulk", width: 1440, height: 1000, maxTransferKb: 450 },
+  { name: "desktop-contact", path: "/contact", width: 1440, height: 1000, maxTransferKb: 300 },
+  { name: "mobile-home", path: "/", width: 390, height: 844, deviceScaleFactor: 2, maxTransferKb: 700 },
 ];
 
 const browser = await chromium.launch();
 const failures = [];
 
 for (const check of checks) {
-  const context = await browser.newContext({ viewport: { width: check.width, height: check.height }, deviceScaleFactor: 1 });
+  const context = await browser.newContext({
+    viewport: { width: check.width, height: check.height },
+    deviceScaleFactor: check.deviceScaleFactor || 1,
+  });
   const page = await context.newPage();
   await page.route("**/api/commerce-status", (route) => route.fulfill({
     status: 200,
@@ -64,14 +67,20 @@ for (const check of checks) {
       cls: Number((window.__coffendiVitals?.cls || 0).toFixed(3)),
       lcp: Math.round(window.__coffendiVitals?.lcp || 0),
       longTasks: window.__coffendiVitals?.longTasks || 0,
+      thirdPartyOrigins: [...new Set(resources
+        .map((resource) => new URL(resource.name).origin)
+        .filter((origin) => origin !== location.origin))],
     };
   });
 
   if (pageErrors.length) failures.push(`${check.name}: ${pageErrors.join(" | ")}`);
   if (metrics.cls > 0.1) failures.push(`${check.name}: CLS ${metrics.cls} exceeds 0.1`);
   if (metrics.lcp > 2500) failures.push(`${check.name}: local LCP ${metrics.lcp}ms exceeds 2500ms`);
+  if (metrics.transferKb > check.maxTransferKb) failures.push(`${check.name}: ${metrics.transferKb}KB exceeds the ${check.maxTransferKb}KB transfer budget`);
   if (metrics.domNodes > 3500) failures.push(`${check.name}: ${metrics.domNodes} DOM nodes exceeds 3500`);
+  if (metrics.longTasks > 3) failures.push(`${check.name}: ${metrics.longTasks} long tasks exceeds the budget of 3`);
   if (metrics.incompleteImages) failures.push(`${check.name}: ${metrics.incompleteImages} visible images are incomplete`);
+  if (metrics.thirdPartyOrigins.length) failures.push(`${check.name}: unexpected third-party requests to ${metrics.thirdPartyOrigins.join(", ")}`);
   console.log(`${check.name}: DCL ${metrics.domContentLoaded}ms · load ${metrics.load}ms · LCP ${metrics.lcp}ms · CLS ${metrics.cls} · ${metrics.transferKb}KB transferred · ${metrics.domNodes} nodes · ${metrics.longTasks} long tasks`);
   await context.close();
 }

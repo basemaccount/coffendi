@@ -181,6 +181,7 @@ npm run test:checkout
 npm run test:operations
 npm run test:security
 npm run test:a11y
+npm run test:bundle
 npm run test:performance
 npm run test:visual
 npm run test:production

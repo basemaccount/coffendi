@@ -1,3 +1,19 @@
+@font-face {
+  font-family: "Manrope";
+  font-style: normal;
+  font-weight: 400 800;
+  font-display: swap;
+  src: url("/fonts/manrope-latin-variable.woff2") format("woff2");
+}
+
+@font-face {
+  font-family: "DM Serif Display";
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+  src: url("/fonts/dm-serif-display-latin.woff2") format("woff2");
+}
+
 :root {
   color-scheme: light;
   --espresso: #2b120c;
@@ -2569,10 +2585,11 @@ p {
 }
 
 .bulk-hero {
+  --bulk-hero-image: url("/images/instant-hero-1280.webp");
   padding-block: 78px;
   background:
     linear-gradient(100deg, rgba(43, 18, 12, 0.97), rgba(62, 30, 18, 0.89)),
-    url("/images/instant-hero.webp") center / cover;
+    var(--bulk-hero-image) center / cover;
   color: var(--cream);
 }
 
@@ -3607,6 +3624,10 @@ p {
 }
 
 @media (max-width: 760px) {
+  .bulk-hero {
+    --bulk-hero-image: url("/images/instant-hero-640.webp");
+  }
+
   .product-specifications__grid {
     grid-template-columns: 1fr;
   }

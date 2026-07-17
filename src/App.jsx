@@ -56,6 +56,14 @@ import {
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
 const CATALOG_READY = publicCatalogReady(products);
+const HERO_IMAGE_SRC_SET = [640, 960, 1280]
+  .map((width) => `/images/instant-hero-${width}.webp ${width}w`)
+  .concat("/images/instant-hero.webp 1694w")
+  .join(", ");
+const BULK_IMAGE_SRC_SET = [640, 960, 1280]
+  .map((width) => `/images/instant-bulk-beans-${width}.webp ${width}w`)
+  .concat("/images/instant-bulk-beans.webp 1600w")
+  .join(", ");
 
 function selectionSearch(items) {
   const selection = items.map(({ product, quantity }) => `${product.id}:${quantity}`).join(",");
@@ -229,7 +237,15 @@ function Header({ cartCount, onOpenCart }) {
     <>
       <header className="site-header">
         <Link className="brand" to="/" aria-label="Coffendi home">
-          <img src="/coffendi-logo.png" alt="" width="82" height="82" />
+          <img
+            src="/coffendi-logo-160.webp"
+            srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w"
+            sizes="60px"
+            alt=""
+            width="160"
+            height="152"
+            decoding="async"
+          />
           <span>
             <strong>Coffendi</strong>
             <small>Instant coffee, clearly considered</small>
@@ -309,7 +325,16 @@ function Footer() {
       </div>
       <div className="site-footer__grid page-shell">
         <div className="footer-brand">
-          <img src="/coffendi-logo.png" alt="" width="112" height="112" />
+          <img
+            src="/coffendi-logo-256.webp"
+            srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w"
+            sizes="112px"
+            alt=""
+            width="256"
+            height="243"
+            loading="lazy"
+            decoding="async"
+          />
           <p>
             A focused home for spray dried, agglomerated and freeze dried coffee—built for curious
             drinkers and serious buyers.
@@ -408,7 +433,7 @@ function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, 
             <div className="cart-items">
               {items.map(({ product, quantity }) => (
                 <article className="cart-item" key={product.id}>
-                  <img src={product.image} alt="" width="96" height="96" />
+                  <img src={product.thumbnailImage} alt="" width="96" height="96" decoding="async" />
                   <div className="cart-item__content">
                     <Link to={`/products/${product.id}`} onClick={onClose}>{product.name}</Link>
                     <span>{formatPrice(product.priceCents)}</span>
@@ -494,7 +519,16 @@ function ProductCard({ product, onAdd, cartQuantity = 0 }) {
   return (
     <article id={`format-${product.id}`} className={`product-card product-card--${product.tone} ${cartQuantity ? "is-in-cart" : ""}`}>
       <Link className="product-card__image" to={`/products/${product.id}`}>
-        <img src={product.image} alt={product.alt} loading="lazy" width="680" height="680" />
+        <img
+          src={product.image}
+          srcSet={product.cardImageSrcSet}
+          sizes="(max-width: 720px) calc(100vw - 40px), (max-width: 1080px) calc(50vw - 54px), 390px"
+          alt={product.alt}
+          loading="lazy"
+          decoding="async"
+          width="680"
+          height="680"
+        />
         <span className="product-card__number">{product.number}</span>
         <span className="product-card__format"><Icon aria-hidden="true" /> {product.format}</span>
       </Link>
@@ -541,7 +575,7 @@ function HomePage({ onAdd, cartQuantities }) {
               name: "Coffendi",
               ...(merchantProfile.legalName ? { legalName: merchantProfile.legalName } : {}),
               url: `${SITE_URL}/`,
-              logo: `${SITE_URL}/coffendi-logo.png`,
+              logo: `${SITE_URL}/coffendi-logo-512.webp`,
               ...(merchantProfile.supportEmail ? { email: merchantProfile.supportEmail } : {}),
             },
             {
@@ -588,8 +622,11 @@ function HomePage({ onAdd, cartQuantities }) {
           <div className="hero__visual">
             <img
               src="/images/instant-hero.webp"
+              srcSet={HERO_IMAGE_SRC_SET}
+              sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(47vw - 36px), 590px"
               alt="Three distinct instant coffee textures beside a freshly prepared cup"
               fetchPriority="high"
+              decoding="async"
               width="1694"
               height="953"
             />
@@ -644,7 +681,16 @@ function HomePage({ onAdd, cartQuantities }) {
 
       <section className="bulk-feature page-shell">
         <div className="bulk-feature__visual">
-          <img src="/images/instant-bulk-beans.webp" alt="Coffee beans in a natural fibre sack" loading="lazy" width="900" height="640" />
+          <img
+            src="/images/instant-bulk-beans.webp"
+            srcSet={BULK_IMAGE_SRC_SET}
+            sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(50vw - 54px), 575px"
+            alt="Coffee beans in a natural fibre sack"
+            loading="lazy"
+            decoding="async"
+            width="900"
+            height="640"
+          />
           <span className="bulk-feature__stamp"><Box aria-hidden="true" /> Built for scale</span>
         </div>
         <div className="bulk-feature__content">
@@ -842,7 +888,16 @@ function ProductPage({ onAdd, cartQuantities }) {
       <section className={`product-detail product-detail--${product.tone}`}>
         <div className="page-shell product-detail__grid">
           <div className="product-detail__media">
-            <img src={product.image} alt={product.alt} fetchPriority="high" width="1254" height="1254" />
+            <img
+              src={product.image}
+              srcSet={product.imageSrcSet}
+              sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(50vw - 54px), 610px"
+              alt={product.alt}
+              fetchPriority="high"
+              decoding="async"
+              width="1254"
+              height="1254"
+            />
             <span className="product-detail__index">{product.number}</span>
           </div>
           <div className="product-detail__content">
@@ -926,7 +981,7 @@ function ProductPage({ onAdd, cartQuantities }) {
         <div className="next-products__grid">
           {products.filter((item) => item.id !== product.id).map((item) => (
             <Link key={item.id} to={`/products/${item.id}`}>
-              <img src={item.image} alt="" loading="lazy" />
+              <img src={item.thumbnailImage} alt="" loading="lazy" decoding="async" width="320" height="320" />
               <div className="next-products__content"><span>{item.number}</span><h3>{item.name}</h3><p>{item.format}</p><small>{item.cupDirection}</small></div>
               <ArrowRight aria-hidden="true" />
             </Link>
@@ -1363,7 +1418,7 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove, commerceStatu
       <div className="checkout-layout">
         <div className="checkout-items">
           {items.map(({ product, quantity }) => (
-            <article key={product.id}><img src={product.image} alt="" /><div><Link to={`/products/${product.id}`}>{product.name}</Link><span>{formatPrice(product.priceCents)}</span><div className="quantity-control"><button type="button" onClick={() => onDecrement(product.id)} aria-label={`Decrease ${product.name} quantity`}><Minus aria-hidden="true" /></button><output aria-label="Quantity">{quantity}</output><button type="button" onClick={() => onIncrement(product.id)} aria-label={`Increase ${product.name} quantity`}><Plus aria-hidden="true" /></button></div></div><button className="remove-button" type="button" onClick={() => onRemove(product.id)} aria-label={`Remove ${product.name}`}><Trash2 aria-hidden="true" /></button></article>
+            <article key={product.id}><img src={product.thumbnailImage} alt="" width="320" height="320" decoding="async" /><div><Link to={`/products/${product.id}`}>{product.name}</Link><span>{formatPrice(product.priceCents)}</span><div className="quantity-control"><button type="button" onClick={() => onDecrement(product.id)} aria-label={`Decrease ${product.name} quantity`}><Minus aria-hidden="true" /></button><output aria-label="Quantity">{quantity}</output><button type="button" onClick={() => onIncrement(product.id)} aria-label={`Increase ${product.name} quantity`}><Plus aria-hidden="true" /></button></div></div><button className="remove-button" type="button" onClick={() => onRemove(product.id)} aria-label={`Remove ${product.name}`}><Trash2 aria-hidden="true" /></button></article>
           ))}
         </div>
         <aside className="checkout-summary">
