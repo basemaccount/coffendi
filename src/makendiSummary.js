@@ -37,8 +37,8 @@ export const makendiOriginSummary = [
       "Natural / Pulped Natural",
       "Pulped Natural"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
     "heroGradeId": "mk-002-brazil-santos-ny2-cascavel-vermelha"
   },
   {
@@ -51,8 +51,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Honey / Anaerobic"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
     "heroGradeId": "mk-018-colombia-bochica-blend-fully-washed-screen-15-premium"
   },
   {
@@ -64,8 +64,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Natural"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
     "heroGradeId": "mk-035-ethiopia-yirgacheffe-sidamo-guji-g1-and-g2-lots"
   },
   {
@@ -79,8 +79,8 @@ export const makendiOriginSummary = [
       "Washed (Parchment)",
       "Natural"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
+    "image": "/makendi/origins/india.webp",
+    "flag": "/makendi/flags/india.webp",
     "heroGradeId": "mk-051-india-shade-grown-estate-cardamom-and-pepper-intercropped"
   },
   {
@@ -90,8 +90,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
     "heroGradeId": "mk-085-papua-n-g-aa-grade-screen-18-7mm-premium"
   },
   {
@@ -105,8 +105,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Natural"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
     "heroGradeId": "mk-058-indonesia-sumatra-mandheling-grade-1-double-picked"
   },
   {
@@ -117,8 +117,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Natural"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
     "heroGradeId": "mk-065-kenya-aa-ab-faq-main-crop-export-classifications"
   },
   {
@@ -132,8 +132,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Washed / Honey"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
     "heroGradeId": "mk-109-vietnam-grade-1-screen-18-clean-color-magnetically-sorted"
   },
   {
@@ -145,8 +145,8 @@ export const makendiOriginSummary = [
       "Natural",
       "Washed"
     ],
-    "image": "/makendi/origins/uganda.jpg",
-    "flag": "/makendi/flags/uganda.jpg",
+    "image": "/makendi/origins/uganda.webp",
+    "flag": "/makendi/flags/uganda.webp",
     "heroGradeId": "mk-104-uganda-kaweri-coffee-plantation-estate-direct-nkg-farm"
   },
   {
@@ -156,8 +156,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/guatemala.jpg",
-    "flag": "/makendi/flags/guatemala.jpg",
+    "image": "/makendi/origins/guatemala.webp",
+    "flag": "/makendi/flags/guatemala.webp",
     "heroGradeId": "mk-043-guatemala-huehuetenango-antigua-micro-lot-specialty"
   },
   {
@@ -168,8 +168,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Natural"
     ],
-    "image": "/makendi/origins/mexico.jpg",
-    "flag": "/makendi/flags/mexico.jpg",
+    "image": "/makendi/origins/mexico.webp",
+    "flag": "/makendi/flags/mexico.webp",
     "heroGradeId": "mk-076-mexico-finca-puebla-estate-direct-nkg-corporate-farm"
   },
   {
@@ -180,8 +180,8 @@ export const makendiOriginSummary = [
       "Fully Washed",
       "Washed"
     ],
-    "image": "/makendi/origins/burundi.jpg",
-    "flag": "/makendi/flags/burundi.jpg",
+    "image": "/makendi/origins/burundi.webp",
+    "flag": "/makendi/flags/burundi.webp",
     "heroGradeId": "mk-011-burundi-inyambo-blend-fully-washed-screen-15-class"
   },
   {
@@ -192,8 +192,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Yellow / Red / Black Honey"
     ],
-    "image": "/makendi/origins/costa-rica.jpg",
-    "flag": "/makendi/flags/costa-rica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
+    "flag": "/makendi/flags/costa-rica.webp",
     "heroGradeId": "mk-026-costa-rica-shb-tarrazu-strictly-hard-bean-1200m"
   },
   {
@@ -204,8 +204,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Washed / Natural"
     ],
-    "image": "/makendi/origins/honduras.jpg",
-    "flag": "/makendi/flags/honduras.jpg",
+    "image": "/makendi/origins/honduras.webp",
+    "flag": "/makendi/flags/honduras.webp",
     "heroGradeId": "mk-048-honduras-shg-ep-traceable-blends-1200m"
   },
   {
@@ -216,8 +216,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Natural"
     ],
-    "image": "/makendi/origins/laos.jpg",
-    "flag": "/makendi/flags/laos.jpg",
+    "image": "/makendi/origins/laos.webp",
+    "flag": "/makendi/flags/laos.webp",
     "heroGradeId": "mk-071-laos-bolavens-plateau-certified-estate-1-250-masl"
   },
   {
@@ -228,8 +228,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Washed / Honey"
     ],
-    "image": "/makendi/origins/nicaragua.jpg",
-    "flag": "/makendi/flags/nicaragua.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
+    "flag": "/makendi/flags/nicaragua.webp",
     "heroGradeId": "mk-080-nicaragua-certified-quality-shg-regional-selects"
   },
   {
@@ -240,8 +240,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Natural"
     ],
-    "image": "/makendi/origins/tanzania.jpg",
-    "flag": "/makendi/flags/tanzania.jpg",
+    "image": "/makendi/origins/tanzania.webp",
+    "flag": "/makendi/flags/tanzania.webp",
     "heroGradeId": "mk-096-tanzania-kilimanjaro-mbeya-aa"
   },
   {
@@ -252,8 +252,8 @@ export const makendiOriginSummary = [
       "Natural",
       "Washed"
     ],
-    "image": "/makendi/origins/cameroon.jpg",
-    "flag": "/makendi/flags/cameroon.jpg",
+    "image": "/makendi/origins/cameroon.webp",
+    "flag": "/makendi/flags/cameroon.webp",
     "heroGradeId": "mk-014-cameroon-screen-16-extra-prima"
   },
   {
@@ -264,8 +264,8 @@ export const makendiOriginSummary = [
       "Washed",
       "Washed / Anaerobic"
     ],
-    "image": "/makendi/origins/china.jpg",
-    "flag": "/makendi/flags/china.jpg",
+    "image": "/makendi/origins/china.webp",
+    "flag": "/makendi/flags/china.webp",
     "heroGradeId": "mk-016-china-yunnan-kongque-blend-screen-16-premium-profile-premium-pro"
   },
   {
@@ -276,8 +276,8 @@ export const makendiOriginSummary = [
       "Washed / Honey",
       "Natural"
     ],
-    "image": "/makendi/origins/ecuador.jpg",
-    "flag": "/makendi/flags/ecuador.jpg",
+    "image": "/makendi/origins/ecuador.webp",
+    "flag": "/makendi/flags/ecuador.webp",
     "heroGradeId": "mk-031-ecuador-loja-high-grown"
   },
   {
@@ -288,8 +288,8 @@ export const makendiOriginSummary = [
       "Washed / Natural",
       "Honey Processed"
     ],
-    "image": "/makendi/origins/el-salvador.jpg",
-    "flag": "/makendi/flags/el-salvador.jpg",
+    "image": "/makendi/origins/el-salvador.webp",
+    "flag": "/makendi/flags/el-salvador.webp",
     "heroGradeId": "mk-033-el-salvador-shg-ep-bourbon-pacamara"
   },
   {
@@ -300,8 +300,8 @@ export const makendiOriginSummary = [
       "Washed / Natural / Anaerobic",
       "Washed"
     ],
-    "image": "/makendi/origins/panama.jpg",
-    "flag": "/makendi/flags/panama.jpg",
+    "image": "/makendi/origins/panama.webp",
+    "flag": "/makendi/flags/panama.webp",
     "heroGradeId": "mk-083-panama-geisha-specialty-grade-boquete-valley"
   },
   {
@@ -311,8 +311,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Natural"
     ],
-    "image": "/makendi/origins/philippines.jpg",
-    "flag": "/makendi/flags/philippines.jpg",
+    "image": "/makendi/origins/philippines.webp",
+    "flag": "/makendi/flags/philippines.webp",
     "heroGradeId": "mk-093-philippines-mindanao-commercial-g1"
   },
   {
@@ -323,8 +323,8 @@ export const makendiOriginSummary = [
       "Washed / Honey",
       "Natural"
     ],
-    "image": "/makendi/origins/thailand.jpg",
-    "flag": "/makendi/flags/thailand.jpg",
+    "image": "/makendi/origins/thailand.webp",
+    "flag": "/makendi/flags/thailand.webp",
     "heroGradeId": "mk-099-thailand-chiang-mai-doi-chang-specialty"
   },
   {
@@ -334,8 +334,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/timor-leste.jpg",
-    "flag": "/makendi/flags/timor-leste.jpg",
+    "image": "/makendi/origins/timor-leste.webp",
+    "flag": "/makendi/flags/timor-leste.webp",
     "heroGradeId": "mk-101-timor-leste-ermera-manufahi-liquica-regional-lots"
   },
   {
@@ -345,8 +345,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/bolivia.jpg",
-    "flag": "/makendi/flags/bolivia.jpg",
+    "image": "/makendi/origins/bolivia.webp",
+    "flag": "/makendi/flags/bolivia.webp",
     "heroGradeId": "mk-001-bolivia-caranavi-colonial-g1"
   },
   {
@@ -356,8 +356,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Natural"
     ],
-    "image": "/makendi/origins/cote-d-ivoire.jpg",
-    "flag": "/makendi/flags/cote-d-ivoire.jpg",
+    "image": "/makendi/origins/cote-d-ivoire.webp",
+    "flag": "/makendi/flags/cote-d-ivoire.webp",
     "heroGradeId": "mk-029-cote-d-ivoire-grade-1-special-export"
   },
   {
@@ -367,8 +367,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/dominican-rep.jpg",
-    "flag": "/makendi/flags/dominican-rep.jpg",
+    "image": "/makendi/origins/dominican-rep.webp",
+    "flag": "/makendi/flags/dominican-rep.webp",
     "heroGradeId": "mk-030-dominican-rep-barahona-aaa-grand-cru"
   },
   {
@@ -378,8 +378,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/haiti.jpg",
-    "flag": "/makendi/flags/haiti.jpg",
+    "image": "/makendi/origins/haiti.webp",
+    "flag": "/makendi/flags/haiti.webp",
     "heroGradeId": "mk-047-haiti-haitian-bleu-standard"
   },
   {
@@ -389,8 +389,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/jamaica.jpg",
-    "flag": "/makendi/flags/jamaica.jpg",
+    "image": "/makendi/origins/jamaica.webp",
+    "flag": "/makendi/flags/jamaica.webp",
     "heroGradeId": "mk-064-jamaica-blue-mountain-wallenford-no-1"
   },
   {
@@ -400,8 +400,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Natural"
     ],
-    "image": "/makendi/origins/madagascar.jpg",
-    "flag": "/makendi/flags/madagascar.jpg",
+    "image": "/makendi/origins/madagascar.webp",
+    "flag": "/makendi/flags/madagascar.webp",
     "heroGradeId": "mk-074-madagascar-elite-grade-east-coast"
   },
   {
@@ -411,8 +411,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/malawi.jpg",
-    "flag": "/makendi/flags/malawi.jpg",
+    "image": "/makendi/origins/malawi.webp",
+    "flag": "/makendi/flags/malawi.webp",
     "heroGradeId": "mk-075-malawi-misuku-hills-pamwamba"
   },
   {
@@ -422,8 +422,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/peru.jpg",
-    "flag": "/makendi/flags/peru.jpg",
+    "image": "/makendi/origins/peru.webp",
+    "flag": "/makendi/flags/peru.webp",
     "heroGradeId": "mk-092-peru-certified-grade-1-traceable-smallholder-cooperatives"
   },
   {
@@ -433,8 +433,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/rwanda.jpg",
-    "flag": "/makendi/flags/rwanda.jpg",
+    "image": "/makendi/origins/rwanda.webp",
+    "flag": "/makendi/flags/rwanda.webp",
     "heroGradeId": "mk-095-rwanda-fully-washed-supreme-fw-bourbon"
   },
   {
@@ -444,8 +444,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Natural"
     ],
-    "image": "/makendi/origins/togo.jpg",
-    "flag": "/makendi/flags/togo.jpg",
+    "image": "/makendi/origins/togo.webp",
+    "flag": "/makendi/flags/togo.webp",
     "heroGradeId": "mk-103-togo-commercial-grade-barista"
   },
   {
@@ -455,8 +455,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Natural"
     ],
-    "image": "/makendi/origins/yemen.jpg",
-    "flag": "/makendi/flags/yemen.jpg",
+    "image": "/makendi/origins/yemen.webp",
+    "flag": "/makendi/flags/yemen.webp",
     "heroGradeId": "mk-115-yemen-mocha-mattari-sanani-genuine"
   },
   {
@@ -466,8 +466,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/zambia.jpg",
-    "flag": "/makendi/flags/zambia.jpg",
+    "image": "/makendi/origins/zambia.webp",
+    "flag": "/makendi/flags/zambia.webp",
     "heroGradeId": "mk-116-zambia-aaa-aa-northern-province"
   },
   {
@@ -477,8 +477,8 @@ export const makendiOriginSummary = [
     "processes": [
       "Washed"
     ],
-    "image": "/makendi/origins/zimbabwe.jpg",
-    "flag": "/makendi/flags/zimbabwe.jpg",
+    "image": "/makendi/origins/zimbabwe.webp",
+    "flag": "/makendi/flags/zimbabwe.webp",
     "heroGradeId": "mk-117-zimbabwe-calveley-estate-class-1"
   }
 ];
@@ -490,7 +490,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Caranavi Colonial G1",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/bolivia.jpg",
+    "image": "/makendi/origins/bolivia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -506,7 +506,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Santos NY2 - (Cascavel Vermelha)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -522,7 +522,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Santos NY2 - (Cascavel Verde)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Citrus",
       "Red Fruit",
@@ -538,7 +538,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Fazenda da Lagoa Estate (Direct NKG Corporate Farm)",
     "processDisplay": "Natural / Pulped Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -554,7 +554,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Sul de Minas & Cerrado Mineiro Regional Blends",
     "processDisplay": "Natural / Pulped Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -570,7 +570,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Santos NY 2/3 Strictly Soft Fine Cup (Screen 17/18)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -586,7 +586,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Sul de Minas Fine Cup (Screen 15/16)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -602,7 +602,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Cerrado Mineiro Pulped Natural (Semi-washed)",
     "processDisplay": "Pulped Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -618,7 +618,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Mogiana NY 2/3 Good Cup",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -634,7 +634,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Conilon - Espírito Santo Screen 16 Extra - (Conilon)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -650,7 +650,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Inyambo Blend (Fully Washed Screen 15+ class)",
     "processDisplay": "Fully Washed",
-    "image": "/makendi/origins/burundi.jpg",
+    "image": "/makendi/origins/burundi.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -666,7 +666,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Turaco Blend (Fully Washed Screen 15+ / Rainforest Alliance)",
     "processDisplay": "Fully Washed",
-    "image": "/makendi/origins/burundi.jpg",
+    "image": "/makendi/origins/burundi.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -682,7 +682,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Fully Washed A / Super Fine Kayanza",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/burundi.jpg",
+    "image": "/makendi/origins/burundi.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -698,7 +698,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Screen 16+ Extra Prima",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/cameroon.jpg",
+    "image": "/makendi/origins/cameroon.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -714,7 +714,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Western Highlands G1",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/cameroon.jpg",
+    "image": "/makendi/origins/cameroon.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -730,7 +730,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Yunnan KongQue Blend (Screen 16+ Premium Profile) - (Premium Profile)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/china.jpg",
+    "image": "/makendi/origins/china.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -746,7 +746,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Yunnan Grade 1 - (Catimor, Pu'er Region)",
     "processDisplay": "Washed / Anaerobic",
-    "image": "/makendi/origins/china.jpg",
+    "image": "/makendi/origins/china.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -762,7 +762,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Bochica Blend (Fully Washed Screen 15+ Premium)",
     "processDisplay": "Fully Washed",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -778,7 +778,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Huitaca Blend (Fully Washed Screen 15+ Premium)",
     "processDisplay": "Fully Washed",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -794,7 +794,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Tumbaga EP (Proprietary Sugarcane Process Decaf)",
     "processDisplay": "Decaffeinated / Washed",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "Cocoa",
       "Caramel",
@@ -810,7 +810,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Medellín / Tolima / Huila Regional Selected Lots",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -826,7 +826,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Supremo EP (Screen 17/18, European Prep)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -842,7 +842,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Excelso EP (Screen 15/16, Standard Export)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -858,7 +858,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Huila Regional Specialty (High acidity lot)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "High Acidity",
       "Citrus",
@@ -874,7 +874,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Pink Bourbon / Caturra Micro-lot",
     "processDisplay": "Honey / Anaerobic",
-    "image": "/makendi/origins/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -890,7 +890,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHB Tarrazu (Strictly Hard Bean, >1200m)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/costa-rica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -906,7 +906,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Central Valley Specialty Honey",
     "processDisplay": "Yellow / Red / Black Honey",
-    "image": "/makendi/origins/costa-rica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -922,7 +922,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Tres Ríos SHB EP",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/costa-rica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -938,7 +938,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Grade 1 / Spécial Export",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/cote-d-ivoire.jpg",
+    "image": "/makendi/origins/cote-d-ivoire.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -954,7 +954,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Barahona AAA Grand Cru",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/dominican-rep.jpg",
+    "image": "/makendi/origins/dominican-rep.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -970,7 +970,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Loja High Grown",
     "processDisplay": "Washed / Honey",
-    "image": "/makendi/origins/ecuador.jpg",
+    "image": "/makendi/origins/ecuador.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -986,7 +986,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Napo/Sucumbíos Commercial",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/ecuador.jpg",
+    "image": "/makendi/origins/ecuador.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1002,7 +1002,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHG EP Bourbon / Pacamara",
     "processDisplay": "Washed / Natural",
-    "image": "/makendi/origins/el-salvador.jpg",
+    "image": "/makendi/origins/el-salvador.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -1018,7 +1018,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Santa Ana High Mountain Honey",
     "processDisplay": "Honey Processed",
-    "image": "/makendi/origins/el-salvador.jpg",
+    "image": "/makendi/origins/el-salvador.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -1034,7 +1034,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Yirgacheffe / Sidamo / Guji G1 & G2 Lots",
     "processDisplay": "Washed / Natural",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -1050,7 +1050,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Yirgacheffe Grade 1 (Specialty micro-lot)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1066,7 +1066,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Guji Grade 1 (High density, high floral)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Floral",
       "Red Fruit",
@@ -1082,7 +1082,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Sidamo Grade 2 (Standard export class)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1098,7 +1098,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Sidamo Grade 3/4 (Commercial natural)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -1114,7 +1114,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Harrar Longberry G4 (Wild, complex berry)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Wild",
       "Complex Berry",
@@ -1130,7 +1130,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Djimmah G5 (Commercial grading block)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -1146,7 +1146,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Limu Grade 2",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1162,7 +1162,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Huehuetenango / Antigua Micro-lot Specialty",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/guatemala.jpg",
+    "image": "/makendi/origins/guatemala.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1178,7 +1178,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHB Huehuetenango Highland",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/guatemala.jpg",
+    "image": "/makendi/origins/guatemala.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1194,7 +1194,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHB Antigua Genuine (Volcanic soil class)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/guatemala.jpg",
+    "image": "/makendi/origins/guatemala.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1210,7 +1210,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Prime Washed (Lowland commercial)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/guatemala.jpg",
+    "image": "/makendi/origins/guatemala.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1226,7 +1226,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Haitian Bleu Standard",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/haiti.jpg",
+    "image": "/makendi/origins/haiti.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1242,7 +1242,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHG EP Traceable Blends (>1200m)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/honduras.jpg",
+    "image": "/makendi/origins/honduras.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1258,7 +1258,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "HG - (High Grown, Standard export)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/honduras.jpg",
+    "image": "/makendi/origins/honduras.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1274,7 +1274,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Copan Regional Specialty",
     "processDisplay": "Washed / Natural",
-    "image": "/makendi/origins/honduras.jpg",
+    "image": "/makendi/origins/honduras.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -1290,7 +1290,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Shade-Grown Estate (Cardamom & Pepper Intercropped)",
     "processDisplay": "Sun-dried / Washed",
-    "image": "/makendi/origins/india.jpg",
+    "image": "/makendi/origins/india.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1306,7 +1306,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Plantation AAA (Screen 19, Premium)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/india.jpg",
+    "image": "/makendi/origins/india.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1322,7 +1322,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Monsooned Malabar AA (Exposed to monsoon winds)",
     "processDisplay": "Monsooned (Specialty)",
-    "image": "/makendi/origins/india.jpg",
+    "image": "/makendi/origins/india.webp",
     "tastingNotes": [
       "Cocoa",
       "Caramel",
@@ -1338,7 +1338,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Mysore Nugget Extra Bold - (AAA, Screen 19+)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/india.jpg",
+    "image": "/makendi/origins/india.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1354,7 +1354,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Parchment AB (Screen 15/16)",
     "processDisplay": "Washed (Parchment)",
-    "image": "/makendi/origins/india.jpg",
+    "image": "/makendi/origins/india.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1370,7 +1370,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Kaapi Royale (Screen 18, No defects)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/india.jpg",
+    "image": "/makendi/origins/india.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1386,7 +1386,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Cherry AAA (Screen 19, Unwashed)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/india.jpg",
+    "image": "/makendi/origins/india.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1402,7 +1402,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Sumatra Mandheling Grade 1 Double Picked",
     "processDisplay": "Wet Hulled (Giling Basah)",
-    "image": "/makendi/origins/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1418,7 +1418,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Sumatra Gayo Mountain Grade 1 Organic",
     "processDisplay": "Wet Hulled (Giling Basah)",
-    "image": "/makendi/origins/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1434,7 +1434,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Sulawesi Toraja G1 (Premium)",
     "processDisplay": "Wet Hulled / Washed",
-    "image": "/makendi/origins/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1450,7 +1450,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Bali Kintamani (Single-Origin Specialty)",
     "processDisplay": "Washed / Honey",
-    "image": "/makendi/origins/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -1466,7 +1466,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Java Preanger - (Government Estate)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1482,7 +1482,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Java East Grade 1 (Large Screen)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1498,7 +1498,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Blue Mountain Wallenford No. 1",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/jamaica.jpg",
+    "image": "/makendi/origins/jamaica.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1514,7 +1514,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "AA / AB FAQ Main Crop Export Classifications",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1530,7 +1530,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "AA FAQ / TOP (Screen 17/18, 7.14mm)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1546,7 +1546,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "AB FAQ / TOP (Screen 15/16, 6.35mm)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1562,7 +1562,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "PB (Peaberry, round mutated sorting)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
     "tastingNotes": [
       "Berry",
       "Citrus",
@@ -1578,7 +1578,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "E - (Elephant Bean, massive size fusion)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1594,7 +1594,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Mbuni Heavy (MH, dry-milled pods)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -1610,7 +1610,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Bolavens Plateau Certified Estate (1,250 MASL)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/laos.jpg",
+    "image": "/makendi/origins/laos.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1626,7 +1626,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Bolaven Plateau G1",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/laos.jpg",
+    "image": "/makendi/origins/laos.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1642,7 +1642,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Champasak Typica / Catimor",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/laos.jpg",
+    "image": "/makendi/origins/laos.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1658,7 +1658,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Elite Grade (East Coast)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/madagascar.jpg",
+    "image": "/makendi/origins/madagascar.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1674,7 +1674,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Misuku Hills Pamwamba",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/malawi.jpg",
+    "image": "/makendi/origins/malawi.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1690,7 +1690,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Finca Puebla Estate (Direct NKG Corporate Farm)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/mexico.jpg",
+    "image": "/makendi/origins/mexico.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1706,7 +1706,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHG Chiapas / Oaxaca Altura",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/mexico.jpg",
+    "image": "/makendi/origins/mexico.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1722,7 +1722,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Coatepec Washed",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/mexico.jpg",
+    "image": "/makendi/origins/mexico.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1738,7 +1738,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Veracruz Commercial Premium",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/mexico.jpg",
+    "image": "/makendi/origins/mexico.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1754,7 +1754,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Certified Quality SHG Regional Selects",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/nicaragua.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1770,7 +1770,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHG EP Jinotega / Matagalpa",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/nicaragua.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1786,7 +1786,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Maragogype Screen 19+ (Elephant Bean)",
     "processDisplay": "Washed / Honey",
-    "image": "/makendi/origins/nicaragua.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -1802,7 +1802,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Geisha Specialty Grade - (Boquete Valley)",
     "processDisplay": "Washed / Natural / Anaerobic",
-    "image": "/makendi/origins/panama.jpg",
+    "image": "/makendi/origins/panama.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -1818,7 +1818,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "SHB Boquete Caturra/Catuaí",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/panama.jpg",
+    "image": "/makendi/origins/panama.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1834,7 +1834,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "AA Grade (Screen 18+ / 7mm Premium)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1850,7 +1850,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "A Grade (Screen 17+ / 6.75mm, formerly PLT)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1866,7 +1866,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "B Grade - (Standard Smallholder, formerly PSC)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1882,7 +1882,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Highlands & Morobe Smallholder Regional Lots",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1898,7 +1898,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "PSC (Premium Smallholder Coffee) X/A",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1914,7 +1914,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Plantation A - (Estate Quality)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1930,7 +1930,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Kimel Estate / Sigri Plantation AX",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1946,7 +1946,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Certified Grade 1 (Traceable Smallholder Cooperatives)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/peru.jpg",
+    "image": "/makendi/origins/peru.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -1962,7 +1962,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Mindanao Commercial G1",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/philippines.jpg",
+    "image": "/makendi/origins/philippines.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -1978,7 +1978,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Liberica",
     "shortGrade": "Barako - (Batangas Standard Grade)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/philippines.jpg",
+    "image": "/makendi/origins/philippines.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -1994,7 +1994,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Fully Washed Supreme - (FW, Bourbon)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/rwanda.jpg",
+    "image": "/makendi/origins/rwanda.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2010,7 +2010,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Kilimanjaro/Mbeya AA",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/tanzania.jpg",
+    "image": "/makendi/origins/tanzania.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2026,7 +2026,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Peaberry (Tanzanian PB Specialty)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/tanzania.jpg",
+    "image": "/makendi/origins/tanzania.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2042,7 +2042,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Bukoba FAQ (Screen 14+)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/tanzania.jpg",
+    "image": "/makendi/origins/tanzania.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2058,7 +2058,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Chiang Mai / Doi Chang Specialty",
     "processDisplay": "Washed / Honey",
-    "image": "/makendi/origins/thailand.jpg",
+    "image": "/makendi/origins/thailand.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -2074,7 +2074,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Chumphon Commercial Grade",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/thailand.jpg",
+    "image": "/makendi/origins/thailand.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2090,7 +2090,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Híbrido de Timor",
     "shortGrade": "Ermera / Manufahi / Liquiçá Regional Lots",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/timor-leste.jpg",
+    "image": "/makendi/origins/timor-leste.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2106,7 +2106,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Ermera Organic G1",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/timor-leste.jpg",
+    "image": "/makendi/origins/timor-leste.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2122,7 +2122,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Commercial Grade Barista",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/togo.jpg",
+    "image": "/makendi/origins/togo.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2138,7 +2138,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Kaweri Coffee Plantation Estate (Direct NKG Farm)",
     "processDisplay": "Washed / Natural",
-    "image": "/makendi/origins/uganda.jpg",
+    "image": "/makendi/origins/uganda.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2154,7 +2154,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Natural Screen 18 (Premium bold line)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/uganda.jpg",
+    "image": "/makendi/origins/uganda.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2170,7 +2170,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Natural Screen 15",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/uganda.jpg",
+    "image": "/makendi/origins/uganda.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2186,7 +2186,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Wugar - (Washed Uganda Arabica, Mt. Elgon)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/uganda.jpg",
+    "image": "/makendi/origins/uganda.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2202,7 +2202,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Drugar - (Dried Uganda Arabica, Rwenzori)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/uganda.jpg",
+    "image": "/makendi/origins/uganda.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -2218,7 +2218,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Grade 1 Screen 18+ Clean (Color/Magnetically Sorted)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2234,7 +2234,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Catimor (Highland Specialty Yeast & Anaerobic Lots)",
     "processDisplay": "Experimental / Washed",
-    "image": "/makendi/origins/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -2250,7 +2250,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Grade 1 - (Clean, Screen 16/18)",
     "processDisplay": "Wet Polished",
-    "image": "/makendi/origins/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2266,7 +2266,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Robusta",
     "shortGrade": "Grade 2 - (5% Black/Broken, Screen 13)",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
     "tastingNotes": [
       "Dark Cocoa",
       "Roasted Nuts",
@@ -2282,7 +2282,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Da Lat High Quality - (Catimor, Lam Dong)",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2298,7 +2298,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Son La Specialty - (Highland Catimor)",
     "processDisplay": "Washed / Honey",
-    "image": "/makendi/origins/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
     "tastingNotes": [
       "Tropical Fruit",
       "Red Fruit",
@@ -2314,7 +2314,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Mocha Mattari / Sanani Genuine",
     "processDisplay": "Natural",
-    "image": "/makendi/origins/yemen.jpg",
+    "image": "/makendi/origins/yemen.webp",
     "tastingNotes": [
       "Red Fruit",
       "Chocolate",
@@ -2330,7 +2330,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "AAA/AA Northern Province",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/zambia.jpg",
+    "image": "/makendi/origins/zambia.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",
@@ -2346,7 +2346,7 @@ export const makendiSearchIndex = [
     "coffeeType": "Arabica",
     "shortGrade": "Calveley Estate Class 1",
     "processDisplay": "Washed",
-    "image": "/makendi/origins/zimbabwe.jpg",
+    "image": "/makendi/origins/zimbabwe.webp",
     "tastingNotes": [
       "Citrus",
       "Floral",

@@ -154,8 +154,12 @@ function validatePayload(kind, input) {
     errors.email = "Enter a valid email address.";
   }
 
-  if (kind === "inquiry" && !["roaster", "producer", "partner"].includes(payload.audience)) {
-    errors.audience = "Select a valid inquiry type.";
+  if (kind === "inquiry") {
+    if (!["roaster", "producer", "partner"].includes(payload.audience)) {
+      errors.audience = "Select a valid inquiry type.";
+    }
+    payload.consent = input.consent === true;
+    if (!payload.consent) errors.consent = "Consent is required.";
   }
 
   if (kind === "sample") {

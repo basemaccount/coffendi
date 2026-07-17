@@ -97,6 +97,7 @@ const inquiry = await invoke(inquiryHandler, {
     volume: "10–30 bags",
     message: "Automated persistence verification for the Coffendi inquiry endpoint.",
     source: "automated-test",
+    consent: true,
   },
 });
 assert.equal(inquiry.status, 201);

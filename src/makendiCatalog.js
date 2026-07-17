@@ -97,10 +97,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/bolivia.jpg",
-    "farmerImage": "/makendi/farmers/bolivia.jpg",
-    "flag": "/makendi/flags/bolivia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/bolivia.webp",
+    "farmerImage": "/makendi/farmers/bolivia.webp",
+    "flag": "/makendi/flags/bolivia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "2",
@@ -188,10 +188,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "3",
@@ -279,10 +279,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "4",
@@ -370,10 +370,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "5",
@@ -461,10 +461,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "6,7",
@@ -552,10 +552,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "8",
@@ -643,10 +643,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "9,10",
@@ -734,10 +734,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "11",
@@ -825,10 +825,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "12,13",
@@ -916,10 +916,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 1,
       "rows": "14",
@@ -1007,10 +1007,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/burundi.jpg",
-    "farmerImage": "/makendi/farmers/burundi.jpg",
-    "flag": "/makendi/flags/burundi.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/burundi.webp",
+    "farmerImage": "/makendi/farmers/burundi.webp",
+    "flag": "/makendi/flags/burundi.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "15,16",
@@ -1098,10 +1098,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/burundi.jpg",
-    "farmerImage": "/makendi/farmers/burundi.jpg",
-    "flag": "/makendi/flags/burundi.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/burundi.webp",
+    "farmerImage": "/makendi/farmers/burundi.webp",
+    "flag": "/makendi/flags/burundi.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "17",
@@ -1189,10 +1189,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/burundi.jpg",
-    "farmerImage": "/makendi/farmers/burundi.jpg",
-    "flag": "/makendi/flags/burundi.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/burundi.webp",
+    "farmerImage": "/makendi/farmers/burundi.webp",
+    "flag": "/makendi/flags/burundi.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "18,19",
@@ -1280,10 +1280,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/cameroon.jpg",
-    "farmerImage": "/makendi/farmers/cameroon.jpg",
-    "flag": "/makendi/flags/cameroon.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/cameroon.webp",
+    "farmerImage": "/makendi/farmers/cameroon.webp",
+    "flag": "/makendi/flags/cameroon.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 1,
       "rows": "20",
@@ -1371,10 +1371,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/cameroon.jpg",
-    "farmerImage": "/makendi/farmers/cameroon.jpg",
-    "flag": "/makendi/flags/cameroon.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/cameroon.webp",
+    "farmerImage": "/makendi/farmers/cameroon.webp",
+    "flag": "/makendi/flags/cameroon.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "21",
@@ -1462,10 +1462,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/china.jpg",
-    "farmerImage": "/makendi/farmers/china.jpg",
-    "flag": "/makendi/flags/china.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/china.webp",
+    "farmerImage": "/makendi/farmers/china.webp",
+    "flag": "/makendi/flags/china.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "22",
@@ -1553,10 +1553,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/china.jpg",
-    "farmerImage": "/makendi/farmers/china.jpg",
-    "flag": "/makendi/flags/china.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/china.webp",
+    "farmerImage": "/makendi/farmers/china.webp",
+    "flag": "/makendi/flags/china.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "23,24",
@@ -1644,10 +1644,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 1,
       "rows": "25",
@@ -1735,10 +1735,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "1,2",
@@ -1826,10 +1826,10 @@ export const makendiGrades = [
       "Suited to decaf espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "3",
@@ -1917,10 +1917,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "4,5",
@@ -2008,10 +2008,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "6",
@@ -2099,10 +2099,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "7,8",
@@ -2190,10 +2190,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "9",
@@ -2281,10 +2281,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "10,11",
@@ -2372,10 +2372,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/costa-rica.jpg",
-    "farmerImage": "/makendi/farmers/costa-rica.jpg",
-    "flag": "/makendi/flags/costa-rica.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
+    "farmerImage": "/makendi/farmers/costa-rica.webp",
+    "flag": "/makendi/flags/costa-rica.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "12",
@@ -2463,10 +2463,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/costa-rica.jpg",
-    "farmerImage": "/makendi/farmers/costa-rica.jpg",
-    "flag": "/makendi/flags/costa-rica.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
+    "farmerImage": "/makendi/farmers/costa-rica.webp",
+    "flag": "/makendi/flags/costa-rica.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "13,14",
@@ -2554,10 +2554,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/costa-rica.jpg",
-    "farmerImage": "/makendi/farmers/costa-rica.jpg",
-    "flag": "/makendi/flags/costa-rica.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
+    "farmerImage": "/makendi/farmers/costa-rica.webp",
+    "flag": "/makendi/flags/costa-rica.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "15",
@@ -2645,10 +2645,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/cote-d-ivoire.jpg",
-    "farmerImage": "/makendi/farmers/cote-d-ivoire.jpg",
-    "flag": "/makendi/flags/cote-d-ivoire.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/cote-d-ivoire.webp",
+    "farmerImage": "/makendi/farmers/cote-d-ivoire.webp",
+    "flag": "/makendi/flags/cote-d-ivoire.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 2,
       "rows": "16,17",
@@ -2736,10 +2736,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/dominican-rep.jpg",
-    "farmerImage": "/makendi/farmers/dominican-rep.jpg",
-    "flag": "/makendi/flags/dominican-rep.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/dominican-rep.webp",
+    "farmerImage": "/makendi/farmers/dominican-rep.webp",
+    "flag": "/makendi/flags/dominican-rep.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "18,19",
@@ -2827,10 +2827,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ecuador.jpg",
-    "farmerImage": "/makendi/farmers/ecuador.jpg",
-    "flag": "/makendi/flags/ecuador.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ecuador.webp",
+    "farmerImage": "/makendi/farmers/ecuador.webp",
+    "flag": "/makendi/flags/ecuador.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "20,21",
@@ -2918,10 +2918,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ecuador.jpg",
-    "farmerImage": "/makendi/farmers/ecuador.jpg",
-    "flag": "/makendi/flags/ecuador.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/ecuador.webp",
+    "farmerImage": "/makendi/farmers/ecuador.webp",
+    "flag": "/makendi/flags/ecuador.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 2,
       "rows": "22",
@@ -3009,10 +3009,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/el-salvador.jpg",
-    "farmerImage": "/makendi/farmers/el-salvador.jpg",
-    "flag": "/makendi/flags/el-salvador.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/el-salvador.webp",
+    "farmerImage": "/makendi/farmers/el-salvador.webp",
+    "flag": "/makendi/flags/el-salvador.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "23",
@@ -3100,10 +3100,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/el-salvador.jpg",
-    "farmerImage": "/makendi/farmers/el-salvador.jpg",
-    "flag": "/makendi/flags/el-salvador.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/el-salvador.webp",
+    "farmerImage": "/makendi/farmers/el-salvador.webp",
+    "flag": "/makendi/flags/el-salvador.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "24",
@@ -3191,10 +3191,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "25,26",
@@ -3282,10 +3282,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "27",
@@ -3373,10 +3373,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "28,29",
@@ -3464,10 +3464,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "30",
@@ -3555,10 +3555,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 2,
       "rows": "31,32",
@@ -3646,10 +3646,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "1",
@@ -3737,10 +3737,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "2,3",
@@ -3828,10 +3828,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "4",
@@ -3919,10 +3919,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/guatemala.jpg",
-    "farmerImage": "/makendi/farmers/guatemala.jpg",
-    "flag": "/makendi/flags/guatemala.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/guatemala.webp",
+    "farmerImage": "/makendi/farmers/guatemala.webp",
+    "flag": "/makendi/flags/guatemala.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "5,6",
@@ -4010,10 +4010,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/guatemala.jpg",
-    "farmerImage": "/makendi/farmers/guatemala.jpg",
-    "flag": "/makendi/flags/guatemala.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/guatemala.webp",
+    "farmerImage": "/makendi/farmers/guatemala.webp",
+    "flag": "/makendi/flags/guatemala.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "7",
@@ -4101,10 +4101,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/guatemala.jpg",
-    "farmerImage": "/makendi/farmers/guatemala.jpg",
-    "flag": "/makendi/flags/guatemala.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/guatemala.webp",
+    "farmerImage": "/makendi/farmers/guatemala.webp",
+    "flag": "/makendi/flags/guatemala.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "8,9",
@@ -4192,10 +4192,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/guatemala.jpg",
-    "farmerImage": "/makendi/farmers/guatemala.jpg",
-    "flag": "/makendi/flags/guatemala.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/guatemala.webp",
+    "farmerImage": "/makendi/farmers/guatemala.webp",
+    "flag": "/makendi/flags/guatemala.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "10",
@@ -4283,10 +4283,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/haiti.jpg",
-    "farmerImage": "/makendi/farmers/haiti.jpg",
-    "flag": "/makendi/flags/haiti.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/haiti.webp",
+    "farmerImage": "/makendi/farmers/haiti.webp",
+    "flag": "/makendi/flags/haiti.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "11",
@@ -4374,10 +4374,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/honduras.jpg",
-    "farmerImage": "/makendi/farmers/honduras.jpg",
-    "flag": "/makendi/flags/honduras.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/honduras.webp",
+    "farmerImage": "/makendi/farmers/honduras.webp",
+    "flag": "/makendi/flags/honduras.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "12",
@@ -4465,10 +4465,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/honduras.jpg",
-    "farmerImage": "/makendi/farmers/honduras.jpg",
-    "flag": "/makendi/flags/honduras.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/honduras.webp",
+    "farmerImage": "/makendi/farmers/honduras.webp",
+    "flag": "/makendi/flags/honduras.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "13,14",
@@ -4556,10 +4556,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/honduras.jpg",
-    "farmerImage": "/makendi/farmers/honduras.jpg",
-    "flag": "/makendi/flags/honduras.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/honduras.webp",
+    "farmerImage": "/makendi/farmers/honduras.webp",
+    "flag": "/makendi/flags/honduras.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "15",
@@ -4647,10 +4647,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "16,17",
@@ -4738,10 +4738,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "18",
@@ -4829,10 +4829,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "19,20",
@@ -4920,10 +4920,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "21",
@@ -5011,10 +5011,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 3,
       "rows": "22,23",
@@ -5102,10 +5102,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 3,
       "rows": "24",
@@ -5193,10 +5193,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 3,
       "rows": "25,26",
@@ -5284,10 +5284,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "farmerImage": "/makendi/farmers/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "farmerImage": "/makendi/farmers/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "27",
@@ -5375,10 +5375,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "farmerImage": "/makendi/farmers/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "farmerImage": "/makendi/farmers/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 3,
       "rows": "28,29",
@@ -5466,10 +5466,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "farmerImage": "/makendi/farmers/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "farmerImage": "/makendi/farmers/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "1",
@@ -5557,10 +5557,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "farmerImage": "/makendi/farmers/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "farmerImage": "/makendi/farmers/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "2,3",
@@ -5648,10 +5648,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "farmerImage": "/makendi/farmers/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "farmerImage": "/makendi/farmers/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "4",
@@ -5739,10 +5739,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "farmerImage": "/makendi/farmers/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "farmerImage": "/makendi/farmers/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 4,
       "rows": "5",
@@ -5830,10 +5830,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/jamaica.jpg",
-    "farmerImage": "/makendi/farmers/jamaica.jpg",
-    "flag": "/makendi/flags/jamaica.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/jamaica.webp",
+    "farmerImage": "/makendi/farmers/jamaica.webp",
+    "flag": "/makendi/flags/jamaica.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "6",
@@ -5921,10 +5921,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "farmerImage": "/makendi/farmers/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "farmerImage": "/makendi/farmers/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "7,8",
@@ -6012,10 +6012,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "farmerImage": "/makendi/farmers/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "farmerImage": "/makendi/farmers/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "9",
@@ -6103,10 +6103,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "farmerImage": "/makendi/farmers/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "farmerImage": "/makendi/farmers/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "10,11",
@@ -6194,10 +6194,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "farmerImage": "/makendi/farmers/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "farmerImage": "/makendi/farmers/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "12",
@@ -6285,10 +6285,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "farmerImage": "/makendi/farmers/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "farmerImage": "/makendi/farmers/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "13,14",
@@ -6376,10 +6376,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "farmerImage": "/makendi/farmers/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "farmerImage": "/makendi/farmers/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "15",
@@ -6467,10 +6467,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/laos.jpg",
-    "farmerImage": "/makendi/farmers/laos.jpg",
-    "flag": "/makendi/flags/laos.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/laos.webp",
+    "farmerImage": "/makendi/farmers/laos.webp",
+    "flag": "/makendi/flags/laos.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "16,17",
@@ -6558,10 +6558,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/laos.jpg",
-    "farmerImage": "/makendi/farmers/laos.jpg",
-    "flag": "/makendi/flags/laos.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/laos.webp",
+    "farmerImage": "/makendi/farmers/laos.webp",
+    "flag": "/makendi/flags/laos.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 4,
       "rows": "18",
@@ -6649,10 +6649,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/laos.jpg",
-    "farmerImage": "/makendi/farmers/laos.jpg",
-    "flag": "/makendi/flags/laos.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/laos.webp",
+    "farmerImage": "/makendi/farmers/laos.webp",
+    "flag": "/makendi/flags/laos.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "19",
@@ -6740,10 +6740,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/madagascar.jpg",
-    "farmerImage": "/makendi/farmers/madagascar.jpg",
-    "flag": "/makendi/flags/madagascar.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/madagascar.webp",
+    "farmerImage": "/makendi/farmers/madagascar.webp",
+    "flag": "/makendi/flags/madagascar.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 4,
       "rows": "20",
@@ -6831,10 +6831,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/malawi.jpg",
-    "farmerImage": "/makendi/farmers/malawi.jpg",
-    "flag": "/makendi/flags/malawi.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/malawi.webp",
+    "farmerImage": "/makendi/farmers/malawi.webp",
+    "flag": "/makendi/flags/malawi.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "21",
@@ -6922,10 +6922,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/mexico.jpg",
-    "farmerImage": "/makendi/farmers/mexico.jpg",
-    "flag": "/makendi/flags/mexico.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/mexico.webp",
+    "farmerImage": "/makendi/farmers/mexico.webp",
+    "flag": "/makendi/flags/mexico.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "22",
@@ -7013,10 +7013,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/mexico.jpg",
-    "farmerImage": "/makendi/farmers/mexico.jpg",
-    "flag": "/makendi/flags/mexico.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/mexico.webp",
+    "farmerImage": "/makendi/farmers/mexico.webp",
+    "flag": "/makendi/flags/mexico.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "23,24",
@@ -7104,10 +7104,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/mexico.jpg",
-    "farmerImage": "/makendi/farmers/mexico.jpg",
-    "flag": "/makendi/flags/mexico.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/mexico.webp",
+    "farmerImage": "/makendi/farmers/mexico.webp",
+    "flag": "/makendi/flags/mexico.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "25",
@@ -7195,10 +7195,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/mexico.jpg",
-    "farmerImage": "/makendi/farmers/mexico.jpg",
-    "flag": "/makendi/flags/mexico.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/mexico.webp",
+    "farmerImage": "/makendi/farmers/mexico.webp",
+    "flag": "/makendi/flags/mexico.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 4,
       "rows": "26",
@@ -7286,10 +7286,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/nicaragua.jpg",
-    "farmerImage": "/makendi/farmers/nicaragua.jpg",
-    "flag": "/makendi/flags/nicaragua.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
+    "farmerImage": "/makendi/farmers/nicaragua.webp",
+    "flag": "/makendi/flags/nicaragua.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 4,
       "rows": "27",
@@ -7377,10 +7377,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/nicaragua.jpg",
-    "farmerImage": "/makendi/farmers/nicaragua.jpg",
-    "flag": "/makendi/flags/nicaragua.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
+    "farmerImage": "/makendi/farmers/nicaragua.webp",
+    "flag": "/makendi/flags/nicaragua.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "1",
@@ -7468,10 +7468,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/nicaragua.jpg",
-    "farmerImage": "/makendi/farmers/nicaragua.jpg",
-    "flag": "/makendi/flags/nicaragua.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
+    "farmerImage": "/makendi/farmers/nicaragua.webp",
+    "flag": "/makendi/flags/nicaragua.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "2",
@@ -7559,10 +7559,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/panama.jpg",
-    "farmerImage": "/makendi/farmers/panama.jpg",
-    "flag": "/makendi/flags/panama.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/panama.webp",
+    "farmerImage": "/makendi/farmers/panama.webp",
+    "flag": "/makendi/flags/panama.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "3,4",
@@ -7650,10 +7650,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/panama.jpg",
-    "farmerImage": "/makendi/farmers/panama.jpg",
-    "flag": "/makendi/flags/panama.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/panama.webp",
+    "farmerImage": "/makendi/farmers/panama.webp",
+    "flag": "/makendi/flags/panama.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "5",
@@ -7741,10 +7741,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "6,7",
@@ -7832,10 +7832,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "8",
@@ -7923,10 +7923,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "9,10",
@@ -8014,10 +8014,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "11",
@@ -8105,10 +8105,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "12,13",
@@ -8196,10 +8196,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "14",
@@ -8287,10 +8287,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "15",
@@ -8378,10 +8378,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/peru.jpg",
-    "farmerImage": "/makendi/farmers/peru.jpg",
-    "flag": "/makendi/flags/peru.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/peru.webp",
+    "farmerImage": "/makendi/farmers/peru.webp",
+    "flag": "/makendi/flags/peru.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "16",
@@ -8469,10 +8469,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/philippines.jpg",
-    "farmerImage": "/makendi/farmers/philippines.jpg",
-    "flag": "/makendi/flags/philippines.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/philippines.webp",
+    "farmerImage": "/makendi/farmers/philippines.webp",
+    "flag": "/makendi/flags/philippines.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 5,
       "rows": "17",
@@ -8560,10 +8560,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/philippines.jpg",
-    "farmerImage": "/makendi/farmers/philippines.jpg",
-    "flag": "/makendi/flags/philippines.jpg",
-    "productImage": "/makendi/products/liberica.jpg",
+    "image": "/makendi/origins/philippines.webp",
+    "farmerImage": "/makendi/farmers/philippines.webp",
+    "flag": "/makendi/flags/philippines.webp",
+    "productImage": "/makendi/products/liberica.webp",
     "source": {
       "page": 5,
       "rows": "18",
@@ -8651,10 +8651,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/rwanda.jpg",
-    "farmerImage": "/makendi/farmers/rwanda.jpg",
-    "flag": "/makendi/flags/rwanda.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/rwanda.webp",
+    "farmerImage": "/makendi/farmers/rwanda.webp",
+    "flag": "/makendi/flags/rwanda.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "19,20",
@@ -8742,10 +8742,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/tanzania.jpg",
-    "farmerImage": "/makendi/farmers/tanzania.jpg",
-    "flag": "/makendi/flags/tanzania.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/tanzania.webp",
+    "farmerImage": "/makendi/farmers/tanzania.webp",
+    "flag": "/makendi/flags/tanzania.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "21",
@@ -8833,10 +8833,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/tanzania.jpg",
-    "farmerImage": "/makendi/farmers/tanzania.jpg",
-    "flag": "/makendi/flags/tanzania.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/tanzania.webp",
+    "farmerImage": "/makendi/farmers/tanzania.webp",
+    "flag": "/makendi/flags/tanzania.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "22,23",
@@ -8924,10 +8924,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/tanzania.jpg",
-    "farmerImage": "/makendi/farmers/tanzania.jpg",
-    "flag": "/makendi/flags/tanzania.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/tanzania.webp",
+    "farmerImage": "/makendi/farmers/tanzania.webp",
+    "flag": "/makendi/flags/tanzania.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 5,
       "rows": "24",
@@ -9015,10 +9015,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/thailand.jpg",
-    "farmerImage": "/makendi/farmers/thailand.jpg",
-    "flag": "/makendi/flags/thailand.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/thailand.webp",
+    "farmerImage": "/makendi/farmers/thailand.webp",
+    "flag": "/makendi/flags/thailand.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "25",
@@ -9106,10 +9106,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/thailand.jpg",
-    "farmerImage": "/makendi/farmers/thailand.jpg",
-    "flag": "/makendi/flags/thailand.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/thailand.webp",
+    "farmerImage": "/makendi/farmers/thailand.webp",
+    "flag": "/makendi/flags/thailand.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 5,
       "rows": "26",
@@ -9197,10 +9197,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/timor-leste.jpg",
-    "farmerImage": "/makendi/farmers/timor-leste.jpg",
-    "flag": "/makendi/flags/timor-leste.jpg",
-    "productImage": "/makendi/products/hibrido-de-timor.jpg",
+    "image": "/makendi/origins/timor-leste.webp",
+    "farmerImage": "/makendi/farmers/timor-leste.webp",
+    "flag": "/makendi/flags/timor-leste.webp",
+    "productImage": "/makendi/products/hibrido-de-timor.webp",
     "source": {
       "page": 5,
       "rows": "27,28",
@@ -9288,10 +9288,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/timor-leste.jpg",
-    "farmerImage": "/makendi/farmers/timor-leste.jpg",
-    "flag": "/makendi/flags/timor-leste.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/timor-leste.webp",
+    "farmerImage": "/makendi/farmers/timor-leste.webp",
+    "flag": "/makendi/flags/timor-leste.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 5,
       "rows": "29",
@@ -9379,10 +9379,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/togo.jpg",
-    "farmerImage": "/makendi/farmers/togo.jpg",
-    "flag": "/makendi/flags/togo.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/togo.webp",
+    "farmerImage": "/makendi/farmers/togo.webp",
+    "flag": "/makendi/flags/togo.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 6,
       "rows": "1",
@@ -9470,10 +9470,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/uganda.jpg",
-    "farmerImage": "/makendi/farmers/uganda.jpg",
-    "flag": "/makendi/flags/uganda.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/uganda.webp",
+    "farmerImage": "/makendi/farmers/uganda.webp",
+    "flag": "/makendi/flags/uganda.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 6,
       "rows": "2",
@@ -9561,10 +9561,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/uganda.jpg",
-    "farmerImage": "/makendi/farmers/uganda.jpg",
-    "flag": "/makendi/flags/uganda.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/uganda.webp",
+    "farmerImage": "/makendi/farmers/uganda.webp",
+    "flag": "/makendi/flags/uganda.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 6,
       "rows": "3,4",
@@ -9652,10 +9652,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/uganda.jpg",
-    "farmerImage": "/makendi/farmers/uganda.jpg",
-    "flag": "/makendi/flags/uganda.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/uganda.webp",
+    "farmerImage": "/makendi/farmers/uganda.webp",
+    "flag": "/makendi/flags/uganda.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 6,
       "rows": "5",
@@ -9743,10 +9743,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/uganda.jpg",
-    "farmerImage": "/makendi/farmers/uganda.jpg",
-    "flag": "/makendi/flags/uganda.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/uganda.webp",
+    "farmerImage": "/makendi/farmers/uganda.webp",
+    "flag": "/makendi/flags/uganda.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "6,7",
@@ -9834,10 +9834,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/uganda.jpg",
-    "farmerImage": "/makendi/farmers/uganda.jpg",
-    "flag": "/makendi/flags/uganda.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/uganda.webp",
+    "farmerImage": "/makendi/farmers/uganda.webp",
+    "flag": "/makendi/flags/uganda.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "8",
@@ -9925,10 +9925,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "farmerImage": "/makendi/farmers/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "farmerImage": "/makendi/farmers/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 6,
       "rows": "9,10",
@@ -10016,10 +10016,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "farmerImage": "/makendi/farmers/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "farmerImage": "/makendi/farmers/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "11",
@@ -10107,10 +10107,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "farmerImage": "/makendi/farmers/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "farmerImage": "/makendi/farmers/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 6,
       "rows": "12",
@@ -10198,10 +10198,10 @@ export const makendiGrades = [
       "Suited to espresso and blends",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "farmerImage": "/makendi/farmers/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
-    "productImage": "/makendi/products/robusta.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "farmerImage": "/makendi/farmers/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
+    "productImage": "/makendi/products/robusta.webp",
     "source": {
       "page": 6,
       "rows": "13",
@@ -10289,10 +10289,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "farmerImage": "/makendi/farmers/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "farmerImage": "/makendi/farmers/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "14,15",
@@ -10380,10 +10380,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "farmerImage": "/makendi/farmers/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "farmerImage": "/makendi/farmers/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "16",
@@ -10471,10 +10471,10 @@ export const makendiGrades = [
       "Suited to espresso and filter coffee",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/yemen.jpg",
-    "farmerImage": "/makendi/farmers/yemen.jpg",
-    "flag": "/makendi/flags/yemen.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/yemen.webp",
+    "farmerImage": "/makendi/farmers/yemen.webp",
+    "flag": "/makendi/flags/yemen.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "17,18",
@@ -10562,10 +10562,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/zambia.jpg",
-    "farmerImage": "/makendi/farmers/zambia.jpg",
-    "flag": "/makendi/flags/zambia.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/zambia.webp",
+    "farmerImage": "/makendi/farmers/zambia.webp",
+    "flag": "/makendi/flags/zambia.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "19",
@@ -10653,10 +10653,10 @@ export const makendiGrades = [
       "Suited to filter coffee and espresso",
       "GrainPro-lined for freshness"
     ],
-    "image": "/makendi/origins/zimbabwe.jpg",
-    "farmerImage": "/makendi/farmers/zimbabwe.jpg",
-    "flag": "/makendi/flags/zimbabwe.jpg",
-    "productImage": "/makendi/products/arabica.jpg",
+    "image": "/makendi/origins/zimbabwe.webp",
+    "farmerImage": "/makendi/farmers/zimbabwe.webp",
+    "flag": "/makendi/flags/zimbabwe.webp",
+    "productImage": "/makendi/products/arabica.webp",
     "source": {
       "page": 6,
       "rows": "20",
@@ -10711,9 +10711,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/brazil.jpg",
-    "farmerImage": "/makendi/farmers/brazil.jpg",
-    "flag": "/makendi/flags/brazil.jpg",
+    "image": "/makendi/origins/brazil.webp",
+    "farmerImage": "/makendi/farmers/brazil.webp",
+    "flag": "/makendi/flags/brazil.webp",
     "heroGradeId": "mk-002-brazil-santos-ny2-cascavel-vermelha"
   },
   {
@@ -10746,9 +10746,9 @@ export const makendiOrigins = [
       "Smooth Finish",
       "High Acidity"
     ],
-    "image": "/makendi/origins/colombia.jpg",
-    "farmerImage": "/makendi/farmers/colombia.jpg",
-    "flag": "/makendi/flags/colombia.jpg",
+    "image": "/makendi/origins/colombia.webp",
+    "farmerImage": "/makendi/farmers/colombia.webp",
+    "flag": "/makendi/flags/colombia.webp",
     "heroGradeId": "mk-018-colombia-bochica-blend-fully-washed-screen-15-premium"
   },
   {
@@ -10780,9 +10780,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/ethiopia.jpg",
-    "farmerImage": "/makendi/farmers/ethiopia.jpg",
-    "flag": "/makendi/flags/ethiopia.jpg",
+    "image": "/makendi/origins/ethiopia.webp",
+    "farmerImage": "/makendi/farmers/ethiopia.webp",
+    "flag": "/makendi/flags/ethiopia.webp",
     "heroGradeId": "mk-035-ethiopia-yirgacheffe-sidamo-guji-g1-and-g2-lots"
   },
   {
@@ -10820,9 +10820,9 @@ export const makendiOrigins = [
       "Balanced Finish",
       "Dark Cocoa"
     ],
-    "image": "/makendi/origins/india.jpg",
-    "farmerImage": "/makendi/farmers/india.jpg",
-    "flag": "/makendi/flags/india.jpg",
+    "image": "/makendi/origins/india.webp",
+    "farmerImage": "/makendi/farmers/india.webp",
+    "flag": "/makendi/flags/india.webp",
     "heroGradeId": "mk-051-india-shade-grown-estate-cardamom-and-pepper-intercropped"
   },
   {
@@ -10848,9 +10848,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/papua-n-g.jpg",
-    "farmerImage": "/makendi/farmers/papua-n-g.jpg",
-    "flag": "/makendi/flags/papua-n-g.jpg",
+    "image": "/makendi/origins/papua-n-g.webp",
+    "farmerImage": "/makendi/farmers/papua-n-g.webp",
+    "flag": "/makendi/flags/papua-n-g.webp",
     "heroGradeId": "mk-085-papua-n-g-aa-grade-screen-18-7mm-premium"
   },
   {
@@ -10888,9 +10888,9 @@ export const makendiOrigins = [
       "Caramel",
       "Fermented Fruit"
     ],
-    "image": "/makendi/origins/indonesia.jpg",
-    "farmerImage": "/makendi/farmers/indonesia.jpg",
-    "flag": "/makendi/flags/indonesia.jpg",
+    "image": "/makendi/origins/indonesia.webp",
+    "farmerImage": "/makendi/farmers/indonesia.webp",
+    "flag": "/makendi/flags/indonesia.webp",
     "heroGradeId": "mk-058-indonesia-sumatra-mandheling-grade-1-double-picked"
   },
   {
@@ -10921,9 +10921,9 @@ export const makendiOrigins = [
       "Chocolate",
       "Roasted Nuts"
     ],
-    "image": "/makendi/origins/kenya.jpg",
-    "farmerImage": "/makendi/farmers/kenya.jpg",
-    "flag": "/makendi/flags/kenya.jpg",
+    "image": "/makendi/origins/kenya.webp",
+    "farmerImage": "/makendi/farmers/kenya.webp",
+    "flag": "/makendi/flags/kenya.webp",
     "heroGradeId": "mk-065-kenya-aa-ab-faq-main-crop-export-classifications"
   },
   {
@@ -10961,9 +10961,9 @@ export const makendiOrigins = [
       "Caramel",
       "Fermented Fruit"
     ],
-    "image": "/makendi/origins/vietnam.jpg",
-    "farmerImage": "/makendi/farmers/vietnam.jpg",
-    "flag": "/makendi/flags/vietnam.jpg",
+    "image": "/makendi/origins/vietnam.webp",
+    "farmerImage": "/makendi/farmers/vietnam.webp",
+    "flag": "/makendi/flags/vietnam.webp",
     "heroGradeId": "mk-109-vietnam-grade-1-screen-18-clean-color-magnetically-sorted"
   },
   {
@@ -10999,9 +10999,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/uganda.jpg",
-    "farmerImage": "/makendi/farmers/uganda.jpg",
-    "flag": "/makendi/flags/uganda.jpg",
+    "image": "/makendi/origins/uganda.webp",
+    "farmerImage": "/makendi/farmers/uganda.webp",
+    "flag": "/makendi/flags/uganda.webp",
     "heroGradeId": "mk-104-uganda-kaweri-coffee-plantation-estate-direct-nkg-farm"
   },
   {
@@ -11027,9 +11027,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/guatemala.jpg",
-    "farmerImage": "/makendi/farmers/guatemala.jpg",
-    "flag": "/makendi/flags/guatemala.jpg",
+    "image": "/makendi/origins/guatemala.webp",
+    "farmerImage": "/makendi/farmers/guatemala.webp",
+    "flag": "/makendi/flags/guatemala.webp",
     "heroGradeId": "mk-043-guatemala-huehuetenango-antigua-micro-lot-specialty"
   },
   {
@@ -11064,9 +11064,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/mexico.jpg",
-    "farmerImage": "/makendi/farmers/mexico.jpg",
-    "flag": "/makendi/flags/mexico.jpg",
+    "image": "/makendi/origins/mexico.webp",
+    "farmerImage": "/makendi/farmers/mexico.webp",
+    "flag": "/makendi/flags/mexico.webp",
     "heroGradeId": "mk-076-mexico-finca-puebla-estate-direct-nkg-corporate-farm"
   },
   {
@@ -11093,9 +11093,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/burundi.jpg",
-    "farmerImage": "/makendi/farmers/burundi.jpg",
-    "flag": "/makendi/flags/burundi.jpg",
+    "image": "/makendi/origins/burundi.webp",
+    "farmerImage": "/makendi/farmers/burundi.webp",
+    "flag": "/makendi/flags/burundi.webp",
     "heroGradeId": "mk-011-burundi-inyambo-blend-fully-washed-screen-15-class"
   },
   {
@@ -11126,9 +11126,9 @@ export const makendiOrigins = [
       "Caramel",
       "Fermented Fruit"
     ],
-    "image": "/makendi/origins/costa-rica.jpg",
-    "farmerImage": "/makendi/farmers/costa-rica.jpg",
-    "flag": "/makendi/flags/costa-rica.jpg",
+    "image": "/makendi/origins/costa-rica.webp",
+    "farmerImage": "/makendi/farmers/costa-rica.webp",
+    "flag": "/makendi/flags/costa-rica.webp",
     "heroGradeId": "mk-026-costa-rica-shb-tarrazu-strictly-hard-bean-1200m"
   },
   {
@@ -11159,9 +11159,9 @@ export const makendiOrigins = [
       "Roasted Nuts",
       "Caramel"
     ],
-    "image": "/makendi/origins/honduras.jpg",
-    "farmerImage": "/makendi/farmers/honduras.jpg",
-    "flag": "/makendi/flags/honduras.jpg",
+    "image": "/makendi/origins/honduras.webp",
+    "farmerImage": "/makendi/farmers/honduras.webp",
+    "flag": "/makendi/flags/honduras.webp",
     "heroGradeId": "mk-048-honduras-shg-ep-traceable-blends-1200m"
   },
   {
@@ -11196,9 +11196,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/laos.jpg",
-    "farmerImage": "/makendi/farmers/laos.jpg",
-    "flag": "/makendi/flags/laos.jpg",
+    "image": "/makendi/origins/laos.webp",
+    "farmerImage": "/makendi/farmers/laos.webp",
+    "flag": "/makendi/flags/laos.webp",
     "heroGradeId": "mk-071-laos-bolavens-plateau-certified-estate-1-250-masl"
   },
   {
@@ -11229,9 +11229,9 @@ export const makendiOrigins = [
       "Caramel",
       "Fermented Fruit"
     ],
-    "image": "/makendi/origins/nicaragua.jpg",
-    "farmerImage": "/makendi/farmers/nicaragua.jpg",
-    "flag": "/makendi/flags/nicaragua.jpg",
+    "image": "/makendi/origins/nicaragua.webp",
+    "farmerImage": "/makendi/farmers/nicaragua.webp",
+    "flag": "/makendi/flags/nicaragua.webp",
     "heroGradeId": "mk-080-nicaragua-certified-quality-shg-regional-selects"
   },
   {
@@ -11266,9 +11266,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/tanzania.jpg",
-    "farmerImage": "/makendi/farmers/tanzania.jpg",
-    "flag": "/makendi/flags/tanzania.jpg",
+    "image": "/makendi/origins/tanzania.webp",
+    "farmerImage": "/makendi/farmers/tanzania.webp",
+    "flag": "/makendi/flags/tanzania.webp",
     "heroGradeId": "mk-096-tanzania-kilimanjaro-mbeya-aa"
   },
   {
@@ -11303,9 +11303,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/cameroon.jpg",
-    "farmerImage": "/makendi/farmers/cameroon.jpg",
-    "flag": "/makendi/flags/cameroon.jpg",
+    "image": "/makendi/origins/cameroon.webp",
+    "farmerImage": "/makendi/farmers/cameroon.webp",
+    "flag": "/makendi/flags/cameroon.webp",
     "heroGradeId": "mk-014-cameroon-screen-16-extra-prima"
   },
   {
@@ -11336,9 +11336,9 @@ export const makendiOrigins = [
       "Caramel",
       "Fermented Fruit"
     ],
-    "image": "/makendi/origins/china.jpg",
-    "farmerImage": "/makendi/farmers/china.jpg",
-    "flag": "/makendi/flags/china.jpg",
+    "image": "/makendi/origins/china.webp",
+    "farmerImage": "/makendi/farmers/china.webp",
+    "flag": "/makendi/flags/china.webp",
     "heroGradeId": "mk-016-china-yunnan-kongque-blend-screen-16-premium-profile-premium-pro"
   },
   {
@@ -11373,9 +11373,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/ecuador.jpg",
-    "farmerImage": "/makendi/farmers/ecuador.jpg",
-    "flag": "/makendi/flags/ecuador.jpg",
+    "image": "/makendi/origins/ecuador.webp",
+    "farmerImage": "/makendi/farmers/ecuador.webp",
+    "flag": "/makendi/flags/ecuador.webp",
     "heroGradeId": "mk-031-ecuador-loja-high-grown"
   },
   {
@@ -11404,9 +11404,9 @@ export const makendiOrigins = [
       "Tropical Fruit",
       "Fermented Fruit"
     ],
-    "image": "/makendi/origins/el-salvador.jpg",
-    "farmerImage": "/makendi/farmers/el-salvador.jpg",
-    "flag": "/makendi/flags/el-salvador.jpg",
+    "image": "/makendi/origins/el-salvador.webp",
+    "farmerImage": "/makendi/farmers/el-salvador.webp",
+    "flag": "/makendi/flags/el-salvador.webp",
     "heroGradeId": "mk-033-el-salvador-shg-ep-bourbon-pacamara"
   },
   {
@@ -11437,9 +11437,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/panama.jpg",
-    "farmerImage": "/makendi/farmers/panama.jpg",
-    "flag": "/makendi/flags/panama.jpg",
+    "image": "/makendi/origins/panama.webp",
+    "farmerImage": "/makendi/farmers/panama.webp",
+    "flag": "/makendi/flags/panama.webp",
     "heroGradeId": "mk-083-panama-geisha-specialty-grade-boquete-valley"
   },
   {
@@ -11472,9 +11472,9 @@ export const makendiOrigins = [
       "Chocolate",
       "Caramel"
     ],
-    "image": "/makendi/origins/philippines.jpg",
-    "farmerImage": "/makendi/farmers/philippines.jpg",
-    "flag": "/makendi/flags/philippines.jpg",
+    "image": "/makendi/origins/philippines.webp",
+    "farmerImage": "/makendi/farmers/philippines.webp",
+    "flag": "/makendi/flags/philippines.webp",
     "heroGradeId": "mk-093-philippines-mindanao-commercial-g1"
   },
   {
@@ -11509,9 +11509,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/thailand.jpg",
-    "farmerImage": "/makendi/farmers/thailand.jpg",
-    "flag": "/makendi/flags/thailand.jpg",
+    "image": "/makendi/origins/thailand.webp",
+    "farmerImage": "/makendi/farmers/thailand.webp",
+    "flag": "/makendi/flags/thailand.webp",
     "heroGradeId": "mk-099-thailand-chiang-mai-doi-chang-specialty"
   },
   {
@@ -11541,9 +11541,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/timor-leste.jpg",
-    "farmerImage": "/makendi/farmers/timor-leste.jpg",
-    "flag": "/makendi/flags/timor-leste.jpg",
+    "image": "/makendi/origins/timor-leste.webp",
+    "farmerImage": "/makendi/farmers/timor-leste.webp",
+    "flag": "/makendi/flags/timor-leste.webp",
     "heroGradeId": "mk-101-timor-leste-ermera-manufahi-liquica-regional-lots"
   },
   {
@@ -11569,9 +11569,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/bolivia.jpg",
-    "farmerImage": "/makendi/farmers/bolivia.jpg",
-    "flag": "/makendi/flags/bolivia.jpg",
+    "image": "/makendi/origins/bolivia.webp",
+    "farmerImage": "/makendi/farmers/bolivia.webp",
+    "flag": "/makendi/flags/bolivia.webp",
     "heroGradeId": "mk-001-bolivia-caranavi-colonial-g1"
   },
   {
@@ -11597,9 +11597,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/cote-d-ivoire.jpg",
-    "farmerImage": "/makendi/farmers/cote-d-ivoire.jpg",
-    "flag": "/makendi/flags/cote-d-ivoire.jpg",
+    "image": "/makendi/origins/cote-d-ivoire.webp",
+    "farmerImage": "/makendi/farmers/cote-d-ivoire.webp",
+    "flag": "/makendi/flags/cote-d-ivoire.webp",
     "heroGradeId": "mk-029-cote-d-ivoire-grade-1-special-export"
   },
   {
@@ -11625,9 +11625,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/dominican-rep.jpg",
-    "farmerImage": "/makendi/farmers/dominican-rep.jpg",
-    "flag": "/makendi/flags/dominican-rep.jpg",
+    "image": "/makendi/origins/dominican-rep.webp",
+    "farmerImage": "/makendi/farmers/dominican-rep.webp",
+    "flag": "/makendi/flags/dominican-rep.webp",
     "heroGradeId": "mk-030-dominican-rep-barahona-aaa-grand-cru"
   },
   {
@@ -11653,9 +11653,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/haiti.jpg",
-    "farmerImage": "/makendi/farmers/haiti.jpg",
-    "flag": "/makendi/flags/haiti.jpg",
+    "image": "/makendi/origins/haiti.webp",
+    "farmerImage": "/makendi/farmers/haiti.webp",
+    "flag": "/makendi/flags/haiti.webp",
     "heroGradeId": "mk-047-haiti-haitian-bleu-standard"
   },
   {
@@ -11681,9 +11681,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/jamaica.jpg",
-    "farmerImage": "/makendi/farmers/jamaica.jpg",
-    "flag": "/makendi/flags/jamaica.jpg",
+    "image": "/makendi/origins/jamaica.webp",
+    "farmerImage": "/makendi/farmers/jamaica.webp",
+    "flag": "/makendi/flags/jamaica.webp",
     "heroGradeId": "mk-064-jamaica-blue-mountain-wallenford-no-1"
   },
   {
@@ -11709,9 +11709,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/madagascar.jpg",
-    "farmerImage": "/makendi/farmers/madagascar.jpg",
-    "flag": "/makendi/flags/madagascar.jpg",
+    "image": "/makendi/origins/madagascar.webp",
+    "farmerImage": "/makendi/farmers/madagascar.webp",
+    "flag": "/makendi/flags/madagascar.webp",
     "heroGradeId": "mk-074-madagascar-elite-grade-east-coast"
   },
   {
@@ -11737,9 +11737,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/malawi.jpg",
-    "farmerImage": "/makendi/farmers/malawi.jpg",
-    "flag": "/makendi/flags/malawi.jpg",
+    "image": "/makendi/origins/malawi.webp",
+    "farmerImage": "/makendi/farmers/malawi.webp",
+    "flag": "/makendi/flags/malawi.webp",
     "heroGradeId": "mk-075-malawi-misuku-hills-pamwamba"
   },
   {
@@ -11765,9 +11765,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/peru.jpg",
-    "farmerImage": "/makendi/farmers/peru.jpg",
-    "flag": "/makendi/flags/peru.jpg",
+    "image": "/makendi/origins/peru.webp",
+    "farmerImage": "/makendi/farmers/peru.webp",
+    "flag": "/makendi/flags/peru.webp",
     "heroGradeId": "mk-092-peru-certified-grade-1-traceable-smallholder-cooperatives"
   },
   {
@@ -11793,9 +11793,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/rwanda.jpg",
-    "farmerImage": "/makendi/farmers/rwanda.jpg",
-    "flag": "/makendi/flags/rwanda.jpg",
+    "image": "/makendi/origins/rwanda.webp",
+    "farmerImage": "/makendi/farmers/rwanda.webp",
+    "flag": "/makendi/flags/rwanda.webp",
     "heroGradeId": "mk-095-rwanda-fully-washed-supreme-fw-bourbon"
   },
   {
@@ -11821,9 +11821,9 @@ export const makendiOrigins = [
       "Spice",
       "Dark Chocolate"
     ],
-    "image": "/makendi/origins/togo.jpg",
-    "farmerImage": "/makendi/farmers/togo.jpg",
-    "flag": "/makendi/flags/togo.jpg",
+    "image": "/makendi/origins/togo.webp",
+    "farmerImage": "/makendi/farmers/togo.webp",
+    "flag": "/makendi/flags/togo.webp",
     "heroGradeId": "mk-103-togo-commercial-grade-barista"
   },
   {
@@ -11849,9 +11849,9 @@ export const makendiOrigins = [
       "Roasted Nuts",
       "Caramel"
     ],
-    "image": "/makendi/origins/yemen.jpg",
-    "farmerImage": "/makendi/farmers/yemen.jpg",
-    "flag": "/makendi/flags/yemen.jpg",
+    "image": "/makendi/origins/yemen.webp",
+    "farmerImage": "/makendi/farmers/yemen.webp",
+    "flag": "/makendi/flags/yemen.webp",
     "heroGradeId": "mk-115-yemen-mocha-mattari-sanani-genuine"
   },
   {
@@ -11877,9 +11877,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/zambia.jpg",
-    "farmerImage": "/makendi/farmers/zambia.jpg",
-    "flag": "/makendi/flags/zambia.jpg",
+    "image": "/makendi/origins/zambia.webp",
+    "farmerImage": "/makendi/farmers/zambia.webp",
+    "flag": "/makendi/flags/zambia.webp",
     "heroGradeId": "mk-116-zambia-aaa-aa-northern-province"
   },
   {
@@ -11905,9 +11905,9 @@ export const makendiOrigins = [
       "Cocoa",
       "Clean Finish"
     ],
-    "image": "/makendi/origins/zimbabwe.jpg",
-    "farmerImage": "/makendi/farmers/zimbabwe.jpg",
-    "flag": "/makendi/flags/zimbabwe.jpg",
+    "image": "/makendi/origins/zimbabwe.webp",
+    "farmerImage": "/makendi/farmers/zimbabwe.webp",
+    "flag": "/makendi/flags/zimbabwe.webp",
     "heroGradeId": "mk-117-zimbabwe-calveley-estate-class-1"
   }
 ];

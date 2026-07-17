@@ -129,7 +129,7 @@ export default function CoffeeDetailPage({
             <img
               src={coffee.image}
               alt={`${coffee.name} coffee origin`}
-              fetchpriority="high"
+              fetchPriority="high"
               decoding="async"
             />
             <div className="lot-image-badge">

@@ -104,7 +104,7 @@ function AtlasHero({ onOpenFinder }) {
   return (
     <section className="atlas-hero">
       <div className="atlas-hero__image">
-        <img src={featured.productImage} alt="" fetchpriority="high" decoding="async" />
+        <img src={featured.productImage} alt="" fetchPriority="high" decoding="async" />
       </div>
       <div className="shell atlas-hero__grid">
         <div className="atlas-hero__copy">
@@ -327,7 +327,11 @@ export function MakendiAtlasPage({ selectedSamples, onToggleSample, onOpenFinder
             </button>
             <label className="sort-field">
               <span>Sort</span>
-              <select value={sort} onChange={(event) => setSort(event.target.value)}>
+              <select
+                value={sort}
+                onChange={(event) => setSort(event.target.value)}
+                aria-label="Sort atlas profiles"
+              >
                 <option value="source">Source order</option>
                 <option value="origin">Origin</option>
                 <option value="type">Coffee type</option>
@@ -403,7 +407,11 @@ export function MakendiAtlasPage({ selectedSamples, onToggleSample, onOpenFinder
         className={`sheet-backdrop ${mobileFilters ? "is-open" : ""}`}
         onClick={() => setMobileFilters(false)}
       />
-      <aside className={`mobile-filter-sheet ${mobileFilters ? "is-open" : ""}`}>
+      <aside
+        className={`mobile-filter-sheet ${mobileFilters ? "is-open" : ""}`}
+        aria-hidden={!mobileFilters}
+        inert={!mobileFilters}
+      >
         <div className="sheet-header">
           <span>
             <Filter size={18} /> Atlas filters
@@ -483,7 +491,7 @@ export function MakendiGradePage({ selectedSamples, onToggleSample, onOpenFinder
         </div>
         <div className="shell grade-hero__grid">
           <div className="grade-product-card">
-            <img src={grade.productImage} alt="" fetchpriority="high" decoding="async" />
+            <img src={grade.productImage} alt="" fetchPriority="high" decoding="async" />
             <span>
               <img src={grade.flag} alt="" />
               {grade.country} {grade.coffeeType}

@@ -9,29 +9,36 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "dev:full": "vercel dev",
+    "optimize:images": "node scripts/optimize-images.mjs",
     "import:makendi": "node scripts/import-makendi.mjs",
     "build:sitemap": "node scripts/build-sitemap.mjs",
     "build": "vite build",
     "preview": "vite preview --host 0.0.0.0",
     "test:api": "node --env-file=.env.local scripts/test-api.mjs",
+    "test:checkout": "node scripts/test-checkout.mjs",
+    "test:security": "node scripts/security-check.mjs",
     "test:sourcing": "node scripts/test-sourcing.mjs",
+    "test:a11y": "node scripts/accessibility-check.mjs",
+    "test:performance": "node scripts/performance-check.mjs",
     "test:visual": "node scripts/visual-check.mjs"
   },
   "dependencies": {
-    "@vercel/blob": "^2.4.1",
+    "@vercel/blob": "^2.6.1",
     "d3-geo": "^3.1.1",
-    "lucide-react": "^0.468.0",
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "react-router-dom": "^6.28.0",
+    "lucide-react": "^1.25.0",
+    "react": "^19.2.7",
+    "react-dom": "^19.2.7",
+    "react-router-dom": "^7.18.1",
+    "stripe": "^22.3.2",
     "topojson-client": "^3.1.0",
     "world-atlas": "^2.0.2"
   },
   "devDependencies": {
-    "@napi-rs/canvas": "^0.1.80",
+    "@axe-core/playwright": "^4.12.1",
+    "@napi-rs/canvas": "^1.0.2",
     "@playwright/test": "^1.61.1",
-    "@vitejs/plugin-react": "^4.3.4",
-    "pdfjs-dist": "^5.4.530",
-    "vite": "^6.0.5"
+    "@vitejs/plugin-react": "^6.0.3",
+    "pdfjs-dist": "^6.1.200",
+    "vite": "^8.1.5"
   }
 }

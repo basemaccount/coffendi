@@ -92,7 +92,7 @@ function mapImageAssets(manifest) {
   return assetsByRole;
 }
 
-async function resizeCover(source, destination, width, height, quality = 82) {
+async function resizeCover(source, destination, width, height, quality = 72) {
   const image = await loadImage(source);
   const canvas = createCanvas(width, height);
   const context = canvas.getContext("2d");
@@ -115,7 +115,7 @@ async function resizeCover(source, destination, width, height, quality = 82) {
 
   context.drawImage(image, sx, sy, sw, sh, 0, 0, width, height);
   await mkdir(path.dirname(destination), { recursive: true });
-  await writeFile(destination, canvas.toBuffer("image/jpeg", quality));
+  await writeFile(destination, await canvas.encode("webp", quality));
 }
 
 async function buildFlagMap() {
@@ -150,7 +150,7 @@ async function main() {
       const asset = assetsByRole[role].get(country);
       if (!asset) continue;
       const source = path.join(ASSET_DIR, path.basename(asset.local_path));
-      const target = path.join(OUTPUT_ASSET_DIR, `${role}s`, `${slugify(country)}.jpg`);
+      const target = path.join(OUTPUT_ASSET_DIR, `${role}s`, `${slugify(country)}.webp`);
       await resizeCover(source, target, 860, 645);
     }
 
@@ -159,10 +159,10 @@ async function main() {
     if (flagFile) {
       await resizeCover(
         path.join(ASSET_DIR, flagFile),
-        path.join(OUTPUT_ASSET_DIR, "flags", `${slugify(country)}.jpg`),
+        path.join(OUTPUT_ASSET_DIR, "flags", `${slugify(country)}.webp`),
         180,
         120,
-        88,
+        84,
       );
     }
   }
@@ -172,9 +172,10 @@ async function main() {
     if (!sourceFile) continue;
     await resizeCover(
       path.join(ASSET_DIR, sourceFile),
-      path.join(OUTPUT_ASSET_DIR, "products", `${slugify(coffeeType)}.jpg`),
+      path.join(OUTPUT_ASSET_DIR, "products", `${slugify(coffeeType)}.webp`),
       920,
       690,
+      78,
     );
   }
 
@@ -213,10 +214,10 @@ async function main() {
       tastingNotes: record.tasting_notes || [],
       perfectFor: record.perfect_for || [],
       whyChoose: record.why_choose || [],
-      image: `/makendi/origins/${countrySlug}.jpg`,
-      farmerImage: `/makendi/farmers/${countrySlug}.jpg`,
-      flag: `/makendi/flags/${countrySlug}.jpg`,
-      productImage: `/makendi/products/${typeSlug}.jpg`,
+      image: `/makendi/origins/${countrySlug}.webp`,
+      farmerImage: `/makendi/farmers/${countrySlug}.webp`,
+      flag: `/makendi/flags/${countrySlug}.webp`,
+      productImage: `/makendi/products/${typeSlug}.webp`,
       source: {
         page: record.source_trace?.source_page,
         rows: record.source_trace?.source_rows,
@@ -262,9 +263,9 @@ async function main() {
         coffeeTypes: Object.entries(typeCounts).map(([type, count]) => ({ type, count })),
         processes,
         flavorNotes,
-        image: `/makendi/origins/${slugify(country)}.jpg`,
-        farmerImage: `/makendi/farmers/${slugify(country)}.jpg`,
-        flag: `/makendi/flags/${slugify(country)}.jpg`,
+        image: `/makendi/origins/${slugify(country)}.webp`,
+        farmerImage: `/makendi/farmers/${slugify(country)}.webp`,
+        flag: `/makendi/flags/${slugify(country)}.webp`,
         heroGradeId: rows[0]?.id,
       };
     })

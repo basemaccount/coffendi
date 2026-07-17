@@ -1,23 +1,15 @@
 import { writeFileSync } from "node:fs";
-import { coffees } from "../src/data.js";
-import { makendiSearchIndex } from "../src/makendiSummary.js";
+import { products } from "../src/storefrontData.js";
 
 const baseUrl = "https://coffendi.vercel.app";
 
 const routes = [
   ["/", "weekly", "1.0"],
-  ["/sourcing", "weekly", "0.95"],
-  ["/coffees", "daily", "0.9"],
-  ...coffees.map((coffee) => [`/coffees/${coffee.id}`, "weekly", "0.8"]),
-  ["/atlas", "weekly", "0.9"],
-  ...makendiSearchIndex.map((grade) => [`/atlas/${grade.id}`, "monthly", "0.65"]),
-  ["/origins", "weekly", "0.8"],
-  ["/availability", "daily", "0.9"],
-  ["/sustainability", "monthly", "0.7"],
-  ["/roasters", "monthly", "0.8"],
-  ["/stories", "weekly", "0.7"],
-  ["/quality", "monthly", "0.7"],
-  ["/contact", "monthly", "0.6"],
+  ["/shop", "weekly", "0.95"],
+  ...products.map((product) => [`/products/${product.id}`, "monthly", "0.9"]),
+  ["/bulk", "monthly", "0.85"],
+  ["/learn", "monthly", "0.75"],
+  ["/sustainability", "monthly", "0.75"],
 ];
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

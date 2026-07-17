@@ -23,6 +23,18 @@ const CERTIFICATIONS = [
   "Women produced",
 ];
 
+const FIELD_LABELS = {
+  budget: "budget",
+  volume: "volume",
+  origin: "origin preference",
+  flavor: "cup direction",
+  process: "process",
+  certification: "certification",
+  delivery: "delivery lane",
+  use: "use case",
+  channel: "source mode",
+};
+
 export const sourcingProfiles = Object.keys(PROFILE_GROUPS);
 export const sourcingProcesses = Object.keys(PROCESS_ALIASES);
 export const sourcingWarehouses = WAREHOUSES;
@@ -73,6 +85,55 @@ function volumeFloor(value) {
   return Math.min(...numeric.map(Number));
 }
 
+function isOpenValue(value) {
+  return ["", "open", "any", "any lane"].includes(lower(value));
+}
+
+export function evaluateBriefQuality(briefInput = {}) {
+  const brief = normalizeSourcingBrief(briefInput);
+  const required = ["budget", "volume", "flavor", "delivery", "use", "channel"];
+  const optional = ["origin", "process", "certification"];
+  const strengths = [];
+  const missing = [];
+  let score = 22;
+
+  for (const field of required) {
+    if (isOpenValue(brief[field])) {
+      missing.push(FIELD_LABELS[field]);
+    } else {
+      score += 10;
+      strengths.push(FIELD_LABELS[field]);
+    }
+  }
+
+  for (const field of optional) {
+    if (!isOpenValue(brief[field]) && brief[field] !== "Any") {
+      score += 6;
+      strengths.push(FIELD_LABELS[field]);
+    }
+  }
+
+  if (brief.channel === "Live lots only" && !isOpenValue(brief.delivery)) score += 5;
+  if (brief.channel === "Atlas planning only" && brief.origin !== "Open") score += 4;
+
+  const normalizedScore = Math.max(0, Math.min(100, score));
+  const label =
+    normalizedScore >= 86 ? "Contract-ready" : normalizedScore >= 68 ? "Sourcing-ready" : "Needs detail";
+
+  return {
+    score: normalizedScore,
+    label,
+    missing: unique(missing).slice(0, 4),
+    strengths: unique(strengths).slice(0, 6),
+    summary:
+      normalizedScore >= 86
+        ? "Enough detail for a focused sample and availability request."
+        : normalizedScore >= 68
+          ? "Good starting point; add one or two constraints for a sharper shortlist."
+          : "Add volume, budget, cup direction, and delivery lane before sending.",
+  };
+}
+
 export function buildSourcingItems(coffees, atlasProfiles) {
   const liveItems = coffees.map((coffee) => ({
     id: coffee.id,
@@ -96,6 +157,13 @@ export function buildSourcingItems(coffees, atlasProfiles) {
     priceValue: coffee.priceValue,
     status: coffee.status,
     availability: coffee.availability,
+    certaintyLabel:
+      coffee.status === "Spot"
+        ? "Priced spot stock"
+        : coffee.status === "Forward"
+          ? "Forward position"
+          : "Limited allocation",
+    nextStep: coffee.status === "Spot" ? "Request sample and reserve bags" : "Confirm timing and allocation",
     image: coffee.image,
     href: `/coffees/${coffee.id}`,
     actionLabel: "Request sample",
@@ -137,6 +205,8 @@ export function buildSourcingItems(coffees, atlasProfiles) {
     priceValue: null,
     status: "Planning",
     availability: "Grade profile",
+    certaintyLabel: "Planning profile",
+    nextStep: "Ask Coffendi for current offer and sample route",
     image: grade.image,
     href: `/atlas/${grade.id}`,
     actionLabel: "Add to brief",
@@ -214,10 +284,14 @@ function scoreVolume(item, brief) {
     return { points: 10, reason: `${item.bags} bags supports the requested volume` };
   }
   if (item.status === "Forward") {
-    return { points: 5, reason: "forward position can be discussed for volume planning" };
+    return {
+      points: 4,
+      reason: "forward position can be discussed for volume planning",
+      caution: `Confirm whether ${floor}+ bags can be allocated.`,
+    };
   }
   return {
-    points: 1,
+    points: -8,
     reason: "",
     caution: `${item.bags || 0} bags may be below the requested volume.`,
   };
@@ -246,14 +320,20 @@ function scoreCertification(item, certification) {
 }
 
 function scoreDelivery(item, delivery) {
-  if (!delivery || delivery === "Open") return { points: 4, reason: "delivery location open" };
+  if (!delivery || delivery === "Open" || delivery === "Any lane") {
+    return { points: 4, reason: "delivery location open" };
+  }
   if (item.sourceType === "atlas") {
-    return { points: 2, reason: "warehouse to be confirmed" };
+    return {
+      points: 2,
+      reason: "warehouse to be confirmed",
+      caution: `${delivery} routing must be quoted before sampling.`,
+    };
   }
   if (item.warehouse === delivery) {
-    return { points: 8, reason: `${delivery} warehouse fit` };
+    return { points: 12, reason: `${delivery} warehouse fit` };
   }
-  return { points: 1, reason: "", caution: `Held in ${item.warehouse}, not ${delivery}.` };
+  return { points: -10, reason: "", caution: `Held in ${item.warehouse}, not ${delivery}.` };
 }
 
 function scoreChannel(item, channel) {
@@ -313,12 +393,33 @@ export function scoreSourcingItem(item, briefInput) {
     cautions.push("Forward arrival - confirm timing.");
   }
 
+  const requestedDelivery =
+    brief.delivery && !["Open", "Any lane"].includes(brief.delivery) ? brief.delivery : null;
+  if (item.sourceType === "live" && requestedDelivery && item.warehouse !== requestedDelivery) {
+    points = Math.min(points, 76);
+  }
+  if (item.sourceType === "live" && (item.bags || 0) < volumeFloor(brief.volume)) {
+    points = Math.min(points, 72);
+  }
+  if (item.sourceType === "atlas" && brief.channel !== "Atlas planning only") {
+    points = Math.min(points, 82);
+  }
+
   const matchScore = Math.max(0, Math.min(100, Math.round(points)));
+  const decisionLabel =
+    item.sourceType === "atlas"
+      ? "Plan source"
+      : matchScore >= 84
+        ? "Sample now"
+        : matchScore >= 68
+          ? "Check tradeoff"
+          : "Use with caution";
 
   return {
     ...item,
     matchScore,
     matchLabel: matchScore >= 84 ? "Strong fit" : matchScore >= 68 ? "Good fit" : "Needs review",
+    decisionLabel,
     reasons: unique(reasons).slice(0, 5),
     cautions: unique(cautions).slice(0, 3),
   };
@@ -366,7 +467,9 @@ export function deriveBriefFromPrompt(prompt, currentBrief = {}, countries = [])
     else next.volume = "60+ bags";
   }
 
-  const country = countries.find((item) => text.includes(lower(item)));
+  const country = countries
+    .sort((a, b) => b.length - a.length)
+    .find((item) => text.includes(lower(item)));
   if (country) next.origin = country;
 
   for (const process of sourcingProcesses) {
@@ -394,11 +497,28 @@ export function deriveBriefFromPrompt(prompt, currentBrief = {}, countries = [])
   const warehouse = WAREHOUSES.find((item) => text.includes(lower(item)));
   if (warehouse) next.delivery = warehouse;
 
-  const certification = CERTIFICATIONS.find((item) => text.includes(lower(item)));
+  const certification = CERTIFICATIONS.find((item) => {
+    const normalized = lower(item);
+    return (
+      text.includes(normalized) ||
+      (normalized === "verified traceable" && /\btraceable|traceability\b/.test(text)) ||
+      (normalized === "rainforest alliance" && /\brainforest|rfa\b/.test(text)) ||
+      (normalized === "women produced" && /\bwomen|female producer|woman producer\b/.test(text))
+    );
+  });
   if (certification) next.certification = certification;
 
-  if (/\blive|spot|available now|warehouse/.test(text)) next.channel = "Live lots only";
-  if (/\batlas|makendi|grade profile|planning|future|forward/.test(text)) next.channel = "Live + atlas";
+  if (/\blive only|spot only|available now|priced stock|warehouse stock|immediate|sample now/.test(text)) {
+    next.channel = "Live lots only";
+  } else if (/\batlas only|planning only|future planning|replacement planning/.test(text)) {
+    next.channel = "Atlas planning only";
+  } else if (/\batlas|makendi|grade profile|planning|future|forward|replacement|alternative/.test(text)) {
+    next.channel = "Live + atlas";
+  }
+
+  if (/\bsample|cup|cupping|evaluate|evaluation/.test(text) && next.channel !== "Atlas planning only") {
+    next.channel = "Live lots only";
+  }
 
   return next;
 }

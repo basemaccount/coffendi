@@ -19,7 +19,7 @@ export const coffees = [
     certification: ["Organic"],
     harvest: "2025/26",
     altitude: "1,950–2,250 masl",
-    image: "/images/drying-beds.jpg",
+    image: "/images/drying-beds.webp",
     coordinates: [38.46, 6.76],
   },
   {
@@ -42,7 +42,7 @@ export const coffees = [
     certification: ["Verified traceable"],
     harvest: "2025/26",
     altitude: "1,650 masl",
-    image: "/images/red-cherries.jpg",
+    image: "/images/red-cherries.webp",
     coordinates: [-75.23, 4.44],
   },
   {
@@ -65,7 +65,7 @@ export const coffees = [
     certification: ["Rainforest Alliance"],
     harvest: "2025/26",
     altitude: "1,150 masl",
-    image: "/images/green-beans-sack.jpg",
+    image: "/images/green-beans-sack.webp",
     coordinates: [-47.88, -18.91],
   },
   {
@@ -88,7 +88,7 @@ export const coffees = [
     certification: ["Verified traceable"],
     harvest: "2025/26",
     altitude: "1,700–1,900 masl",
-    image: "/images/farmer-guatemala.jpg",
+    image: "/images/farmer-guatemala.webp",
     coordinates: [-91.48, 15.32],
   },
   {
@@ -111,7 +111,7 @@ export const coffees = [
     certification: ["Verified traceable"],
     harvest: "2025/26",
     altitude: "1,650–1,800 masl",
-    image: "/images/cherry-harvest.jpg",
+    image: "/images/cherry-harvest.webp",
     coordinates: [37.3, -0.66],
   },
   {
@@ -134,7 +134,7 @@ export const coffees = [
     certification: ["Organic", "Women produced"],
     harvest: "2025/26",
     altitude: "1,750–1,800 masl",
-    image: "/images/green-cherries.jpg",
+    image: "/images/green-cherries.webp",
     coordinates: [29.38, -2.07],
   },
   {
@@ -157,7 +157,7 @@ export const coffees = [
     certification: ["Organic", "Fairtrade"],
     harvest: "2025/26",
     altitude: "1,650–1,950 masl",
-    image: "/images/drying-beds.jpg",
+    image: "/images/drying-beds.webp",
     coordinates: [-78.9, -5.15],
   },
   {
@@ -180,7 +180,7 @@ export const coffees = [
     certification: ["Organic", "Fairtrade"],
     harvest: "2025/26",
     altitude: "1,400–1,650 masl",
-    image: "/images/sun-drying.jpg",
+    image: "/images/sun-drying.webp",
     coordinates: [-87.68, 14.31],
   },
   {
@@ -203,7 +203,7 @@ export const coffees = [
     certification: ["Verified traceable"],
     harvest: "2025/26",
     altitude: "1,400–1,700 masl",
-    image: "/images/coffee-farmer.jpg",
+    image: "/images/coffee-farmer.webp",
     coordinates: [101.26, -1.7],
   },
 ];
@@ -217,7 +217,7 @@ export const origins = [
     bags: 242,
     harvest: "Oct–Jan",
     profile: "Floral, stone fruit, citrus",
-    image: "/images/drying-beds.jpg",
+    image: "/images/drying-beds.webp",
   },
   {
     country: "Colombia",
@@ -227,7 +227,7 @@ export const origins = [
     bags: 384,
     harvest: "Year-round",
     profile: "Red fruit, caramel, tropical",
-    image: "/images/coffee-farmer.jpg",
+    image: "/images/coffee-farmer.webp",
   },
   {
     country: "Brazil",
@@ -237,7 +237,7 @@ export const origins = [
     bags: 610,
     harvest: "May–Sep",
     profile: "Chocolate, nuts, ripe fruit",
-    image: "/images/sun-drying.jpg",
+    image: "/images/sun-drying.webp",
   },
   {
     country: "Guatemala",
@@ -247,7 +247,7 @@ export const origins = [
     bags: 198,
     harvest: "Nov–Mar",
     profile: "Citrus, cocoa, structured",
-    image: "/images/farmer-guatemala.jpg",
+    image: "/images/farmer-guatemala.webp",
   },
   {
     country: "Kenya",
@@ -257,7 +257,7 @@ export const origins = [
     bags: 96,
     harvest: "Oct–Dec",
     profile: "Blackcurrant, grapefruit, tea",
-    image: "/images/drying-beds.jpg",
+    image: "/images/drying-beds.webp",
   },
   {
     country: "Rwanda",
@@ -267,7 +267,7 @@ export const origins = [
     bags: 117,
     harvest: "Mar–Jul",
     profile: "Apricot, tea, brown sugar",
-    image: "/images/coffee-farmer.jpg",
+    image: "/images/coffee-farmer.webp",
   },
 ];
 
@@ -278,7 +278,7 @@ export const stories = [
     category: "Producer profile",
     excerpt:
       "How agronomist Diego Ovalle is pairing careful shade management with meticulous lot separation.",
-    image: "/images/farmer-guatemala.jpg",
+    image: "/images/farmer-guatemala.webp",
     metric: "3rd generation",
   },
   {
@@ -287,7 +287,7 @@ export const stories = [
     category: "Community",
     excerpt:
       "The Gitesi women’s lot turns farm-level training and separate cherry collection into durable premiums.",
-    image: "/images/coffee-farmer.jpg",
+    image: "/images/coffee-farmer.webp",
     metric: "96 members",
   },
   {
@@ -296,7 +296,7 @@ export const stories = [
     category: "Processing",
     excerpt:
       "Raised beds, slow drying, and daily moisture checks create the clarity behind Bombe’s fruit-forward cup.",
-    image: "/images/drying-beds.jpg",
+    image: "/images/drying-beds.webp",
     metric: "18–21 days",
   },
 ];

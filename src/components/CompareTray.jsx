@@ -59,7 +59,14 @@ export default function CompareTray({ ids, onRemove, onClear, onAddSample, sampl
       </div>
 
       <div className={`drawer-backdrop ${open ? "is-open" : ""}`} onClick={() => setOpen(false)} />
-      <section className={`compare-dialog ${open ? "is-open" : ""}`} role="dialog" aria-modal="true" aria-label="Compare coffees">
+      <section
+        className={`compare-dialog ${open ? "is-open" : ""}`}
+        role="dialog"
+        aria-modal="true"
+        aria-label="Compare coffees"
+        aria-hidden={!open}
+        inert={!open}
+      >
         <header className="compare-dialog__header">
           <div>
             <p className="eyebrow">Side-by-side</p>
