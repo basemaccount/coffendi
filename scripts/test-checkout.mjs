@@ -3,7 +3,9 @@ import { Readable } from "node:stream";
 import Stripe from "stripe";
 import checkoutHandler from "../api/checkout.js";
 import checkoutSessionHandler from "../api/checkout-session.js";
+import commerceStatusHandler from "../api/commerce-status.js";
 import stripeWebhookHandler, { orderRecordFromSession } from "../api/stripe-webhook.js";
+import { commerceConfiguration } from "../server/commerce.js";
 
 function request(body) {
   return {
@@ -41,6 +43,11 @@ const keys = [
   "STRIPE_CREATE_CUSTOMER",
   "STRIPE_REQUIRE_TERMS",
   "COMMERCE_LEGAL_READY",
+  "COMMERCE_PUBLIC_CATALOG_READY",
+  "COMMERCE_INVENTORY_READY",
+  "COMMERCE_FULFILLMENT_READY",
+  "COMMERCE_SUPPORT_READY",
+  "COMMERCE_AVAILABLE_PRODUCTS",
   "BLOB_READ_WRITE_TOKEN",
 ];
 const saved = Object.fromEntries(keys.map((key) => [key, process.env[key]]));
@@ -48,6 +55,10 @@ keys.forEach((key) => delete process.env[key]);
 
 const unavailable = await invoke({ items: [{ id: "spray-dried", quantity: 1 }] });
 assert.equal(unavailable.status, 503);
+assert.equal(unavailable.body.code, "commerce_not_ready");
+const unavailableStatus = await invokeHandler(commerceStatusHandler, { method: "GET", headers: {} });
+assert.equal(unavailableStatus.status, 200);
+assert.equal(unavailableStatus.body.ready, false);
 
 process.env.STRIPE_SECRET_KEY = "sk_test_placeholder";
 process.env.STRIPE_WEBHOOK_SECRET = "whsec_placeholder";
@@ -74,9 +85,24 @@ process.env.STRIPE_SHIPPING_RATE_IDS = "shr_standard,shr_express";
 process.env.STRIPE_ALLOW_PROMOTION_CODES = "true";
 process.env.STRIPE_COLLECT_PHONE = "true";
 process.env.STRIPE_REQUIRE_TERMS = "true";
+process.env.COMMERCE_INVENTORY_READY = "true";
+process.env.COMMERCE_FULFILLMENT_READY = "true";
+process.env.COMMERCE_PUBLIC_CATALOG_READY = "true";
+process.env.COMMERCE_SUPPORT_READY = "true";
+process.env.COMMERCE_AVAILABLE_PRODUCTS = "spray-dried,agglomerated,freeze-dried";
+
+const readyConfiguration = commerceConfiguration();
+assert.equal(readyConfiguration.ready, true);
+const readyStatus = await invokeHandler(commerceStatusHandler, { method: "GET", headers: {} });
+assert.equal(readyStatus.status, 200);
+assert.equal(readyStatus.body.ready, true);
 
 const invalid = await invoke({ items: [{ id: "not-a-product", quantity: 1 }] });
 assert.equal(invalid.status, 422);
+process.env.COMMERCE_AVAILABLE_PRODUCTS = "spray-dried,agglomerated";
+const unavailableProduct = await invoke({ items: [{ id: "freeze-dried", quantity: 1 }] });
+assert.equal(unavailableProduct.status, 422);
+process.env.COMMERCE_AVAILABLE_PRODUCTS = "spray-dried,agglomerated,freeze-dried";
 const invalidSession = await invokeHandler(checkoutSessionHandler, {
   method: "GET",
   url: "/api/checkout-session?session_id=not-a-session",

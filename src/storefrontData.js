@@ -1,3 +1,5 @@
+import { productCommercialData } from "./merchantConfig.js";
+
 const clientEnvironment = import.meta.env || {};
 
 function readPrice(key) {
@@ -28,6 +30,7 @@ export const products = [
     idealFor: "Everyday cups, food service, vending, mixes and recipe development",
     processLabel: "Atomised and dried with hot air",
     tone: "clay",
+    ...productCommercialData["spray-dried"],
   },
   {
     id: "agglomerated",
@@ -49,6 +52,7 @@ export const products = [
     idealFor: "Retail jars, hospitality, office coffee and private-label concepts",
     processLabel: "Fine particles clustered into granules",
     tone: "caramel",
+    ...productCommercialData.agglomerated,
   },
   {
     id: "freeze-dried",
@@ -70,6 +74,7 @@ export const products = [
     idealFor: "Premium retail, gifting, hospitality and elevated private-label ranges",
     processLabel: "Frozen, then dried under vacuum",
     tone: "espresso",
+    ...productCommercialData["freeze-dried"],
   },
 ];
 

@@ -16,6 +16,7 @@
     "preview": "vite preview --host 0.0.0.0",
     "test:api": "node --env-file=.env.local scripts/test-api.mjs",
     "test:checkout": "node scripts/test-checkout.mjs",
+    "test:operations": "node scripts/test-operations.mjs",
     "test:security": "node scripts/security-check.mjs",
     "test:sourcing": "node scripts/test-sourcing.mjs",
     "test:a11y": "node scripts/accessibility-check.mjs",

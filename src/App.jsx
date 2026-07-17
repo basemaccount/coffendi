@@ -1,18 +1,23 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
+  AlertTriangle,
   Box,
   Check,
   ChevronRight,
   CircleGauge,
   Coffee,
+  Copy,
   Droplets,
   Factory,
+  Headphones,
   Leaf,
+  Mail,
   Menu,
   Minus,
   PackageCheck,
   Plus,
+  Phone,
   ShieldCheck,
   ShoppingBag,
   Snowflake,
@@ -34,6 +39,13 @@ import {
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
 import {
+  availabilityLabel,
+  merchantProfile,
+  publicCatalogReady,
+  publicStoreConfiguration,
+  supportContactReady,
+} from "./merchantConfig";
+import {
   formatPrice,
   getProduct,
   learningCards,
@@ -43,6 +55,41 @@ import {
 } from "./storefrontData";
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
+const CATALOG_READY = publicCatalogReady(products);
+
+function selectionSearch(items) {
+  const selection = items.map(({ product, quantity }) => `${product.id}:${quantity}`).join(",");
+  return selection ? `?selection=${encodeURIComponent(selection)}` : "";
+}
+
+function useCommerceStatus() {
+  const [status, setStatus] = useState({ state: "loading", ready: false, message: "Checking online checkout…" });
+  useEffect(() => {
+    const controller = new AbortController();
+    const timeout = window.setTimeout(() => controller.abort(), 8_000);
+    fetch("/api/commerce-status", {
+      credentials: "same-origin",
+      headers: { Accept: "application/json" },
+      signal: controller.signal,
+    })
+      .then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.message || "Checkout status is unavailable.");
+        setStatus({ state: "ready", ready: result.ready === true, message: result.message || "" });
+      })
+      .catch(() => setStatus({
+        state: "unavailable",
+        ready: false,
+        message: "Online checkout status could not be confirmed. Send the selection to Coffendi instead.",
+      }))
+      .finally(() => window.clearTimeout(timeout));
+    return () => {
+      window.clearTimeout(timeout);
+      controller.abort();
+    };
+  }, []);
+  return status;
+}
 
 const processIcons = {
   "spray-dried": Wind,
@@ -115,11 +162,12 @@ function ScrollManager() {
 }
 
 function AnnouncementBar() {
+  const purchaseMessage = CATALOG_READY ? "Retail-ready catalog · Dedicated bulk pathway" : "Retail catalog in preparation · Bulk briefs open";
   return (
     <div className="announcement">
       <p>
         <span>Three instant-coffee formats.</span>
-        <span className="announcement__detail">Retail-ready experience · Dedicated bulk pathway</span>
+        <span className="announcement__detail">{purchaseMessage}</span>
       </p>
       <Link to="/bulk">
         <span className="announcement__desktop-link">Plan a bulk order</span>
@@ -174,6 +222,7 @@ function Header({ cartCount, onOpenCart }) {
     ["Learn", "/learn"],
     ["Sustainability", "/sustainability"],
     ["Bulk", "/bulk"],
+    ["Contact", "/contact"],
   ];
 
   return (
@@ -246,6 +295,7 @@ function Header({ cartCount, onOpenCart }) {
 }
 
 function Footer() {
+  const hasSupport = supportContactReady();
   return (
     <footer className="site-footer">
       <div className="site-footer__lead page-shell">
@@ -284,16 +334,24 @@ function Footer() {
           <Link to="/privacy">Privacy</Link>
           <Link to="/terms">Terms</Link>
         </div>
+        <div>
+          <h3>Support</h3>
+          <Link to="/contact">Contact Coffendi</Link>
+          {hasSupport && <a href={`mailto:${merchantProfile.supportEmail}`}>{merchantProfile.supportEmail}</a>}
+          {merchantProfile.supportPhone && <a href={`tel:${merchantProfile.supportPhone.replace(/[^+\d]/g, "")}`}>{merchantProfile.supportPhone}</a>}
+          {!hasSupport && <span>Contact details confirmed before retail launch</span>}
+        </div>
       </div>
       <div className="site-footer__base page-shell">
         <span>© {new Date().getFullYear()} Coffendi</span>
+        {merchantProfile.legalName && <span>{merchantProfile.legalName}</span>}
         <span>Specifications, availability and delivery terms are confirmed before purchase.</span>
       </div>
     </footer>
   );
 }
 
-function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, returnFocusRef }) {
+function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, returnFocusRef, commerceStatus }) {
   const closeButton = useRef(null);
   const wasOpen = useRef(false);
   const count = items.reduce((total, item) => total + item.quantity, 0);
@@ -302,6 +360,8 @@ function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, 
     (total, { product, quantity }) => total + (product.priceCents || 0) * quantity,
     0,
   );
+  const onlineReady = commerceStatus.state === "ready" && commerceStatus.ready;
+  const salesPath = `/bulk${selectionSearch(items)}`;
 
   useEffect(() => {
     document.body.classList.toggle("no-scroll", open);
@@ -376,13 +436,19 @@ function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, 
               </ul>
               <div className="cart-total">
                 <span>{priced ? "Subtotal" : "Retail pricing"}</span>
-                <strong>{priced ? formatPrice(subtotal) : "Confirmed securely at checkout"}</strong>
+                <strong>{priced ? formatPrice(subtotal) : "Confirmed by Coffendi"}</strong>
               </div>
-              <p>Shipping, taxes and final availability are reviewed before payment.</p>
+              <p>{onlineReady ? "Shipping, taxes and final availability are reviewed before payment." : "Online payment is not active yet. Keep the selection and send it to Coffendi for confirmation."}</p>
               <div className="cart-drawer__footer-actions">
-                <Link className="button button--dark button--full" to="/checkout" onClick={onClose}>
-                  Continue to checkout <ArrowRight aria-hidden="true" />
-                </Link>
+                {onlineReady ? (
+                  <Link className="button button--dark button--full" to="/checkout" onClick={onClose}>
+                    Continue to checkout <ArrowRight aria-hidden="true" />
+                  </Link>
+                ) : (
+                  <Link className="button button--dark button--full" to={salesPath} onClick={onClose}>
+                    Send this selection <ArrowRight aria-hidden="true" />
+                  </Link>
+                )}
                 <Link className="button button--ghost button--full" to="/shop" onClick={onClose}>
                   Continue shopping
                 </Link>
@@ -424,6 +490,7 @@ function SectionHeading({ eyebrow, title, copy, action }) {
 
 function ProductCard({ product, onAdd, cartQuantity = 0 }) {
   const Icon = processIcons[product.id];
+  const retailConfigured = Boolean(product.priceCents && product.packSize && product.availability === "available");
   return (
     <article id={`format-${product.id}`} className={`product-card product-card--${product.tone} ${cartQuantity ? "is-in-cart" : ""}`}>
       <Link className="product-card__image" to={`/products/${product.id}`}>
@@ -441,10 +508,11 @@ function ProductCard({ product, onAdd, cartQuantity = 0 }) {
         <dl className="product-card__facts">
           <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
           <div><dt>Choose it for</dt><dd>{product.decisionCue}</dd></div>
+          <div><dt>Pack & status</dt><dd>{product.packSize || "Pack size pending"} · {availabilityLabel(product.availability)}</dd></div>
         </dl>
         <div className="product-card__actions">
-          <button className="button button--dark" type="button" onClick={() => onAdd(product.id)} aria-label={cartQuantity ? `Add another ${product.name} to cart` : `Add to cart: ${product.name}`}>
-            {cartQuantity ? "Add another" : "Add to cart"} <Plus aria-hidden="true" />
+          <button className="button button--dark" type="button" onClick={() => onAdd(product.id)} aria-label={cartQuantity ? `Add another ${product.name} to selection` : `Add to selection: ${product.name}`}>
+            {cartQuantity ? "Add another" : retailConfigured ? "Add to cart" : "Add to selection"} <Plus aria-hidden="true" />
           </button>
           <Link className="circle-link" to={`/products/${product.id}`} aria-label={`Learn about ${product.name}`}>
             <ArrowRight aria-hidden="true" />
@@ -471,8 +539,10 @@ function HomePage({ onAdd, cartQuantities }) {
               "@type": "Organization",
               "@id": `${SITE_URL}/#organization`,
               name: "Coffendi",
+              ...(merchantProfile.legalName ? { legalName: merchantProfile.legalName } : {}),
               url: `${SITE_URL}/`,
               logo: `${SITE_URL}/coffendi-logo.png`,
+              ...(merchantProfile.supportEmail ? { email: merchantProfile.supportEmail } : {}),
             },
             {
               "@type": "WebSite",
@@ -731,18 +801,22 @@ function ProductPage({ onAdd, cartQuantities }) {
     "@type": "Product",
     "@id": `${SITE_URL}/products/${product.id}#product`,
     name: product.name,
-    sku: `COFFENDI-${product.id.toUpperCase()}`,
+    ...(product.sku ? { sku: product.sku } : {}),
     category: "Instant coffee",
     image: `${SITE_URL}${product.image}`,
     description: product.intro,
     brand: { "@type": "Brand", name: "Coffendi" },
-    ...(product.priceCents
+    ...(product.priceCents && product.packSize && product.availability !== "unconfirmed"
       ? {
           offers: {
             "@type": "Offer",
             url: `${SITE_URL}/products/${product.id}`,
             priceCurrency: storeCurrency,
             price: (product.priceCents / 100).toFixed(2),
+            ...(product.availability === "available" ? { availability: "https://schema.org/InStock" } : {}),
+            ...(product.availability === "preorder" ? { availability: "https://schema.org/PreOrder" } : {}),
+            ...(product.availability === "unavailable" ? { availability: "https://schema.org/OutOfStock" } : {}),
+            ...(merchantProfile.legalName ? { seller: { "@type": "Organization", name: merchantProfile.legalName } } : {}),
           },
         }
       : {}),
@@ -778,7 +852,7 @@ function ProductPage({ onAdd, cartQuantities }) {
             <p className="product-detail__lede">{product.intro}</p>
             <div className="product-price">
               <strong>{formatPrice(product.priceCents)}</strong>
-              <span>Consumer pack · final size and availability shown at checkout</span>
+              <span>{product.packSize || "Consumer pack size pending"} · {availabilityLabel(product.availability)}</span>
             </div>
             <div className="product-purchase">
               <div className="product-purchase__quantity">
@@ -790,7 +864,7 @@ function ProductPage({ onAdd, cartQuantities }) {
                 </div>
               </div>
               <button ref={purchaseActionRef} className="button button--dark button--large" type="button" onClick={addSelectedQuantity}>
-                {purchaseQuantity > 1 ? `Add ${purchaseQuantity} to cart` : cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
+                {purchaseQuantity > 1 ? `Add ${purchaseQuantity} to selection` : cartQuantity ? "Add another" : product.priceCents ? "Add to cart" : "Add to selection"} <ShoppingBag aria-hidden="true" />
               </button>
             </div>
             {cartQuantity > 0 && <p className="product-in-cart" aria-live="polite"><Check aria-hidden="true" /> {cartQuantity} {cartQuantity === 1 ? "pack" : "packs"} currently in your cart</p>}
@@ -803,6 +877,7 @@ function ProductPage({ onAdd, cartQuantities }) {
               <div><dt>Format</dt><dd>{product.format}</dd></div>
               <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
               <div><dt>Choose it for</dt><dd>{product.decisionCue}</dd></div>
+              <div><dt>Consumer pack</dt><dd>{product.packSize || "Confirmed before purchase"}</dd></div>
             </dl>
           </div>
         </div>
@@ -817,6 +892,24 @@ function ProductPage({ onAdd, cartQuantities }) {
           <p>{product.story}</p>
           <div><strong>Well suited to</strong><p>{product.idealFor}</p></div>
         </div>
+      </section>
+      <section className="product-specifications page-shell">
+        <SectionHeading
+          eyebrow="Confirmed product information"
+          title="The pack remains the source of truth."
+          copy="Commercial facts are published only when they have been supplied and approved by the merchant."
+        />
+        <dl className="product-specifications__grid">
+          <div><dt>Availability</dt><dd>{availabilityLabel(product.availability)}</dd></div>
+          <div><dt>SKU</dt><dd>{product.sku || "Assigned with the final retail catalog"}</dd></div>
+          <div><dt>Ingredients</dt><dd>{product.ingredients || "Confirmed on the final retail pack"}</dd></div>
+          <div><dt>Allergen information</dt><dd>{product.allergens || "Confirmed on the final retail pack"}</dd></div>
+          <div><dt>Preparation</dt><dd>{product.preparation || "Follow the directions on the confirmed pack"}</dd></div>
+          <div><dt>Storage</dt><dd>{product.storage || "Follow the directions on the confirmed pack"}</dd></div>
+          <div><dt>Shelf life</dt><dd>{product.shelfLife || "Shown on the confirmed pack"}</dd></div>
+          <div><dt>Manufacture / origin</dt><dd>{product.manufactureOrigin || "Confirmed with the final product specification"}</dd></div>
+          <div><dt>Verified certifications</dt><dd>{product.certifications.length ? product.certifications.join(" · ") : "No certification claim is currently published"}{product.evidenceUrl && <><br /><a className="text-link" href={product.evidenceUrl} target="_blank" rel="noreferrer">View supporting evidence <ArrowRight aria-hidden="true" /></a></>}</dd></div>
+        </dl>
       </section>
       <section className="preparation-section">
         <div className="page-shell">
@@ -843,7 +936,7 @@ function ProductPage({ onAdd, cartQuantities }) {
       <div className={`mobile-buy-bar ${showMobileBuy ? "is-visible" : ""}`} aria-label={`Buy ${product.name}`} aria-hidden={!showMobileBuy}>
         <span><strong>{product.shortName}</strong><small>{cartQuantity ? `${cartQuantity} in cart` : formatPrice(product.priceCents)}</small></span>
         <button className="button button--cream" type="button" onClick={addSelectedQuantity}>
-          {purchaseQuantity > 1 ? `Add ${purchaseQuantity}` : cartQuantity ? "Add another" : "Add to cart"} <ShoppingBag aria-hidden="true" />
+          {purchaseQuantity > 1 ? `Add ${purchaseQuantity}` : cartQuantity ? "Add another" : product.priceCents ? "Add to cart" : "Select"} <ShoppingBag aria-hidden="true" />
         </button>
       </div>
     </div>
@@ -962,7 +1055,9 @@ function SustainabilityPage() {
 
 function BulkInquiryForm() {
   const location = useLocation();
-  const initialProduct = new URLSearchParams(location.search).get("product") || "";
+  const searchParameters = new URLSearchParams(location.search);
+  const initialProduct = searchParameters.get("product") || "";
+  const initialSelection = searchParameters.get("selection") || "";
   const [form, setForm] = useState({
     product: initialProduct,
     volume: "",
@@ -971,6 +1066,13 @@ function BulkInquiryForm() {
     company: "",
     email: "",
     country: "",
+    timeline: "",
+    samples: "",
+    incoterm: "",
+    certification: "",
+    application: "",
+    targetPackSize: "",
+    annualVolume: "",
     message: "",
     consent: false,
     website: "",
@@ -989,6 +1091,14 @@ function BulkInquiryForm() {
       `Instant coffee format: ${productName}`,
       `Indicative volume: ${form.volume || "Not confirmed"}`,
       `Packaging route: ${form.packaging || "Not confirmed"}`,
+      `Target application: ${form.application || "Not confirmed"}`,
+      `Target pack size: ${form.targetPackSize || "Not confirmed"}`,
+      `Annual volume: ${form.annualVolume || "Not confirmed"}`,
+      `Target timeline: ${form.timeline || "Not confirmed"}`,
+      `Samples: ${form.samples || "Not confirmed"}`,
+      `Incoterm preference: ${form.incoterm || "Not confirmed"}`,
+      `Certification requirement: ${form.certification || "Not confirmed"}`,
+      `Retail selection context: ${initialSelection || "None"}`,
     ].join("\n");
     try {
       const result = await submitRequest("/api/inquiries", {
@@ -1005,7 +1115,21 @@ function BulkInquiryForm() {
         website: form.website,
       });
       setStatus({ state: "success", message: `Brief received. Your reference is ${result.reference}.` });
-      setForm((current) => ({ ...current, volume: "", packaging: "", message: "", consent: false, website: "" }));
+      setForm((current) => ({
+        ...current,
+        volume: "",
+        packaging: "",
+        timeline: "",
+        samples: "",
+        incoterm: "",
+        certification: "",
+        application: "",
+        targetPackSize: "",
+        annualVolume: "",
+        message: "",
+        consent: false,
+        website: "",
+      }));
     } catch (error) {
       setStatus({ state: "error", message: error.message });
     }
@@ -1022,8 +1146,26 @@ function BulkInquiryForm() {
             <label><span>Indicative volume</span><select name="volume" value={form.volume} onChange={update}><option value="">Select a range</option><option>Under 500 kg</option><option>500 kg–2 tonnes</option><option>2–10 tonnes</option><option>10+ tonnes</option><option>Still planning</option></select></label>
             <label><span>Packaging route</span><select name="packaging" value={form.packaging} onChange={update}><option value="">Select a route</option><option>Bulk carton</option><option>Industrial sack / super sack</option><option>Retail or private label</option><option>Food service</option><option>Open to recommendation</option></select></label>
             <label><span>Destination country</span><input name="country" value={form.country} onChange={update} autoComplete="country-name" required /></label>
+            <label><span>Target application</span><input name="application" value={form.application} onChange={update} placeholder="Retail jar, vending, beverage mix…" /></label>
+            <label><span>Target pack size</span><input name="targetPackSize" value={form.targetPackSize} onChange={update} placeholder="For example: 200 g or 25 kg" /></label>
+            <label><span>Indicative annual volume</span><input name="annualVolume" value={form.annualVolume} onChange={update} placeholder="Optional annual estimate" /></label>
+            <label><span>Target timeline</span><select name="timeline" value={form.timeline} onChange={update}><option value="">Select a timeline</option><option>Within 4 weeks</option><option>1–3 months</option><option>3–6 months</option><option>6+ months</option><option>Still planning</option></select></label>
+            <label><span>Sample requirement</span><select name="samples" value={form.samples} onChange={update}><option value="">Select an option</option><option>Samples required</option><option>Technical documents first</option><option>No samples required yet</option></select></label>
+            <label><span>Incoterm preference</span><select name="incoterm" value={form.incoterm} onChange={update}><option value="">Open / not confirmed</option><option>EXW</option><option>FCA</option><option>FOB</option><option>CFR</option><option>CIF</option><option>DAP</option><option>DDP</option></select></label>
+            <label className="form-grid__wide"><span>Certification or documentation requirement</span><input name="certification" value={form.certification} onChange={update} placeholder="State the required certificate, audit or product document" /></label>
           </div>
         </fieldset>
+        <details className="brief-review">
+          <summary>Review brief summary before sending</summary>
+          <dl>
+            <div><dt>Format</dt><dd>{getProduct(form.product)?.name || "Open to recommendation"}</dd></div>
+            <div><dt>Volume</dt><dd>{form.volume || "Not confirmed"}</dd></div>
+            <div><dt>Packaging</dt><dd>{form.packaging || "Not confirmed"}</dd></div>
+            <div><dt>Destination</dt><dd>{form.country || "Not confirmed"}</dd></div>
+            <div><dt>Timeline</dt><dd>{form.timeline || "Not confirmed"}</dd></div>
+            <div><dt>Samples</dt><dd>{form.samples || "Not confirmed"}</dd></div>
+          </dl>
+        </details>
         <fieldset className="form-group">
           <legend><span>02</span>Your details</legend>
           <div className="form-grid">
@@ -1072,8 +1214,112 @@ function BulkPage() {
   );
 }
 
-function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
+function ContactPage() {
+  const location = useLocation();
+  const initialTopic = new URLSearchParams(location.search).get("topic") || "general";
+  const [form, setForm] = useState({
+    name: "",
+    company: "",
+    email: "",
+    topic: ["retail", "order", "returns", "bulk", "general"].includes(initialTopic) ? initialTopic : "general",
+    orderReference: "",
+    message: "",
+    consent: false,
+    website: "",
+  });
   const [status, setStatus] = useState({ state: "idle", message: "" });
+  usePageMeta(
+    "Contact and support — Coffendi",
+    "Contact Coffendi about retail instant coffee, an order, returns, or bulk supply.",
+  );
+
+  const update = (event) => {
+    const { checked, name, type, value } = event.target;
+    setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
+  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    setStatus({ state: "loading", message: "Sending your message…" });
+    try {
+      const result = await submitRequest("/api/contact", {
+        ...form,
+        source: "instant-coffee-contact-page",
+      });
+      setStatus({ state: "success", message: `Message received. Your reference is ${result.reference}.` });
+      setForm((current) => ({ ...current, company: "", orderReference: "", message: "", consent: false, website: "" }));
+    } catch (error) {
+      setStatus({ state: "error", message: error.message });
+    }
+  };
+
+  const contactStructuredData = {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "ContactPage",
+        "@id": `${SITE_URL}/contact#page`,
+        name: "Contact and support — Coffendi",
+        url: `${SITE_URL}/contact`,
+      },
+      ...(merchantProfile.legalName ? [{
+        "@type": "Organization",
+        "@id": `${SITE_URL}/#organization`,
+        name: merchantProfile.legalName,
+        url: SITE_URL,
+        ...(merchantProfile.supportEmail ? {
+          contactPoint: {
+            "@type": "ContactPoint",
+            contactType: "customer support",
+            email: merchantProfile.supportEmail,
+            ...(merchantProfile.supportPhone ? { telephone: merchantProfile.supportPhone } : {}),
+          },
+        } : {}),
+      }] : []),
+    ],
+  };
+
+  return (
+    <>
+      <StructuredData data={contactStructuredData} />
+      <PageHero
+        eyebrow="Contact & support"
+        title="Start with the right conversation."
+        copy="Choose the topic and include enough context for Coffendi to route your message clearly."
+        marker="Human follow-up"
+      />
+      <section className="contact-page page-shell">
+        <aside className="contact-options">
+          <div><Headphones aria-hidden="true" /><h2>Support pathways</h2><p>Retail, order, return and commercial questions are kept distinct so the right workflow can respond.</p></div>
+          {merchantProfile.supportEmail ? <a href={`mailto:${merchantProfile.supportEmail}`}><Mail aria-hidden="true" /><span><small>Email</small><strong>{merchantProfile.supportEmail}</strong></span></a> : <div className="contact-option-pending"><Mail aria-hidden="true" /><span><small>Email</small><strong>Confirmed before retail launch</strong></span></div>}
+          {merchantProfile.supportPhone && <a href={`tel:${merchantProfile.supportPhone.replace(/[^+\d]/g, "")}`}><Phone aria-hidden="true" /><span><small>Phone</small><strong>{merchantProfile.supportPhone}</strong></span></a>}
+          {merchantProfile.businessHours && <p><strong>Business hours</strong><br />{merchantProfile.businessHours}</p>}
+          {merchantProfile.retailResponseTime && <p><strong>Retail response target</strong><br />{merchantProfile.retailResponseTime}</p>}
+          <Link className="text-link" to="/bulk">Need commercial quantities? Use the detailed bulk brief <ArrowRight aria-hidden="true" /></Link>
+        </aside>
+        <form className="contact-form" onSubmit={handleSubmit}>
+          <div><p className="eyebrow">Send a message</p><h2>How can Coffendi help?</h2></div>
+          <div className="contact-form__grid">
+            <label><span>Topic</span><select name="topic" value={form.topic} onChange={update} required><option value="general">General question</option><option value="retail">Retail product</option><option value="order">Existing order</option><option value="returns">Return or damaged order</option><option value="bulk">Bulk or private label</option></select></label>
+            <label><span>Order reference</span><input name="orderReference" value={form.orderReference} onChange={update} placeholder="Optional" /></label>
+            <label><span>Name</span><input name="name" value={form.name} onChange={update} autoComplete="name" required /></label>
+            <label><span>Company</span><input name="company" value={form.company} onChange={update} autoComplete="organization" /></label>
+            <label className="contact-form__wide"><span>Email</span><input type="email" name="email" value={form.email} onChange={update} autoComplete="email" required /></label>
+            <label className="contact-form__wide"><span>Message</span><textarea name="message" value={form.message} onChange={update} rows="7" required /></label>
+            <label className="contact-consent contact-form__wide"><input type="checkbox" name="consent" checked={form.consent} onChange={update} required /><span>I agree that Coffendi may use this information to respond to my request, as described in the <Link to="/privacy">privacy notice</Link>.</span></label>
+            <label className="bot-field" aria-hidden="true"><span>Website</span><input name="website" value={form.website} onChange={update} tabIndex="-1" autoComplete="off" /></label>
+          </div>
+          <div className="contact-form__submit"><button className="button button--dark button--large" type="submit" disabled={status.state === "loading"}>{status.state === "loading" ? "Sending…" : "Send message"}<ArrowRight aria-hidden="true" /></button><p className={`form-status form-status--${status.state}`} aria-live="polite">{status.message}</p></div>
+        </form>
+      </section>
+    </>
+  );
+}
+
+function CheckoutPage({ items, onIncrement, onDecrement, onRemove, commerceStatus }) {
+  const [status, setStatus] = useState({ state: "idle", message: "" });
+  const checkoutInFlight = useRef(false);
+  const onlineReady = commerceStatus.state === "ready" && commerceStatus.ready;
+  const salesPath = `/bulk${selectionSearch(items)}`;
   usePageMeta(
     "Checkout — Coffendi",
     "Review your Coffendi instant coffee selection and continue to secure checkout.",
@@ -1081,6 +1327,8 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
   );
 
   const startCheckout = async () => {
+    if (checkoutInFlight.current) return;
+    checkoutInFlight.current = true;
     setStatus({ state: "loading", message: "Opening secure checkout…" });
     try {
       const result = await submitRequest("/api/checkout", {
@@ -1090,6 +1338,8 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
       window.location.assign(result.url);
     } catch (error) {
       setStatus({ state: "error", message: error.message });
+    } finally {
+      checkoutInFlight.current = false;
     }
   };
 
@@ -1102,6 +1352,13 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
   return (
     <section className="checkout-page page-shell">
       <div className="checkout-page__heading"><p className="eyebrow">Secure checkout</p><h1>Review your instant-coffee selection.</h1><p>Final live pricing, delivery, taxes and availability are presented before payment.</p></div>
+      <aside className={`commerce-readiness ${onlineReady ? "commerce-readiness--ready" : "commerce-readiness--pending"}`} aria-live="polite">
+        {onlineReady ? <ShieldCheck aria-hidden="true" /> : <AlertTriangle aria-hidden="true" />}
+        <div>
+          <strong>{onlineReady ? "Secure checkout is available" : "Online checkout is not active yet"}</strong>
+          <p>{commerceStatus.message || "The Coffendi team can confirm this selection through the commercial brief."}</p>
+        </div>
+      </aside>
       <ol className="checkout-steps" aria-label="Checkout progress"><li className="is-active" aria-current="step"><span>1</span>Review</li><li><span>2</span>Delivery</li><li><span>3</span>Payment</li></ol>
       <div className="checkout-layout">
         <div className="checkout-items">
@@ -1114,7 +1371,11 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
           <div><span>{priced ? "Subtotal" : "Product pricing"}</span><strong>{priced ? formatPrice(subtotal) : "Shown in hosted checkout"}</strong></div>
           <div><span>Shipping & taxes</span><strong>Confirmed before payment</strong></div>
           <p className="checkout-summary__policies">By continuing, you can review the final payment, shipping and contact details under our <Link to="/terms">terms</Link>, <Link to="/shipping-returns">shipping & returns framework</Link> and <Link to="/privacy">privacy notice</Link>.</p>
-          <button className="button button--dark button--full button--large" type="button" onClick={startCheckout} disabled={status.state === "loading"}>{status.state === "loading" ? "Opening checkout…" : "Continue to secure payment"}<ArrowRight aria-hidden="true" /></button>
+          {onlineReady ? (
+            <button className="button button--dark button--full button--large" type="button" onClick={startCheckout} disabled={status.state === "loading"}>{status.state === "loading" ? "Opening checkout…" : "Continue to secure payment"}<ArrowRight aria-hidden="true" /></button>
+          ) : (
+            <Link className="button button--dark button--full button--large" to={salesPath}>Send selection for confirmation <ArrowRight aria-hidden="true" /></Link>
+          )}
           <p className="checkout-summary__secure"><ShieldCheck aria-hidden="true" /> Payment card details are collected by the configured hosted payment provider.</p>
           <p className={`form-status form-status--${status.state}`} aria-live="polite">{status.message}</p>
           <Link className="text-link text-link--center" to="/bulk">Buying for a business? Request bulk terms</Link>
@@ -1127,6 +1388,7 @@ function CheckoutPage({ items, onIncrement, onDecrement, onRemove }) {
 function CheckoutSuccessPage({ onClearCart }) {
   const location = useLocation();
   const [verification, setVerification] = useState({ state: "loading", message: "Verifying your payment…", reference: "" });
+  const [copied, setCopied] = useState(false);
   usePageMeta(
     "Order received — Coffendi",
     "Your Coffendi checkout has been completed.",
@@ -1148,7 +1410,8 @@ function CheckoutSuccessPage({ onClearCart }) {
     })
       .then(async (response) => {
         const result = await response.json();
-        if (!response.ok || !result.paid) throw new Error(result.message || "Payment has not been confirmed yet.");
+        if (!response.ok) throw new Error(result.message || "Payment has not been confirmed yet.");
+        if (!result.paid) throw new Error("Payment is still pending. Keep this reference and check again before placing another order.");
         if (active) {
           onClearCart();
           setVerification({ state: "success", message: "Payment confirmed.", reference: result.reference });
@@ -1169,7 +1432,12 @@ function CheckoutSuccessPage({ onClearCart }) {
   }, [location.search, onClearCart]);
 
   const confirmed = verification.state === "success";
-  return <section className="checkout-empty checkout-success page-shell"><span className={`success-mark ${confirmed ? "" : "success-mark--pending"}`}>{confirmed ? <Check aria-hidden="true" /> : <ShieldCheck aria-hidden="true" />}</span><p className="eyebrow">{confirmed ? "Order received" : "Checkout verification"}</p><h1>{confirmed ? "Thank you. Your coffee is in motion." : "We are checking your payment."}</h1><p>{verification.message}{verification.reference ? ` Reference: ${verification.reference}.` : ""}</p><Link className="button button--dark" to={confirmed ? "/" : "/checkout"}>{confirmed ? "Return home" : "Return to checkout"}</Link></section>;
+  const copyReference = async () => {
+    if (!verification.reference || !navigator.clipboard) return;
+    await navigator.clipboard.writeText(verification.reference);
+    setCopied(true);
+  };
+  return <section className="checkout-empty checkout-success page-shell"><span className={`success-mark ${confirmed ? "" : "success-mark--pending"}`}>{confirmed ? <Check aria-hidden="true" /> : <ShieldCheck aria-hidden="true" />}</span><p className="eyebrow">{confirmed ? "Order received" : "Checkout verification"}</p><h1>{confirmed ? "Thank you. Your coffee is in motion." : "We are checking your payment."}</h1><p>{verification.message}{verification.reference ? ` Reference: ${verification.reference}.` : ""}</p>{verification.reference && <button className="button button--ghost" type="button" onClick={copyReference}>{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}{copied ? "Reference copied" : "Copy reference"}</button>}<Link className="button button--dark" to={confirmed ? "/" : "/checkout"}>{confirmed ? "Return home" : "Return to checkout"}</Link></section>;
 }
 
 const policyPages = {
@@ -1237,7 +1505,8 @@ const policyPages = {
 
 function PolicyPage({ policyKey }) {
   const policy = policyPages[policyKey];
-  usePageMeta(`${policy.eyebrow} — Coffendi`, policy.description, { robots: "noindex,follow" });
+  const approved = publicStoreConfiguration.policiesApproved && supportContactReady();
+  usePageMeta(`${policy.eyebrow} — Coffendi`, policy.description, { robots: approved ? "index,follow" : "noindex,follow" });
 
   return (
     <>
@@ -1245,12 +1514,12 @@ function PolicyPage({ policyKey }) {
         eyebrow={policy.eyebrow}
         title={policy.title}
         copy={policy.description}
-        marker="Pre-launch"
+        marker={approved ? "Current policy" : "Pre-launch"}
       />
       <section className="policy-page page-shell">
         <aside className="policy-status">
           <ShieldCheck aria-hidden="true" />
-          <div><strong>Merchant review required</strong><p>This framework is not legal advice and must be completed before live payment is enabled.</p></div>
+          <div><strong>{approved ? "Merchant approved" : "Merchant review required"}</strong><p>{approved ? `Effective ${merchantProfile.policyEffectiveDate || "on the published approval date"}.` : "This framework is not legal advice and must be completed before live payment is enabled."}</p></div>
         </aside>
         <div className="policy-page__content">
           <p className="policy-page__intro">{policy.intro}</p>
@@ -1260,10 +1529,10 @@ function PolicyPage({ policyKey }) {
               <div><h2>{section.title}</h2><p>{section.copy}</p></div>
             </section>
           ))}
-          <div className="policy-next-step">
+          {!approved && <div className="policy-next-step">
             <strong>Launch control</strong>
             <p>Keep <code>COMMERCE_LEGAL_READY</code> disabled until the final policy text, merchant details and operational workflow have been approved.</p>
-          </div>
+          </div>}
         </div>
       </section>
     </>
@@ -1289,6 +1558,7 @@ function normalizeCart(value) {
 export default function App() {
   const [cart, setCart] = usePersistentState("coffendi-instant-cart", []);
   const [cartOpen, setCartOpen] = useState(false);
+  const commerceStatus = useCommerceStatus();
   const cartReturnFocus = useRef(null);
   const normalizedCart = useMemo(() => normalizeCart(cart), [cart]);
   const cartItems = useMemo(
@@ -1341,7 +1611,8 @@ export default function App() {
             <Route path="/learn" element={<LearnPage />} />
             <Route path="/sustainability" element={<SustainabilityPage />} />
             <Route path="/bulk" element={<BulkPage />} />
-            <Route path="/checkout" element={<CheckoutPage items={cartItems} onIncrement={increment} onDecrement={decrement} onRemove={remove} />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/checkout" element={<CheckoutPage items={cartItems} onIncrement={increment} onDecrement={decrement} onRemove={remove} commerceStatus={commerceStatus} />} />
             <Route path="/checkout/success" element={<CheckoutSuccessPage onClearCart={clearCart} />} />
             <Route path="/privacy" element={<PolicyPage policyKey="privacy" />} />
             <Route path="/terms" element={<PolicyPage policyKey="terms" />} />
@@ -1351,7 +1622,7 @@ export default function App() {
         </main>
         <Footer />
       </div>
-      <CartDrawer open={cartOpen} items={cartItems} onClose={closeCart} onIncrement={increment} onDecrement={decrement} onRemove={remove} returnFocusRef={cartReturnFocus} />
+      <CartDrawer open={cartOpen} items={cartItems} onClose={closeCart} onIncrement={increment} onDecrement={decrement} onRemove={remove} returnFocusRef={cartReturnFocus} commerceStatus={commerceStatus} />
     </div>
   );
 }

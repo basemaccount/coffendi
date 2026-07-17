@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { products } from "../src/storefrontData.js";
 
-const baseUrl = "https://coffendi.vercel.app";
+const baseUrl = String(process.env.PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
 
 const routes = [
   ["/", "weekly", "1.0"],
@@ -10,6 +10,7 @@ const routes = [
   ["/bulk", "monthly", "0.85"],
   ["/learn", "monthly", "0.75"],
   ["/sustainability", "monthly", "0.75"],
+  ["/contact", "monthly", "0.7"],
 ];
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>

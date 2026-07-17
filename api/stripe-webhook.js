@@ -1,5 +1,6 @@
 import { put } from "@vercel/blob";
 import Stripe from "stripe";
+import { sendOperationsNotification } from "../server/notifications.js";
 
 const MAX_WEBHOOK_BYTES = 1_000_000;
 const FULFILLMENT_EVENTS = new Set([
@@ -96,11 +97,13 @@ export default async function stripeWebhookHandler(request, response) {
     }
 
     const record = orderRecordFromSession(event, session);
+    record.type = "stripe-order";
     await put(`orders/stripe/${session.id}.json`, JSON.stringify(record, null, 2), {
       access: "private",
       addRandomSuffix: false,
       contentType: "application/json",
     });
+    await sendOperationsNotification(record);
     respond(response, 200, { ok: true, received: true, handled: true });
   } catch (error) {
     const status = Number(error.status) || (error.type === "StripeSignatureVerificationError" ? 400 : 500);

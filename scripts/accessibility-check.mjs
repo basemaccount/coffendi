@@ -13,6 +13,7 @@ const checks = [
   { name: "desktop-sustainability", path: "/sustainability", width: 1440, height: 1000 },
   { name: "desktop-privacy", path: "/privacy", width: 1440, height: 1000 },
   { name: "desktop-terms", path: "/terms", width: 1440, height: 1000 },
+  { name: "desktop-contact", path: "/contact", width: 1440, height: 1000 },
   { name: "mobile-home", path: "/", width: 390, height: 844 },
   { name: "mobile-shop", path: "/shop", width: 390, height: 844 },
   { name: "mobile-spray", path: "/products/spray-dried", width: 390, height: 844 },
@@ -20,6 +21,7 @@ const checks = [
   { name: "mobile-learn", path: "/learn", width: 390, height: 844 },
   { name: "mobile-sustainability", path: "/sustainability", width: 390, height: 844 },
   { name: "mobile-shipping", path: "/shipping-returns", width: 390, height: 844 },
+  { name: "mobile-contact", path: "/contact", width: 390, height: 844 },
 ];
 
 const browser = await chromium.launch();
@@ -31,6 +33,11 @@ for (const check of checks) {
     deviceScaleFactor: 1,
   });
   const page = await context.newPage();
+  await page.route("**/api/commerce-status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ ok: true, ready: false, purchasePath: "inquiry", message: "Online checkout is being prepared." }),
+  }));
   await page.goto(`${baseUrl}${check.path}`, { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
 

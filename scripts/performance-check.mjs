@@ -6,6 +6,7 @@ const checks = [
   { name: "desktop-shop", path: "/shop", width: 1440, height: 1000 },
   { name: "desktop-product", path: "/products/freeze-dried", width: 1440, height: 1000 },
   { name: "desktop-bulk", path: "/bulk", width: 1440, height: 1000 },
+  { name: "desktop-contact", path: "/contact", width: 1440, height: 1000 },
   { name: "mobile-home", path: "/", width: 390, height: 844 },
 ];
 
@@ -15,6 +16,11 @@ const failures = [];
 for (const check of checks) {
   const context = await browser.newContext({ viewport: { width: check.width, height: check.height }, deviceScaleFactor: 1 });
   const page = await context.newPage();
+  await page.route("**/api/commerce-status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ ok: true, ready: false, purchasePath: "inquiry", message: "Online checkout is being prepared." }),
+  }));
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") pageErrors.push(message.text()); });

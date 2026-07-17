@@ -18,12 +18,20 @@ assert.match(headerMap.get("strict-transport-security") || "", /max-age=31536000
 const browser = await chromium.launch();
 const failures = [];
 
-for (const path of ["/", "/products/freeze-dried"]) {
+for (const path of ["/", "/products/freeze-dried", "/contact"]) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
   const policyErrors = [];
 
   await page.route("**/*", async (route) => {
+    if (route.request().url().includes("/api/commerce-status")) {
+      await route.fulfill({
+        status: 200,
+        contentType: "application/json",
+        body: JSON.stringify({ ok: true, ready: false, purchasePath: "inquiry", message: "Online checkout is being prepared." }),
+      });
+      return;
+    }
     if (route.request().resourceType() !== "document") {
       await route.continue();
       return;

@@ -1,5 +1,11 @@
 import { createHash, randomUUID } from "node:crypto";
 import { put } from "@vercel/blob";
+import {
+  acknowledgmentStatus,
+  notificationStatus,
+  sendBuyerAcknowledgment,
+  sendOperationsNotification,
+} from "./notifications.js";
 
 const MAX_BODY_BYTES = 24_000;
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
@@ -21,6 +27,19 @@ const schemas = {
       volume: [0, 80],
       country: [0, 100],
       brief: [0, 2_000],
+      source: [0, 160],
+      website: [0, 200],
+    },
+  },
+  contact: {
+    required: ["name", "email", "message", "topic"],
+    fields: {
+      name: [2, 80],
+      company: [0, 120],
+      email: [5, 160],
+      topic: [2, 40],
+      orderReference: [0, 120],
+      message: [10, 2_500],
       source: [0, 160],
       website: [0, 200],
     },
@@ -162,6 +181,14 @@ function validatePayload(kind, input) {
     if (!payload.consent) errors.consent = "Consent is required.";
   }
 
+  if (kind === "contact") {
+    if (!["retail", "order", "returns", "bulk", "general"].includes(payload.topic)) {
+      errors.topic = "Select a valid support topic.";
+    }
+    payload.consent = input.consent === true;
+    if (!payload.consent) errors.consent = "Consent is required.";
+  }
+
   if (kind === "sample") {
     const coffeeIds = Array.isArray(input.coffeeIds)
       ? [...new Set(input.coffeeIds.map((value) => cleanText(value)).filter(Boolean))]
@@ -187,7 +214,7 @@ function validatePayload(kind, input) {
 }
 
 function buildReference(kind) {
-  const prefixes = { inquiry: "CFI", sample: "CFS", subscription: "CFN" };
+  const prefixes = { inquiry: "CFI", contact: "CFC", sample: "CFS", subscription: "CFN" };
   const date = new Date().toISOString().slice(0, 10).replaceAll("-", "");
   const suffix = randomUUID().replaceAll("-", "").slice(0, 8).toUpperCase();
   return `${prefixes[kind]}-${date}-${suffix}`;
@@ -269,6 +296,12 @@ export function createSubmissionHandler(kind) {
           referrer: cleanText(String(request.headers.referer || "")).slice(0, 300),
           deployment: process.env.VERCEL_URL || "local",
         },
+        workflow: {
+          status: "new",
+          owner: "unassigned",
+          nextAction: "review",
+          updatedAt: receivedAt,
+        },
       };
       const [year, month, day] = receivedAt.slice(0, 10).split("-");
       const pathname = `submissions/${kind}/${year}/${month}/${day}/${receivedAt.replaceAll(":", "-")}-${id}.json`;
@@ -278,6 +311,11 @@ export function createSubmissionHandler(kind) {
         addRandomSuffix: false,
         contentType: "application/json",
       });
+
+      await Promise.all([
+        sendOperationsNotification(record),
+        sendBuyerAcknowledgment(record),
+      ]);
 
       respond(response, 201, {
         ok: true,
@@ -309,6 +347,8 @@ export function healthHandler(request, response) {
     ok: true,
     service: "coffendi-submissions",
     storage: process.env.BLOB_READ_WRITE_TOKEN ? "configured" : "unavailable",
+    notifications: notificationStatus(),
+    acknowledgments: acknowledgmentStatus(),
     timestamp: new Date().toISOString(),
   });
 }

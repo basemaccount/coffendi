@@ -3,6 +3,7 @@ import inquiryHandler from "../api/inquiries.js";
 import sampleHandler from "../api/sample-requests.js";
 import subscriptionHandler from "../api/subscriptions.js";
 import healthHandler from "../api/health.js";
+import contactHandler from "../api/contact.js";
 
 let requestSequence = 1;
 
@@ -102,6 +103,30 @@ const inquiry = await invoke(inquiryHandler, {
 });
 assert.equal(inquiry.status, 201);
 assert.match(inquiry.body.reference, /^CFI-/);
+
+const invalidContact = await invoke(contactHandler, {
+  body: {
+    name: "A",
+    email: "invalid",
+    topic: "unknown",
+    message: "short",
+  },
+});
+assert.equal(invalidContact.status, 422);
+
+const contact = await invoke(contactHandler, {
+  body: {
+    name: "API Test Contact",
+    company: "Coffendi QA",
+    email: "qa@example.com",
+    topic: "general",
+    message: "Automated persistence verification for the Coffendi contact endpoint.",
+    source: "automated-test",
+    consent: true,
+  },
+});
+assert.equal(contact.status, 201);
+assert.match(contact.body.reference, /^CFC-/);
 
 const sample = await invoke(sampleHandler, {
   body: {

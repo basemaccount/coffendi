@@ -63,6 +63,11 @@ STRIPE_COLLECT_PHONE=true
 STRIPE_CREATE_CUSTOMER=true
 STRIPE_REQUIRE_TERMS=true
 COMMERCE_LEGAL_READY=false
+COMMERCE_PUBLIC_CATALOG_READY=false
+COMMERCE_INVENTORY_READY=false
+COMMERCE_FULFILLMENT_READY=false
+COMMERCE_SUPPORT_READY=false
+COMMERCE_AVAILABLE_PRODUCTS=
 ```
 
 The checkout endpoint accepts only the three configured product IDs and never
@@ -104,6 +109,24 @@ refund/return policy, terms, privacy language, support details, and every
 certification or sustainability claim. These policy frameworks are implementation
 checklists, not legal advice.
 
+Commerce readiness also requires explicit public-catalog, inventory, fulfillment
+and support approval. `/api/commerce-status` exposes only a safe ready/inquiry
+state and never returns secret names, values or individual missing checks. The
+client uses that state to route a pre-launch retail selection into the bulk brief
+instead of presenting a payment flow that cannot complete.
+
+`COMMERCE_AVAILABLE_PRODUCTS` is a comma-separated allowlist using the storefront
+IDs `spray-dried`, `agglomerated` and `freeze-dried`. The checkout endpoint rejects
+an unavailable product even when a valid Stripe Price ID exists. This provides a
+manual launch control; it is not an inventory reservation engine.
+
+Public merchant details and approved product facts use optional `VITE_` settings
+documented in `.env.example`. Unconfigured facts use explicit confirmation copy.
+They are never inferred from competitor sites or generic instant-coffee data.
+`VITE_ANALYTICS_MODE` defaults to `disabled`; no nonessential tracker is loaded by
+the storefront. A consented analytics implementation should be added only after
+the merchant's cookie and privacy decisions are approved.
+
 ## Bulk inquiries
 
 `/bulk` collects format, volume, packaging, destination, company and product
@@ -111,12 +134,46 @@ requirements. It requires explicit privacy consent in both the browser and API,
 then submits through the existing hardened `/api/inquiries` endpoint and private
 Vercel Blob storage. Missing commercial data remains inquiry-led.
 
+## Contact and operations notifications
+
+`/contact` routes retail, order, return, bulk and general questions through the
+same private persistence boundary. Accepted records receive `CFC-` references.
+
+An optional HTTPS operations webhook can receive a minimal routing summary for
+orders, bulk leads and contact requests:
+
+```text
+SUBMISSION_NOTIFICATION_WEBHOOK_URL=https://operations.example/webhook
+SUBMISSION_NOTIFICATION_BEARER_TOKEN=...
+CUSTOMER_ACKNOWLEDGMENT_WEBHOOK_URL=https://email-automation.example/webhook
+CUSTOMER_ACKNOWLEDGMENT_BEARER_TOKEN=...
+```
+
+The notification deliberately omits the full buyer message and does not replace
+the private source record. Provider failure is isolated after persistence, so an
+accepted record is not lost merely because an alert could not be delivered.
+The optional acknowledgment webhook receives only the buyer email, name, reference,
+timestamp and template identifier; the email provider or automation owns the final
+approved message and sender-domain configuration.
+
+## Launch and operations documentation
+
+- `docs/merchant-handoff.md` — merchant-owned catalog, business, policy, shipping
+  and approval fields.
+- `docs/launch-runbook.md` — domain, Stripe, test-mode, controlled-live, rollback
+  and launch monitoring.
+- `docs/operations-runbook.md` — order, inventory, refund, damage, lead and manual
+  Blob-review procedures.
+- `docs/incident-response.md` — payment, submission, data, price, inventory and
+  notification incident response.
+
 ## Verification
 
 With the production preview running at `http://127.0.0.1:4173`:
 
 ```bash
 npm run test:checkout
+npm run test:operations
 npm run test:security
 npm run test:a11y
 npm run test:performance

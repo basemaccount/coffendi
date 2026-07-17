@@ -14,6 +14,7 @@ const checks = [
   { name: "desktop-learn", path: "/learn", width: 1440, height: 1000 },
   { name: "desktop-sustainability", path: "/sustainability", width: 1440, height: 1000 },
   { name: "desktop-privacy", path: "/privacy", width: 1440, height: 1000 },
+  { name: "desktop-contact", path: "/contact", width: 1440, height: 1000 },
   { name: "desktop-cart-recovery", path: "/checkout", width: 1440, height: 1000, malformedCart: true },
   { name: "mobile-home", path: "/", width: 390, height: 844 },
   { name: "mobile-shop", path: "/shop", width: 390, height: 844 },
@@ -22,6 +23,7 @@ const checks = [
   { name: "mobile-learn", path: "/learn", width: 390, height: 844 },
   { name: "mobile-sustainability", path: "/sustainability", width: 390, height: 844 },
   { name: "mobile-shipping", path: "/shipping-returns", width: 390, height: 844 },
+  { name: "mobile-contact", path: "/contact", width: 390, height: 844 },
   { name: "mobile-checkout", path: "/checkout", width: 390, height: 844, cart: true },
   { name: "compact-home", path: "/", width: 320, height: 700 },
   { name: "compact-product", path: "/products/agglomerated", width: 320, height: 700 },
@@ -38,6 +40,7 @@ const firstViewportTargets = {
   "mobile-learn": ".making-process",
   "mobile-sustainability": ".sustainability-intro",
   "mobile-shipping": ".policy-status",
+  "mobile-contact": ".contact-options",
   "mobile-checkout": ".checkout-items",
 };
 
@@ -50,6 +53,11 @@ for (const check of checks) {
     await context.addInitScript(() => localStorage.setItem("coffendi-instant-cart", JSON.stringify({ unexpected: true })));
   }
   const page = await context.newPage();
+  await page.route("**/api/commerce-status", (route) => route.fulfill({
+    status: 200,
+    contentType: "application/json",
+    body: JSON.stringify({ ok: true, ready: false, purchasePath: "inquiry", message: "Online checkout is being prepared." }),
+  }));
   const pageErrors = [];
   page.on("pageerror", (error) => pageErrors.push(error.message));
   page.on("console", (message) => { if (message.type() === "error") pageErrors.push(message.text()); });
@@ -74,7 +82,7 @@ for (const check of checks) {
   console.log(`${check.name}: ${dimensions.clientWidth}x${check.height}, scrollWidth=${dimensions.scrollWidth}, title="${dimensions.title}"`);
 
   if (check.name === "desktop-shop") {
-    const addButton = page.getByRole("button", { name: /Add to cart/ }).first();
+    const addButton = page.getByRole("button", { name: /Add to (cart|selection)/ }).first();
     const addButtonHandle = await addButton.elementHandle();
     await addButton.click();
     const cart = page.getByRole("dialog", { name: /Cart/ });
@@ -127,7 +135,7 @@ for (const check of checks) {
     await purchaseControls.getByRole("button", { name: /Increase purchase quantity/ }).click();
     await purchaseControls.getByRole("button", { name: /Increase purchase quantity/ }).click();
     if (await purchaseControls.getByRole("spinbutton").inputValue() !== "3") failures.push("desktop-freeze: product purchase quantity did not increment to three");
-    const multiAddButton = purchaseControls.getByRole("button", { name: "Add 3 to cart" });
+    const multiAddButton = purchaseControls.getByRole("button", { name: /Add 3 to (cart|selection)/ });
     const multiAddButtonHandle = await multiAddButton.elementHandle();
     await multiAddButton.click();
     const productCart = page.getByRole("dialog", { name: /Cart/ });
