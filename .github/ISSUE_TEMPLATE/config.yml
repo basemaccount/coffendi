@@ -1,0 +1,9 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Customer or order support
+    url: https://coffendi.vercel.app/contact
+    about: Use the private support form instead of a public GitHub issue.
+  - name: Bulk or private-label request
+    url: https://coffendi.vercel.app/bulk
+    about: Send product, volume, packaging, and destination requirements privately.
+

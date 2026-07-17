@@ -1,0 +1,75 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Build, test, and browser gates
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v6
+
+      - name: Use Node.js 24
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Verify generated sitemap
+        run: |
+          npm run build:sitemap
+          git diff --exit-code -- public/sitemap.xml
+
+      - name: Build production application
+        run: npm run build
+
+      - name: Run server-boundary tests
+        run: |
+          npm run test:checkout
+          npm run test:operations
+          npm run test:sourcing
+
+      - name: Install Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Start production preview
+        run: |
+          npm run preview -- --port 4173 > /tmp/coffendi-preview.log 2>&1 &
+          for attempt in {1..30}; do
+            if curl --fail --silent http://127.0.0.1:4173/ > /dev/null; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/coffendi-preview.log
+          exit 1
+
+      - name: Run security checks
+        run: npm run test:security
+
+      - name: Run accessibility checks
+        run: npm run test:a11y
+
+      - name: Run performance checks
+        run: npm run test:performance
+
+      - name: Run visual and responsive checks
+        run: npm run test:visual
+

@@ -1,5 +1,8 @@
 # Coffendi instant coffee storefront
 
+[![CI](https://github.com/basemaccount/coffendi/actions/workflows/ci.yml/badge.svg)](https://github.com/basemaccount/coffendi/actions/workflows/ci.yml)
+[![Production smoke](https://github.com/basemaccount/coffendi/actions/workflows/production-smoke.yml/badge.svg)](https://github.com/basemaccount/coffendi/actions/workflows/production-smoke.yml)
+
 A responsive React and Vite storefront focused on three soluble-coffee formats:
 spray dried, agglomerated, and freeze dried. It includes retail product journeys,
 a persistent cart, a server-side Stripe Checkout boundary, bulk inquiry capture,
@@ -166,6 +169,8 @@ approved message and sender-domain configuration.
   Blob-review procedures.
 - `docs/incident-response.md` — payment, submission, data, price, inventory and
   notification incident response.
+- `docs/deployment.md` — GitHub CI, Dependabot, Vercel deployment, production
+  smoke monitoring, release verification and rollback.
 
 ## Verification
 
@@ -178,6 +183,7 @@ npm run test:security
 npm run test:a11y
 npm run test:performance
 npm run test:visual
+npm run test:production
 ```
 
 Additional retained checks:

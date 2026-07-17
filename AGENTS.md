@@ -29,6 +29,7 @@
 - Run `npm run test:a11y` with the Vite server available at `http://127.0.0.1:4173` after UI changes.
 - Run `npm run build`, start `npm run preview -- --port 4173`, then run `npm run test:performance` against that production preview after changing layout, loading behavior, imagery, routing, or dependencies.
 - Run `npm run test:visual` with the same server after layout, navigation, cart, product, checkout, bulk-form, or responsive changes.
+- Run `npm run test:production` after deployment, domain, security-header, readiness, health, sitemap, robots, or Vercel configuration changes. The check is read-only and targets `https://coffendi.vercel.app` by default.
 - Run `git diff --check` before handoff.
 - `npm run test:api` requires the linked private Vercel environment and exercises persistent submission APIs; do not run it unless that external test is explicitly in scope.
 
