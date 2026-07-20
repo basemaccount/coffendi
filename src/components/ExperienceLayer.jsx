@@ -4,6 +4,10 @@ import { useLocation } from "react-router-dom";
 
 const REVEAL_SELECTOR = [
   ".service-strip .shell > div",
+  ".origin-atlas__header > *",
+  ".origin-atlas__controls",
+  ".origin-atlas__visual",
+  ".origin-atlas__readout",
   ".section-heading",
   ".profile-card",
   ".story-grid > *",
@@ -84,6 +88,48 @@ export default function ExperienceLayer({ language }) {
     });
 
     return () => observer.disconnect();
+  }, [pathname]);
+
+  useEffect(() => {
+    const precisePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!precisePointer || reduceMotion) return undefined;
+
+    const cleanups = Array.from(document.querySelectorAll("[data-optical]")).map((surface) => {
+      let pointerFrame = 0;
+      let pendingEvent;
+      const renderPointer = () => {
+        pointerFrame = 0;
+        if (!pendingEvent) return;
+        const bounds = surface.getBoundingClientRect();
+        const x = Math.min(1, Math.max(0, (pendingEvent.clientX - bounds.left) / bounds.width));
+        const y = Math.min(1, Math.max(0, (pendingEvent.clientY - bounds.top) / bounds.height));
+        surface.style.setProperty("--optical-x", `${x * 100}%`);
+        surface.style.setProperty("--optical-y", `${y * 100}%`);
+        surface.style.setProperty("--optical-shift-x", `${(x - 0.5) * -8}px`);
+        surface.style.setProperty("--optical-shift-y", `${(y - 0.5) * -8}px`);
+        surface.classList.add("is-optical-active");
+      };
+      const handlePointerMove = (event) => {
+        pendingEvent = event;
+        if (!pointerFrame) pointerFrame = window.requestAnimationFrame(renderPointer);
+      };
+      const handlePointerLeave = () => {
+        surface.classList.remove("is-optical-active");
+        surface.style.setProperty("--optical-shift-x", "0px");
+        surface.style.setProperty("--optical-shift-y", "0px");
+      };
+
+      surface.addEventListener("pointermove", handlePointerMove, { passive: true });
+      surface.addEventListener("pointerleave", handlePointerLeave);
+      return () => {
+        surface.removeEventListener("pointermove", handlePointerMove);
+        surface.removeEventListener("pointerleave", handlePointerLeave);
+        if (pointerFrame) window.cancelAnimationFrame(pointerFrame);
+      };
+    });
+
+    return () => cleanups.forEach((cleanup) => cleanup());
   }, [pathname]);
 
   const returnToTop = () => {

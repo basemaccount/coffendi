@@ -21,13 +21,40 @@ import {
   Warehouse,
   X,
 } from "lucide-react";
-import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import { Link as RouterLink, NavLink as RouterNavLink, Navigate, Route, Routes, useLocation, useNavigate, useParams } from "react-router-dom";
 import ExperienceLayer from "./components/ExperienceLayer";
+import OriginAtlas from "./components/OriginAtlas";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
 const CONTACT_EMAIL = "coffee@coffendi.com";
+
+function useTransitionClick({ to, onClick, target, replace, state, preventScrollReset, relative }) {
+  const navigate = useNavigate();
+  return (event) => {
+    onClick?.(event);
+    const shouldNavigate = !event.defaultPrevented && event.button === 0 && !event.metaKey && !event.ctrlKey && !event.shiftKey && !event.altKey && (!target || target === "_self");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (!shouldNavigate || reduceMotion || !document.startViewTransition) return;
+
+    event.preventDefault();
+    document.startViewTransition(() => {
+      navigate(to, { replace, state, preventScrollReset, relative, flushSync: true });
+      window.scrollTo({ top: 0, behavior: "instant" });
+    }).finished.catch(() => {});
+  };
+}
+
+function Link({ to, onClick, target, replace, state, preventScrollReset, relative, ...props }) {
+  const handleClick = useTransitionClick({ to, onClick, target, replace, state, preventScrollReset, relative });
+  return <RouterLink {...props} to={to} target={target} replace={replace} state={state} preventScrollReset={preventScrollReset} relative={relative} onClick={handleClick} />;
+}
+
+function NavLink({ to, onClick, target, replace, state, preventScrollReset, relative, ...props }) {
+  const handleClick = useTransitionClick({ to, onClick, target, replace, state, preventScrollReset, relative });
+  return <RouterNavLink {...props} to={to} target={target} replace={replace} state={state} preventScrollReset={preventScrollReset} relative={relative} onClick={handleClick} />;
+}
 
 const messages = {
   en: {
@@ -272,7 +299,7 @@ function ProfileCard({ profile, language, selected, onToggle, copy }) {
   return (
     <article className="profile-card">
       <Link className="profile-card__image" to={`/coffees/${profile.id}`}>
-        <img src={profile.image} srcSet={profile.srcSet} sizes="(max-width: 820px) calc(100vw - 34px), (max-width: 1100px) calc(50vw - 36px), 390px" alt={localized(profile.alt, language)} width="1200" height="800" loading="lazy" decoding="async" />
+        <img src={profile.image} srcSet={profile.srcSet} sizes="(max-width: 820px) calc(100vw - 34px), (max-width: 1100px) calc(50vw - 36px), 390px" alt={localized(profile.alt, language)} width="1200" height="800" loading="lazy" decoding="async" style={{ viewTransitionName: `coffee-${profile.id}` }} />
         <span>{localized(profile.process, language)}</span>
       </Link>
       <div className="profile-card__content">
@@ -306,14 +333,17 @@ function HomePage({ language, copy, selected, onToggle }) {
             <div className="hero__actions"><Link className="button button--gold" to="/coffees">{language === "tr" ? "Kahveleri keşfet" : "Explore coffees"}<ArrowRight aria-hidden="true" /></Link><Link className="button button--glass" to="/contact">{copy.inquiry}</Link></div>
             <div className="hero__proof"><span><Globe2 aria-hidden="true" />{language === "tr" ? "Menşe odaklı" : "Origin-led"}</span><span><GitCompareArrows aria-hidden="true" />{language === "tr" ? "Net karşılaştırma" : "Clear comparison"}</span><span><ClipboardCheck aria-hidden="true" />{language === "tr" ? "Teyitli sonraki adımlar" : "Confirmed next steps"}</span></div>
           </div>
-          <div className="hero__media">
+          <div className="hero__media" data-optical>
             <img src="/images/instant-bulk-beans-1280.webp" srcSet="/images/instant-bulk-beans-640.webp 640w, /images/instant-bulk-beans-960.webp 960w, /images/instant-bulk-beans-1280.webp 1280w" sizes="(max-width: 800px) calc(100vw - 34px), 48vw" alt={language === "tr" ? "Çuvalda yeşil kahve çekirdekleri" : "Green coffee beans in a jute sack"} width="1280" height="960" fetchPriority="high" decoding="async" />
+            <span className="material-lens" aria-hidden="true"><Sprout /></span>
             <div className="hero__card"><Sprout aria-hidden="true" /><span>{language === "tr" ? "Kahve kimliği menşede başlar" : "Coffee identity starts at origin"}</span></div>
           </div>
         </div>
       </section>
 
       <section className="service-strip"><div className="shell"><div><MapPin aria-hidden="true" /><span>{language === "tr" ? "Menşe bağlamı" : "Origin context"}</span></div><div><Coffee aria-hidden="true" /><span>{language === "tr" ? "Fincan yönü" : "Cup direction"}</span></div><div><PackageCheck aria-hidden="true" /><span>{language === "tr" ? "Belge teyidi" : "Document confirmation"}</span></div><div><Ship aria-hidden="true" /><span>{language === "tr" ? "Talebe göre lojistik" : "Logistics by inquiry"}</span></div></div></section>
+
+      <OriginAtlas profiles={coffeeProfiles} language={language} LinkComponent={Link} />
 
       <section className="section shell">
         <SectionHeading eyebrow={language === "tr" ? "Başlangıç profilleri" : "Starting profiles"} title={language === "tr" ? "Önce fincan yönünü bulun." : "Find the cup direction first."} copy={language === "tr" ? "Bunlar canlı stok veya fiyat teklifi değil, ilk görüşmeyi netleştiren temsili menşe profilleridir." : "These are representative origin profiles—not live stock or offers—designed to make the first conversation more precise."} action={<Link className="text-link" to="/coffees">{language === "tr" ? "Tüm profiller" : "All profiles"}<ArrowRight aria-hidden="true" /></Link>} />
@@ -346,7 +376,7 @@ function CoffeePage({ language, copy, selected, onToggle }) {
     profile ? `/coffees/${profile.id}` : "/coffees",
   );
   if (!profile) return <Navigate to="/coffees" replace />;
-  return <><section className="profile-detail"><div className="shell profile-detail__grid"><div className="profile-detail__media"><img src={profile.image} alt={localized(profile.alt, language)} width="960" height="720" fetchPriority="high" decoding="async" /><span>{localized(profile.country, language)}</span></div><div className="profile-detail__copy"><Link className="breadcrumbs" to="/coffees">{copy.backCoffees}<ChevronRight aria-hidden="true" /></Link><p className="eyebrow">{profile.region}</p><h1>{localized(profile.name, language)}</h1><p className="profile-detail__lede">{localized(profile.profile, language)}</p><dl className="detail-facts"><div><dt>{language === "tr" ? "Menşe" : "Origin"}</dt><dd>{localized(profile.country, language)}</dd></div><div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "İşleme" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div><div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div><div><dt>{language === "tr" ? "Hasat bağlamı" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div></dl><div className="detail-actions"><button className={`button button--compare ${selected.includes(profile.id) ? "is-selected" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selected.includes(profile.id)}>{selected.includes(profile.id) ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selected.includes(profile.id) ? copy.removeCompare : copy.addCompare}</button><Link className="button button--dark" to="/contact">{copy.requestInfo}<ArrowRight aria-hidden="true" /></Link></div><p className="source-note">{copy.sourceNote}</p></div></div></section><section className="section shell"><SectionHeading eyebrow={language === "tr" ? "Karar çerçevesi" : "Decision framework"} title={language === "tr" ? "Bir sonraki görüşmede neyi teyit etmelisiniz?" : "What should the next conversation confirm?"} /><div className="decision-grid"><article><Coffee aria-hidden="true" /><h3>{language === "tr" ? "Fincan" : "Cup"}</h3><p>{language === "tr" ? "Numuneyi hedef kavurma ve demleme yaklaşımıyla değerlendirin." : "Evaluate a sample against the intended roast and brewing approach."}</p></article><article><ClipboardCheck aria-hidden="true" /><h3>{language === "tr" ? "Belge" : "Documentation"}</h3><p>{language === "tr" ? "Menşe, süreç ve gereken belgeleri sözleşmeden önce teyit edin." : "Confirm origin, process and required documents before any agreement."}</p></article><article><Ship aria-hidden="true" /><h3>{language === "tr" ? "Lojistik" : "Logistics"}</h3><p>{language === "tr" ? "Hacim, teslim noktası ve zamanlamayı gerçek taleple eşleştirin." : "Align volume, destination and timing with the actual brief."}</p></article></div></section></>;
+  return <><section className="profile-detail"><div className="shell profile-detail__grid"><div className="profile-detail__media"><img src={profile.image} alt={localized(profile.alt, language)} width="960" height="720" fetchPriority="high" decoding="async" style={{ viewTransitionName: `coffee-${profile.id}` }} /><span>{localized(profile.country, language)}</span></div><div className="profile-detail__copy"><Link className="breadcrumbs" to="/coffees">{copy.backCoffees}<ChevronRight aria-hidden="true" /></Link><p className="eyebrow">{profile.region}</p><h1>{localized(profile.name, language)}</h1><p className="profile-detail__lede">{localized(profile.profile, language)}</p><dl className="detail-facts"><div><dt>{language === "tr" ? "Menşe" : "Origin"}</dt><dd>{localized(profile.country, language)}</dd></div><div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "İşleme" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div><div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div><div><dt>{language === "tr" ? "Hasat bağlamı" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div></dl><div className="detail-actions"><button className={`button button--compare ${selected.includes(profile.id) ? "is-selected" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selected.includes(profile.id)}>{selected.includes(profile.id) ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selected.includes(profile.id) ? copy.removeCompare : copy.addCompare}</button><Link className="button button--dark" to="/contact">{copy.requestInfo}<ArrowRight aria-hidden="true" /></Link></div><p className="source-note">{copy.sourceNote}</p></div></div></section><section className="section shell"><SectionHeading eyebrow={language === "tr" ? "Karar çerçevesi" : "Decision framework"} title={language === "tr" ? "Bir sonraki görüşmede neyi teyit etmelisiniz?" : "What should the next conversation confirm?"} /><div className="decision-grid"><article><Coffee aria-hidden="true" /><h3>{language === "tr" ? "Fincan" : "Cup"}</h3><p>{language === "tr" ? "Numuneyi hedef kavurma ve demleme yaklaşımıyla değerlendirin." : "Evaluate a sample against the intended roast and brewing approach."}</p></article><article><ClipboardCheck aria-hidden="true" /><h3>{language === "tr" ? "Belge" : "Documentation"}</h3><p>{language === "tr" ? "Menşe, süreç ve gereken belgeleri sözleşmeden önce teyit edin." : "Confirm origin, process and required documents before any agreement."}</p></article><article><Ship aria-hidden="true" /><h3>{language === "tr" ? "Lojistik" : "Logistics"}</h3><p>{language === "tr" ? "Hacim, teslim noktası ve zamanlamayı gerçek taleple eşleştirin." : "Align volume, destination and timing with the actual brief."}</p></article></div></section></>;
 }
 
 function OriginsPage({ language }) {
