@@ -1,1834 +1,424 @@
-import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
-  AlertTriangle,
-  Box,
+  Bean,
   Check,
   ChevronRight,
-  CircleGauge,
+  ClipboardCheck,
   Coffee,
-  Copy,
-  Droplets,
-  Factory,
-  Headphones,
+  GitCompareArrows,
+  Globe2,
+  HandHeart,
   Leaf,
   Mail,
+  MapPin,
   Menu,
-  Minus,
+  Mountain,
   PackageCheck,
-  Plus,
-  Phone,
-  ShieldCheck,
-  ShoppingBag,
-  Snowflake,
-  Sparkles,
-  Trash2,
-  Truck,
-  Wind,
+  Send,
+  Ship,
+  Sprout,
+  Warehouse,
   X,
 } from "lucide-react";
-import {
-  Link as RouterLink,
-  NavLink as RouterNavLink,
-  Navigate,
-  Route,
-  Routes,
-  useLocation,
-  useParams,
-} from "react-router-dom";
+import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
-import {
-  availabilityLabel,
-  merchantProfile,
-  publicCatalogReady,
-  publicStoreConfiguration,
-  supportContactReady,
-} from "./merchantConfig";
-import {
-  formatPrice,
-  getProduct,
-  learningCards,
-  products,
-  storeCurrency,
-  sustainabilityPillars,
-} from "./storefrontData";
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
-const CATALOG_READY = publicCatalogReady(products);
-const HERO_IMAGE_SRC_SET = [640, 960, 1280]
-  .map((width) => `/images/instant-hero-${width}.webp ${width}w`)
-  .concat("/images/instant-hero.webp 1694w")
-  .join(", ");
-const BULK_IMAGE_SRC_SET = [640, 960, 1280]
-  .map((width) => `/images/instant-bulk-beans-${width}.webp ${width}w`)
-  .concat("/images/instant-bulk-beans.webp 1600w")
-  .join(", ");
+const CONTACT_EMAIL = "coffee@coffendi.com";
 
-function Link(props) {
-  return <RouterLink viewTransition {...props} />;
-}
-
-function NavLink(props) {
-  return <RouterNavLink viewTransition {...props} />;
-}
-
-function selectionSearch(items) {
-  const selection = items.map(({ product, quantity }) => `${product.id}:${quantity}`).join(",");
-  return selection ? `?selection=${encodeURIComponent(selection)}` : "";
-}
-
-function useCommerceStatus() {
-  const [status, setStatus] = useState({ state: "loading", ready: false, message: "Checking online checkout…" });
-  useEffect(() => {
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 8_000);
-    fetch("/api/commerce-status", {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message || "Checkout status is unavailable.");
-        setStatus({ state: "ready", ready: result.ready === true, message: result.message || "" });
-      })
-      .catch(() => setStatus({
-        state: "unavailable",
-        ready: false,
-        message: "Online checkout status could not be confirmed. Send the selection to Coffendi instead.",
-      }))
-      .finally(() => window.clearTimeout(timeout));
-    return () => {
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
-  }, []);
-  return status;
-}
-
-const processIcons = {
-  "spray-dried": Wind,
-  agglomerated: CircleGauge,
-  "freeze-dried": Snowflake,
+const messages = {
+  en: {
+    language: "Language",
+    nav: { home: "Home", coffees: "Coffees", origins: "Origins", compare: "Compare", impact: "Our approach", contact: "Contact" },
+    inquiry: "Start an inquiry",
+    menuOpen: "Open navigation",
+    menuClose: "Close navigation",
+    compareAction: "Compare profiles",
+    addCompare: "Add to compare",
+    removeCompare: "In comparison",
+    comparisonEmpty: "Choose at least one profile to begin your comparison.",
+    requestInfo: "Request information",
+    learnMore: "View profile",
+    backCoffees: "Back to coffees",
+    sourceNote: "Reference information only. Current lots, samples, documentation and delivery terms are confirmed directly by Coffendi.",
+    footerLine: "Green coffee information and inquiry pathways for roasters and partners.",
+    form: {
+      eyebrow: "Tell us what you need",
+      title: "Begin with a clear coffee brief.",
+      copy: "Share your preferred origin, process, cup direction and approximate volume. The Coffendi team will confirm what can be discussed next.",
+      name: "Name",
+      company: "Company",
+      email: "Work email",
+      country: "Country / market",
+      volume: "Indicative volume",
+      message: "Your coffee brief",
+      consent: "I agree that Coffendi may use these details to respond to this inquiry.",
+      submit: "Send inquiry",
+      submitting: "Sending inquiry",
+      success: "Thank you. Your inquiry has been recorded.",
+      error: "The inquiry could not be sent. Please try again or email us directly.",
+    },
+  },
+  tr: {
+    language: "Dil",
+    nav: { home: "Ana sayfa", coffees: "Kahveler", origins: "Menşeler", compare: "Karşılaştır", impact: "Yaklaşımımız", contact: "İletişim" },
+    inquiry: "Talep oluştur",
+    menuOpen: "Menüyü aç",
+    menuClose: "Menüyü kapat",
+    compareAction: "Profilleri karşılaştır",
+    addCompare: "Karşılaştırmaya ekle",
+    removeCompare: "Karşılaştırmada",
+    comparisonEmpty: "Karşılaştırmaya başlamak için en az bir profil seçin.",
+    requestInfo: "Bilgi talep et",
+    learnMore: "Profili incele",
+    backCoffees: "Kahvelere dön",
+    sourceNote: "Yalnızca referans amaçlıdır. Güncel lotlar, numuneler, belgeler ve teslimat koşulları Coffendi tarafından doğrudan teyit edilir.",
+    footerLine: "Kavurucular ve iş ortakları için yeşil kahve bilgileri ve talep kanalları.",
+    form: {
+      eyebrow: "İhtiyacınızı anlatın",
+      title: "Net bir kahve özetiyle başlayın.",
+      copy: "Tercih ettiğiniz menşeyi, işleme yöntemini, fincan yönünü ve yaklaşık hacmi paylaşın. Coffendi ekibi sonraki adımları sizinle teyit edecektir.",
+      name: "Ad soyad",
+      company: "Şirket",
+      email: "İş e-postası",
+      country: "Ülke / pazar",
+      volume: "Tahmini hacim",
+      message: "Kahve talebiniz",
+      consent: "Coffendi'nin bu talebe yanıt vermek için bilgilerimi kullanmasını kabul ediyorum.",
+      submit: "Talebi gönder",
+      submitting: "Talep gönderiliyor",
+      success: "Teşekkürler. Talebiniz kaydedildi.",
+      error: "Talep gönderilemedi. Lütfen tekrar deneyin veya bize doğrudan e-posta gönderin.",
+    },
+  },
 };
 
-function setMetaContent(selector, attributes, content) {
-  let element = document.head.querySelector(selector);
-  if (!element) {
-    element = document.createElement("meta");
-    Object.entries(attributes).forEach(([name, value]) => element.setAttribute(name, value));
-    document.head.append(element);
-  }
-  element.setAttribute("content", content);
+const coffeeProfiles = [
+  {
+    id: "ethiopia-washed",
+    country: { en: "Ethiopia", tr: "Etiyopya" },
+    name: { en: "Highland washed profile", tr: "Yüksek rakım yıkanmış profil" },
+    region: "Sidama · Guji · Yirgacheffe",
+    process: { en: "Washed", tr: "Yıkanmış" },
+    profile: { en: "Floral, citrus and tea-like clarity", tr: "Çiçeksi, narenciye ve çay benzeri berraklık" },
+    use: { en: "Filter-led menus and bright components", tr: "Filtre odaklı menüler ve canlı bileşenler" },
+    harvest: { en: "Typical main crop: October–January", tr: "Tipik ana hasat: Ekim–Ocak" },
+    image: "/images/green-drying-beds.webp",
+    srcSet: "/images/green-drying-beds-480.webp 480w, /images/green-drying-beds-720.webp 720w, /images/green-drying-beds-960.webp 960w, /images/green-drying-beds.webp 1200w",
+    alt: { en: "Coffee drying on raised beds", tr: "Yükseltilmiş yataklarda kuruyan kahve" },
+  },
+  {
+    id: "colombia-balanced",
+    country: { en: "Colombia", tr: "Kolombiya" },
+    name: { en: "Balanced regional profile", tr: "Dengeli bölgesel profil" },
+    region: "Huila · Tolima · Nariño",
+    process: { en: "Washed and selected processes", tr: "Yıkanmış ve seçili işlemler" },
+    profile: { en: "Red fruit, caramel and rounded acidity", tr: "Kırmızı meyve, karamel ve yuvarlak asidite" },
+    use: { en: "Flexible espresso and filter programs", tr: "Esnek espresso ve filtre programları" },
+    harvest: { en: "Regional harvest windows vary", tr: "Bölgesel hasat dönemleri değişkenlik gösterir" },
+    image: "/images/green-coffee-farmer.webp",
+    srcSet: "/images/green-coffee-farmer-480.webp 480w, /images/green-coffee-farmer-720.webp 720w, /images/green-coffee-farmer-960.webp 960w, /images/green-coffee-farmer.webp 1200w",
+    alt: { en: "Coffee producer among coffee plants", tr: "Kahve bitkileri arasında bir üretici" },
+  },
+  {
+    id: "brazil-classic",
+    country: { en: "Brazil", tr: "Brezilya" },
+    name: { en: "Classic natural profile", tr: "Klasik natural profil" },
+    region: "Cerrado · Mantiqueira",
+    process: { en: "Natural", tr: "Natural" },
+    profile: { en: "Chocolate, nuts and ripe-fruit sweetness", tr: "Çikolata, kuruyemiş ve olgun meyve tatlılığı" },
+    use: { en: "Espresso foundations and approachable blends", tr: "Espresso temelleri ve erişilebilir harmanlar" },
+    harvest: { en: "Typical main crop: May–September", tr: "Tipik ana hasat: Mayıs–Eylül" },
+    image: "/images/green-green-beans-sack.webp",
+    srcSet: "/images/green-green-beans-sack-480.webp 480w, /images/green-green-beans-sack-720.webp 720w, /images/green-green-beans-sack-960.webp 960w, /images/green-green-beans-sack.webp 1200w",
+    alt: { en: "Unroasted green coffee beans in a sack", tr: "Çuval içinde kavrulmamış yeşil kahve çekirdekleri" },
+  },
+  {
+    id: "guatemala-structured",
+    country: { en: "Guatemala", tr: "Guatemala" },
+    name: { en: "Structured highland profile", tr: "Yapılı yüksek rakım profili" },
+    region: "Huehuetenango · Antigua",
+    process: { en: "Washed", tr: "Yıkanmış" },
+    profile: { en: "Cocoa, citrus and structured sweetness", tr: "Kakao, narenciye ve yapılı tatlılık" },
+    use: { en: "Single-origin releases and blend structure", tr: "Tek menşe sunumlar ve harman yapısı" },
+    harvest: { en: "Typical main crop: November–March", tr: "Tipik ana hasat: Kasım–Mart" },
+    image: "/images/green-farmer-guatemala.webp",
+    srcSet: "/images/green-farmer-guatemala-480.webp 480w, /images/green-farmer-guatemala-720.webp 720w, /images/green-farmer-guatemala-960.webp 960w, /images/green-farmer-guatemala.webp 1200w",
+    alt: { en: "Coffee producer examining coffee cherries", tr: "Kahve kirazlarını inceleyen üretici" },
+  },
+  {
+    id: "kenya-vivid",
+    country: { en: "Kenya", tr: "Kenya" },
+    name: { en: "Vivid washed profile", tr: "Canlı yıkanmış profil" },
+    region: "Kirinyaga · Nyeri",
+    process: { en: "Washed", tr: "Yıkanmış" },
+    profile: { en: "Dark berries, grapefruit and black tea", tr: "Koyu meyveler, greyfurt ve siyah çay" },
+    use: { en: "Distinctive seasonal filter selections", tr: "Ayırt edici sezonluk filtre seçkileri" },
+    harvest: { en: "Typical main crop: October–December", tr: "Tipik ana hasat: Ekim–Aralık" },
+    image: "/images/green-cherry-harvest.webp",
+    srcSet: "/images/green-cherry-harvest-480.webp 480w, /images/green-cherry-harvest-720.webp 720w, /images/green-cherry-harvest-960.webp 960w, /images/green-cherry-harvest.webp 1200w",
+    alt: { en: "Fresh red coffee cherries during harvest", tr: "Hasat sırasında taze kırmızı kahve kirazları" },
+  },
+  {
+    id: "rwanda-sweet",
+    country: { en: "Rwanda", tr: "Ruanda" },
+    name: { en: "Sweet, composed profile", tr: "Tatlı ve dengeli profil" },
+    region: "Karongi · Gakenke",
+    process: { en: "Washed and honey", tr: "Yıkanmış ve honey" },
+    profile: { en: "Stone fruit, tea and brown-sugar sweetness", tr: "Sert çekirdekli meyve, çay ve esmer şeker tatlılığı" },
+    use: { en: "Elegant filter and lighter espresso programs", tr: "Zarif filtre ve açık kavrum espresso programları" },
+    harvest: { en: "Typical main crop: March–July", tr: "Tipik ana hasat: Mart–Temmuz" },
+    image: "/images/green-green-cherries.webp",
+    srcSet: "/images/green-green-cherries-480.webp 480w, /images/green-green-cherries-720.webp 720w, /images/green-green-cherries-960.webp 960w, /images/green-green-cherries.webp 1200w",
+    alt: { en: "Green coffee cherries growing on a branch", tr: "Dal üzerinde büyüyen yeşil kahve kirazları" },
+  },
+];
+
+function localized(value, language) {
+  return typeof value === "object" && value !== null ? value[language] : value;
 }
 
-function usePageMeta(title, description, options = {}) {
-  const { pathname } = useLocation();
-  const canonicalUrl = `${SITE_URL}${pathname === "/" ? "/" : pathname}`;
-  const imageUrl = options.image ? `${SITE_URL}${options.image}` : `${SITE_URL}/images/instant-hero.webp`;
-
+function usePageMeta(title, description, path = "/") {
   useEffect(() => {
     document.title = title;
-    setMetaContent('meta[name="description"]', { name: "description" }, description);
-    setMetaContent('meta[name="robots"]', { name: "robots" }, options.robots || "index,follow");
-    setMetaContent('meta[property="og:type"]', { property: "og:type" }, options.type || "website");
-    setMetaContent('meta[property="og:title"]', { property: "og:title" }, title);
-    setMetaContent('meta[property="og:description"]', { property: "og:description" }, description);
-    setMetaContent('meta[property="og:url"]', { property: "og:url" }, canonicalUrl);
-    setMetaContent('meta[property="og:image"]', { property: "og:image" }, imageUrl);
-    setMetaContent('meta[name="twitter:title"]', { name: "twitter:title" }, title);
-    setMetaContent('meta[name="twitter:description"]', { name: "twitter:description" }, description);
-    setMetaContent('meta[name="twitter:image"]', { name: "twitter:image" }, imageUrl);
-    let canonical = document.head.querySelector('link[rel="canonical"]');
-    if (!canonical) {
-      canonical = document.createElement("link");
-      canonical.setAttribute("rel", "canonical");
-      document.head.append(canonical);
-    }
-    canonical.setAttribute("href", canonicalUrl);
-  }, [canonicalUrl, description, imageUrl, options.robots, options.type, title]);
-}
-
-function StructuredData({ data }) {
-  const serialized = JSON.stringify(data).replaceAll("<", "\\u003c");
-  return <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: serialized }} />;
+    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `${SITE_URL}${path}`);
+  }, [description, path, title]);
 }
 
 function ScrollManager() {
-  const { pathname, hash } = useLocation();
-
-  useEffect(() => {
-    if (hash) {
-      requestAnimationFrame(() => {
-        let targetId = hash.slice(1);
-        try {
-          targetId = decodeURIComponent(targetId);
-        } catch {
-          // Keep the literal fragment when it is not valid percent-encoding.
-        }
-        document.getElementById(targetId)?.scrollIntoView({ block: "start" });
-      });
-      return;
-    }
-    window.scrollTo({ top: 0, behavior: "instant" });
-  }, [pathname, hash]);
-
+  const { pathname } = useLocation();
+  useEffect(() => window.scrollTo({ top: 0, behavior: "instant" }), [pathname]);
   return null;
 }
 
-const REVEAL_ITEM_SELECTOR = [
-  ".product-card",
-  ".shop-intro__note",
-  ".format-switcher",
-  ".format-story__steps li",
-  ".learning-card",
-  ".faq-grid details",
-  ".shop-service > div",
-  ".making-process li",
-  ".comparison-row:not(.comparison-row--header)",
-  ".pillar-grid article",
-  ".bulk-route__grid article",
-  ".form-group",
-  ".contact-options > *",
-  ".contact-form",
-  ".product-specifications__grid > div",
-  ".preparation-grid li",
-  ".next-products__grid > a",
-  ".checkout-items article",
-  ".checkout-summary",
-].join(",");
-
-function MotionManager() {
-  const { pathname, hash } = useLocation();
-
-  useLayoutEffect(() => {
-    const motionPreference = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const reduceMotion = motionPreference.matches;
-    const sections = [
-      ...document.querySelectorAll("#main-content > section, #main-content > .product-page > section"),
-    ];
-    const releaseTimers = [];
-    const releaseItems = (section, delay = 1_100) => {
-      const timer = window.setTimeout(() => {
-        section.querySelectorAll(".reveal-item").forEach((item) => {
-          item.classList.remove("reveal-item");
-          item.style.removeProperty("--reveal-order");
-        });
-      }, delay);
-      releaseTimers.push(timer);
-    };
-    const observer = !reduceMotion && "IntersectionObserver" in window
-      ? new IntersectionObserver((entries) => {
-        entries.forEach((entry) => {
-          if (!entry.isIntersecting) return;
-          entry.target.classList.add("is-revealed");
-          releaseItems(entry.target);
-          observer.unobserve(entry.target);
-        });
-      }, { rootMargin: "0px 0px -8%", threshold: 0.08 })
-      : null;
-
-    sections.forEach((section, sectionIndex) => {
-      section.classList.add(sectionIndex === 0 ? "route-intro" : "reveal-section");
-      section.querySelectorAll(REVEAL_ITEM_SELECTOR).forEach((item, itemIndex) => {
-        item.classList.add("reveal-item");
-        item.style.setProperty("--reveal-order", Math.min(itemIndex, 7));
-      });
-
-      if (sectionIndex === 0 || !observer) {
-        section.classList.add("is-revealed");
-        releaseItems(section, reduceMotion ? 0 : 1_100);
-      }
-      else observer.observe(section);
-    });
-
-    const handleMotionPreference = (event) => {
-      document.documentElement.classList.toggle("motion-ready", !event.matches);
-      if (!event.matches) return;
-      observer?.disconnect();
-      sections.forEach((section) => {
-        section.classList.add("is-revealed");
-        releaseItems(section, 0);
-      });
-    };
-    motionPreference.addEventListener("change", handleMotionPreference);
-
-    return () => {
-      observer?.disconnect();
-      releaseTimers.forEach((timer) => window.clearTimeout(timer));
-      motionPreference.removeEventListener("change", handleMotionPreference);
-    };
-  }, [pathname, hash]);
-
-  return null;
-}
-
-function AnnouncementBar() {
-  const purchaseMessage = CATALOG_READY ? "Retail-ready catalog · Dedicated bulk pathway" : "Retail catalog in preparation · Bulk briefs open";
-  return (
-    <div className="announcement">
-      <p>
-        <span>Three instant-coffee formats.</span>
-        <span className="announcement__detail">{purchaseMessage}</span>
-      </p>
-      <Link to="/bulk">
-        <span className="announcement__desktop-link">Plan a bulk order</span>
-        <span className="announcement__mobile-link">Bulk & private label</span>
-        <ArrowRight size={14} aria-hidden="true" />
-      </Link>
-    </div>
-  );
-}
-
-function Header({ cartCount, onOpenCart }) {
+function Header({ language, setLanguage, copy }) {
   const [menuOpen, setMenuOpen] = useState(false);
-  const [scrolled, setScrolled] = useState(() => window.scrollY > 18);
-  const menuButton = useRef(null);
-  const mobileNavigation = useRef(null);
-  const scrollProgress = useRef(null);
-  const menuWasOpen = useRef(false);
   const location = useLocation();
+  const menuButton = useRef(null);
+  const navigation = useRef(null);
+  const menuWasOpen = useRef(false);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
   useEffect(() => {
-    let frame = 0;
-    const updateScrollState = () => {
-      const scrollRange = document.documentElement.scrollHeight - window.innerHeight;
-      const progress = scrollRange > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollRange)) : 0;
-      scrollProgress.current?.style.setProperty("--scroll-progress", progress);
-      setScrolled(window.scrollY > 18);
-    };
-    const scheduleScrollUpdate = () => {
-      if (frame) return;
-      frame = requestAnimationFrame(() => {
-        updateScrollState();
-        frame = 0;
-      });
-    };
-    updateScrollState();
-    window.addEventListener("scroll", scheduleScrollUpdate, { passive: true });
-    window.addEventListener("resize", scheduleScrollUpdate);
-    return () => {
-      window.removeEventListener("scroll", scheduleScrollUpdate);
-      window.removeEventListener("resize", scheduleScrollUpdate);
-      cancelAnimationFrame(frame);
-    };
-  }, []);
-  useEffect(() => {
-    const isolatedElements = [
-      document.querySelector(".announcement"),
-      document.querySelector(".brand"),
-      document.querySelector(".desktop-nav"),
-      document.querySelector(".cart-button"),
-      document.querySelector("#main-content"),
-      document.querySelector(".site-footer"),
-    ].filter(Boolean);
-    const handleKey = (event) => {
+    const handleEscape = (event) => {
       if (event.key === "Escape") setMenuOpen(false);
     };
-
     document.body.classList.toggle("no-scroll", menuOpen);
-    isolatedElements.forEach((element) => { element.inert = menuOpen; });
     if (menuOpen) {
-      menuWasOpen.current = true;
-      document.addEventListener("keydown", handleKey);
-      requestAnimationFrame(() => mobileNavigation.current?.querySelector("a")?.focus());
-    } else if (menuWasOpen.current) {
-      menuWasOpen.current = false;
-      requestAnimationFrame(() => menuButton.current?.focus());
+      document.addEventListener("keydown", handleEscape);
+      requestAnimationFrame(() => navigation.current?.querySelector("a")?.focus());
     }
-
     return () => {
       document.body.classList.remove("no-scroll");
-      document.removeEventListener("keydown", handleKey);
-      isolatedElements.forEach((element) => { element.inert = false; });
+      document.removeEventListener("keydown", handleEscape);
     };
   }, [menuOpen]);
 
-  const navigation = [
-    ["Shop", "/shop"],
-    ["Learn", "/learn"],
-    ["Sustainability", "/sustainability"],
-    ["Bulk", "/bulk"],
-    ["Contact", "/contact"],
+  useEffect(() => {
+    const pageRegions = [document.querySelector("#main-content"), document.querySelector(".site-footer")].filter(Boolean);
+    pageRegions.forEach((region) => { region.inert = menuOpen; });
+    if (!menuOpen && menuWasOpen.current) requestAnimationFrame(() => menuButton.current?.focus());
+    menuWasOpen.current = menuOpen;
+    return () => pageRegions.forEach((region) => { region.inert = false; });
+  }, [menuOpen]);
+
+  const nav = [
+    [copy.nav.coffees, "/coffees"],
+    [copy.nav.origins, "/origins"],
+    [copy.nav.compare, "/compare"],
+    [copy.nav.impact, "/approach"],
   ];
 
   return (
     <>
-      <header className={`site-header ${scrolled ? "is-scrolled" : ""}`}>
+      <header className="site-header">
         <Link className="brand" to="/" aria-label="Coffendi home">
-          <img
-            src="/coffendi-logo-160.webp"
-            srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w"
-            sizes="60px"
-            alt=""
-            width="160"
-            height="152"
-            decoding="async"
-          />
-          <span>
-            <strong>Coffendi</strong>
-            <small>Instant coffee, clearly considered</small>
-          </span>
+          <img src="/coffendi-logo-160.webp" alt="" width="160" height="152" />
+          <span><strong>Coffendi</strong><small>Green coffee · clearly connected</small></span>
         </Link>
-
         <nav className="desktop-nav" aria-label="Primary navigation">
-          {navigation.map(([label, to]) => (
-            <NavLink key={to} to={to} className={({ isActive }) => (isActive ? "is-active" : "")}>
-              {label}
-            </NavLink>
-          ))}
+          {nav.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}
         </nav>
-
         <div className="header-actions">
-          <button
-            className="cart-button"
-            type="button"
-            onClick={onOpenCart}
-            aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? "item" : "items"}`}
-          >
-            <ShoppingBag size={19} aria-hidden="true" />
-            <span className="cart-button__label">Cart</span>
-            <span key={cartCount} className="cart-count" aria-hidden="true">{cartCount}</span>
-          </button>
-          <button
-            ref={menuButton}
-            className="menu-button"
-            type="button"
-            onClick={() => setMenuOpen((open) => !open)}
-            aria-expanded={menuOpen}
-            aria-controls="mobile-navigation"
-            aria-label={menuOpen ? "Close navigation" : "Open navigation"}
-          >
-            <span key={menuOpen ? "close" : "menu"} className="menu-button__icon">
-              {menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}
-            </span>
-          </button>
+          <div className="language-switcher" aria-label={copy.language}>
+            {['en', 'tr'].map((code) => (
+              <button key={code} className={language === code ? "is-active" : ""} type="button" onClick={() => setLanguage(code)} aria-pressed={language === code}>{code.toUpperCase()}</button>
+            ))}
+          </div>
+          <Link className="button button--dark header-cta" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link>
+          <button ref={menuButton} className="menu-button" type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-controls="mobile-navigation" aria-label={menuOpen ? copy.menuClose : copy.menuOpen}>{menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}</button>
         </div>
-        <span ref={scrollProgress} className="scroll-progress" aria-hidden="true" />
       </header>
-
-      <div
-        ref={mobileNavigation}
-        id="mobile-navigation"
-        className={`mobile-navigation ${menuOpen ? "is-open" : ""}`}
-        aria-hidden={!menuOpen}
-        inert={!menuOpen}
-      >
+      <div ref={navigation} id="mobile-navigation" className={`mobile-navigation ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen} inert={!menuOpen ? true : undefined}>
         <nav aria-label="Mobile navigation">
-          {navigation.map(([label, to], index) => (
-            <NavLink key={to} to={to}>
-              <span>0{index + 1}</span>
-              {label}
-              <ArrowRight aria-hidden="true" />
-            </NavLink>
-          ))}
+          {nav.map(([label, to], index) => <NavLink key={to} to={to}><span>0{index + 1}</span>{label}<ArrowRight aria-hidden="true" /></NavLink>)}
+          <NavLink to="/contact"><span>05</span>{copy.nav.contact}<ArrowRight aria-hidden="true" /></NavLink>
         </nav>
-        <div className="mobile-navigation__note">
-          <Coffee aria-hidden="true" />
-          <p>From one jar to a full production brief, start with the format that fits.</p>
-        </div>
+        <div className="mobile-navigation__foot"><Mail aria-hidden="true" /><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></div>
       </div>
     </>
   );
 }
 
-function Footer() {
-  const hasSupport = supportContactReady();
-  return (
-    <footer className="site-footer">
-      <div className="site-footer__lead page-shell">
-        <div>
-          <p className="eyebrow eyebrow--light">Make the next cup clear</p>
-          <h2>Retail ease. Bulk capability. One thoughtful coffee language.</h2>
-        </div>
-        <Link className="button button--cream" to="/shop">
-          Explore the three formats <ArrowRight aria-hidden="true" />
-        </Link>
-      </div>
-      <div className="site-footer__grid page-shell">
-        <div className="footer-brand">
-          <img
-            src="/coffendi-logo-256.webp"
-            srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w"
-            sizes="112px"
-            alt=""
-            width="256"
-            height="243"
-            loading="lazy"
-            decoding="async"
-          />
-          <p>
-            A focused home for spray dried, agglomerated and freeze dried coffee—built for curious
-            drinkers and serious buyers.
-          </p>
-        </div>
-        <div>
-          <h3>Products</h3>
-          {products.map((product) => (
-            <Link key={product.id} to={`/products/${product.id}`}>{product.shortName}</Link>
-          ))}
-        </div>
-        <div>
-          <h3>Discover</h3>
-          <Link to="/learn">How it is made</Link>
-          <Link to="/sustainability">Sustainability</Link>
-          <Link to="/bulk">Bulk & private label</Link>
-          <Link to="/checkout">Checkout</Link>
-        </div>
-        <div>
-          <h3>Policies</h3>
-          <Link to="/shipping-returns">Shipping & returns</Link>
-          <Link to="/privacy">Privacy</Link>
-          <Link to="/terms">Terms</Link>
-        </div>
-        <div>
-          <h3>Support</h3>
-          <Link to="/contact">Contact Coffendi</Link>
-          {hasSupport && <a href={`mailto:${merchantProfile.supportEmail}`}>{merchantProfile.supportEmail}</a>}
-          {merchantProfile.supportPhone && <a href={`tel:${merchantProfile.supportPhone.replace(/[^+\d]/g, "")}`}>{merchantProfile.supportPhone}</a>}
-          {!hasSupport && <span>Contact details confirmed before retail launch</span>}
-        </div>
-      </div>
-      <div className="site-footer__base page-shell">
-        <span>© {new Date().getFullYear()} Coffendi</span>
-        {merchantProfile.legalName && <span>{merchantProfile.legalName}</span>}
-        <span>Specifications, availability and delivery terms are confirmed before purchase.</span>
-      </div>
-    </footer>
-  );
-}
-
-function CartDrawer({ open, items, onClose, onIncrement, onDecrement, onRemove, returnFocusRef, commerceStatus }) {
-  const closeButton = useRef(null);
-  const wasOpen = useRef(false);
-  const count = items.reduce((total, item) => total + item.quantity, 0);
-  const priced = items.length > 0 && items.every(({ product }) => product.priceCents);
-  const subtotal = items.reduce(
-    (total, { product, quantity }) => total + (product.priceCents || 0) * quantity,
-    0,
-  );
-  const onlineReady = commerceStatus.state === "ready" && commerceStatus.ready;
-  const salesPath = `/bulk${selectionSearch(items)}`;
-
-  useEffect(() => {
-    document.body.classList.toggle("no-scroll", open);
-    if (open) {
-      wasOpen.current = true;
-      closeButton.current?.focus();
-    } else if (wasOpen.current) {
-      wasOpen.current = false;
-      requestAnimationFrame(() => returnFocusRef.current?.focus?.());
-    }
-    const handleKey = (event) => {
-      if (event.key === "Escape" && open) onClose();
-    };
-    document.addEventListener("keydown", handleKey);
-    return () => {
-      document.body.classList.remove("no-scroll");
-      document.removeEventListener("keydown", handleKey);
-    };
-  }, [open, onClose, returnFocusRef]);
-
-  return (
-    <div className={`cart-layer ${open ? "is-open" : ""}`} aria-hidden={!open}>
-      <button className="cart-backdrop" type="button" onClick={onClose} tabIndex="-1" aria-hidden="true" />
-      <aside
-        className="cart-drawer"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby="cart-title"
-        aria-hidden={!open}
-        inert={!open}
-      >
-        <div className="cart-drawer__header">
-          <div>
-            <p className="eyebrow">Your selection</p>
-            <h2 id="cart-title">Cart <span>{count}</span></h2>
-          </div>
-          <button ref={closeButton} className="icon-button" type="button" onClick={onClose} aria-label="Close cart">
-            <X aria-hidden="true" />
-          </button>
-        </div>
-
-        {items.length ? (
-          <>
-            <div className="cart-items">
-              {items.map(({ product, quantity }) => (
-                <article className="cart-item" key={product.id}>
-                  <img src={product.thumbnailImage} alt="" width="96" height="96" decoding="async" />
-                  <div className="cart-item__content">
-                    <Link to={`/products/${product.id}`} onClick={onClose}>{product.name}</Link>
-                    <span>{formatPrice(product.priceCents)}</span>
-                    <div className="quantity-control" aria-label={`Quantity for ${product.name}`}>
-                      <button type="button" onClick={() => onDecrement(product.id)} aria-label={`Decrease ${product.name} quantity`}>
-                        <Minus aria-hidden="true" />
-                      </button>
-                      <output aria-label="Quantity">{quantity}</output>
-                      <button type="button" onClick={() => onIncrement(product.id)} aria-label={`Increase ${product.name} quantity`}>
-                        <Plus aria-hidden="true" />
-                      </button>
-                    </div>
-                  </div>
-                  <button className="remove-button" type="button" onClick={() => onRemove(product.id)} aria-label={`Remove ${product.name} from cart`}>
-                    <Trash2 aria-hidden="true" />
-                  </button>
-                </article>
-              ))}
-            </div>
-            <div className="cart-drawer__footer">
-              <ul className="cart-checkpoints" aria-label="Reviewed before payment">
-                <li><Check aria-hidden="true" /> Pack & availability</li>
-                <li><Truck aria-hidden="true" /> Delivery & taxes</li>
-                <li><ShieldCheck aria-hidden="true" /> Secure payment</li>
-              </ul>
-              <div className="cart-total">
-                <span>{priced ? "Subtotal" : "Retail pricing"}</span>
-                <strong>{priced ? formatPrice(subtotal) : "Confirmed by Coffendi"}</strong>
-              </div>
-              <p>{onlineReady ? "Shipping, taxes and final availability are reviewed before payment." : "Online payment is not active yet. Keep the selection and send it to Coffendi for confirmation."}</p>
-              <div className="cart-drawer__footer-actions">
-                {onlineReady ? (
-                  <Link className="button button--dark button--full" to="/checkout" onClick={onClose}>
-                    Continue to checkout <ArrowRight aria-hidden="true" />
-                  </Link>
-                ) : (
-                  <Link className="button button--dark button--full" to={salesPath} onClick={onClose}>
-                    Send this selection <ArrowRight aria-hidden="true" />
-                  </Link>
-                )}
-                <Link className="button button--ghost button--full" to="/shop" onClick={onClose}>
-                  Continue shopping
-                </Link>
-              </div>
-              <Link className="text-link text-link--center" to="/bulk" onClick={onClose}>
-                Need commercial quantities? Start a bulk brief
-              </Link>
-            </div>
-          </>
-        ) : (
-          <div className="empty-cart">
-            <span><ShoppingBag aria-hidden="true" /></span>
-            <h3>Your cart is ready for a first format.</h3>
-            <p>Compare the three textures, then add the one that fits your cup.</p>
-            <Link className="button button--dark" to="/shop" onClick={onClose}>Explore products</Link>
-          </div>
-        )}
-      </aside>
-    </div>
-  );
-}
-
 function SectionHeading({ eyebrow, title, copy, action }) {
-  return (
-    <div className="section-heading">
-      <div>
-        <p className="eyebrow">{eyebrow}</p>
-        <h2>{title}</h2>
-      </div>
-      {(copy || action) && (
-        <div className="section-heading__aside">
-          {copy && <p>{copy}</p>}
-          {action}
-        </div>
-      )}
-    </div>
-  );
+  return <div className="section-heading"><div><p className="eyebrow">{eyebrow}</p><h2>{title}</h2></div>{(copy || action) && <div className="section-heading__aside">{copy && <p>{copy}</p>}{action}</div>}</div>;
 }
 
-function ProductCard({ product, onAdd, cartQuantity = 0 }) {
-  const Icon = processIcons[product.id];
-  const retailConfigured = Boolean(product.priceCents && product.packSize && product.availability === "available");
+function ProfileCard({ profile, language, selected, onToggle, copy }) {
   return (
-    <article id={`format-${product.id}`} className={`product-card product-card--${product.tone} ${cartQuantity ? "is-in-cart" : ""}`}>
-      <Link className="product-card__image" to={`/products/${product.id}`}>
-        <img
-          src={product.image}
-          srcSet={product.cardImageSrcSet}
-          sizes="(max-width: 720px) calc(100vw - 40px), (max-width: 1080px) calc(50vw - 54px), 390px"
-          alt={product.alt}
-          loading="lazy"
-          decoding="async"
-          width="680"
-          height="680"
-        />
-        <span className="product-card__number">{product.number}</span>
-        <span className="product-card__format"><Icon aria-hidden="true" /> {product.format}</span>
+    <article className="profile-card">
+      <Link className="profile-card__image" to={`/coffees/${profile.id}`}>
+        <img src={profile.image} srcSet={profile.srcSet} sizes="(max-width: 820px) calc(100vw - 34px), (max-width: 1100px) calc(50vw - 36px), 390px" alt={localized(profile.alt, language)} width="1200" height="800" loading="lazy" decoding="async" />
+        <span>{localized(profile.process, language)}</span>
       </Link>
-      <div className="product-card__content">
-        <p>{product.descriptor}</p>
-        <h3><Link to={`/products/${product.id}`}>{product.name}</Link></h3>
-        <div className="product-card__status">
-          <span className="product-card__price">{formatPrice(product.priceCents)}</span>
-          {cartQuantity > 0 && <span className="product-card__cart-state"><Check aria-hidden="true" /> In cart · {cartQuantity}</span>}
-        </div>
-        <dl className="product-card__facts">
-          <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
-          <div><dt>Choose it for</dt><dd>{product.decisionCue}</dd></div>
-          <div><dt>Pack & status</dt><dd>{product.packSize || "Pack size pending"} · {availabilityLabel(product.availability)}</dd></div>
-        </dl>
-        <div className="product-card__actions">
-          <button className="button button--dark" type="button" onClick={() => onAdd(product.id)} aria-label={cartQuantity ? `Add another ${product.name} to selection` : `Add to selection: ${product.name}`}>
-            {cartQuantity ? "Add another" : retailConfigured ? "Add to cart" : "Add to selection"} <Plus aria-hidden="true" />
-          </button>
-          <Link className="circle-link" to={`/products/${product.id}`} aria-label={`Learn about ${product.name}`}>
-            <ArrowRight aria-hidden="true" />
-          </Link>
+      <div className="profile-card__content">
+        <p className="eyebrow">{localized(profile.country, language)}</p>
+        <h3><Link to={`/coffees/${profile.id}`}>{localized(profile.name, language)}</Link></h3>
+        <p>{localized(profile.profile, language)}</p>
+        <dl><div><dt>{language === "tr" ? "Bölge" : "Region"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "Kullanım yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div></dl>
+        <div className="profile-card__actions">
+          <button className={`button button--compare ${selected ? "is-selected" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selected}>{selected ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selected ? copy.removeCompare : copy.addCompare}</button>
+          <Link className="circle-link" to={`/coffees/${profile.id}`} aria-label={`${copy.learnMore}: ${localized(profile.name, language)}`}><ArrowRight aria-hidden="true" /></Link>
         </div>
       </div>
     </article>
   );
 }
 
-function HomePage({ onAdd, cartQuantities }) {
+function HomePage({ language, copy, selected, onToggle }) {
   usePageMeta(
-    "Coffendi — Instant coffee, clearly considered",
-    "Discover spray dried, agglomerated and freeze dried instant coffee for individual purchase and bulk supply.",
+    language === "tr" ? "Coffendi — Menşeden kavurucuya yeşil kahve" : "Coffendi — Green coffee, from origin to roaster",
+    language === "tr" ? "Yeşil kahve menşelerini, profilleri ve Coffendi talep yolunu keşfedin." : "Explore green coffee origins, representative profiles and the Coffendi inquiry pathway.",
   );
-
+  const featured = coffeeProfiles.slice(0, 3);
   return (
     <>
-      <StructuredData
-        data={{
-          "@context": "https://schema.org",
-          "@graph": [
-            {
-              "@type": "Organization",
-              "@id": `${SITE_URL}/#organization`,
-              name: "Coffendi",
-              ...(merchantProfile.legalName ? { legalName: merchantProfile.legalName } : {}),
-              url: `${SITE_URL}/`,
-              logo: `${SITE_URL}/coffendi-logo-512.webp`,
-              ...(merchantProfile.supportEmail ? { email: merchantProfile.supportEmail } : {}),
-            },
-            {
-              "@type": "WebSite",
-              "@id": `${SITE_URL}/#website`,
-              name: "Coffendi",
-              url: `${SITE_URL}/`,
-              publisher: { "@id": `${SITE_URL}/#organization` },
-            },
-            {
-              "@type": "ItemList",
-              name: "Coffendi instant coffee formats",
-              itemListElement: products.map((product, index) => ({
-                "@type": "ListItem",
-                position: index + 1,
-                url: `${SITE_URL}/products/${product.id}`,
-                name: product.name,
-              })),
-            },
-          ],
-        }}
-      />
       <section className="hero">
-        <div className="hero__content page-shell">
+        <div className="shell hero__grid">
           <div className="hero__copy">
-            <p className="eyebrow">Instant coffee · reintroduced</p>
-            <h1>Three ways to make a remarkable cup, <em>instantly.</em></h1>
-            <p className="hero__lede">
-              Fine powder, generous granules or aromatic crystals. Meet the format that fits your
-              ritual—and the scale that fits your business.
-            </p>
-            <div className="hero__actions">
-              <Link className="button button--dark" to="/shop">
-                Shop the collection <ArrowRight aria-hidden="true" />
-              </Link>
-              <Link className="button button--ghost" to="/bulk">Explore bulk supply</Link>
-            </div>
-            <div className="hero__proof" aria-label="Store highlights">
-              <span><Check aria-hidden="true" /> Three distinct formats</span>
-              <span><Check aria-hidden="true" /> Retail and bulk pathways</span>
-              <span><Check aria-hidden="true" /> Secure hosted checkout</span>
-            </div>
+            <p className="eyebrow eyebrow--gold">{language === "tr" ? "Menşeden kavurucuya" : "From origin to roaster"}</p>
+            <h1>{language === "tr" ? "Daha net bağlantılarla başlayan yeşil kahve." : "Green coffee begins with clearer connections."}</h1>
+            <p>{language === "tr" ? "Menşeleri keşfedin, temsili profilleri karşılaştırın ve doğru kahve görüşmesini başlatmak için ihtiyacınızı paylaşın." : "Explore origins, compare representative profiles and share the brief that starts the right coffee conversation."}</p>
+            <div className="hero__actions"><Link className="button button--gold" to="/coffees">{language === "tr" ? "Kahveleri keşfet" : "Explore coffees"}<ArrowRight aria-hidden="true" /></Link><Link className="button button--glass" to="/contact">{copy.inquiry}</Link></div>
+            <div className="hero__proof"><span><Globe2 aria-hidden="true" />{language === "tr" ? "Menşe odaklı" : "Origin-led"}</span><span><GitCompareArrows aria-hidden="true" />{language === "tr" ? "Net karşılaştırma" : "Clear comparison"}</span><span><ClipboardCheck aria-hidden="true" />{language === "tr" ? "Teyitli sonraki adımlar" : "Confirmed next steps"}</span></div>
           </div>
-          <div className="hero__visual">
-            <img
-              src="/images/instant-hero.webp"
-              srcSet={HERO_IMAGE_SRC_SET}
-              sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(47vw - 36px), 590px"
-              alt="Three distinct instant coffee textures beside a freshly prepared cup"
-              fetchPriority="high"
-              decoding="async"
-              width="1694"
-              height="953"
-            />
-            <div className="hero-note hero-note--top"><span>01</span> Fine powder</div>
-            <div className="hero-note hero-note--middle"><span>02</span> Porous granules</div>
-            <div className="hero-note hero-note--bottom"><span>03</span> Premium crystals</div>
-          </div>
-        </div>
-        <div className="hero__marquee" aria-hidden="true">
-          <div className="hero__marquee-track">
-            {[0, 1].map((group) => (
-              <div className="hero__marquee-group" key={group}>
-                <span>SPRAY DRIED</span><i>✦</i><span>AGGLOMERATED</span><i>✦</i><span>FREEZE DRIED</span><i>✦</i><span>INSTANTLY COFFENDI</span><i>✦</i>
-              </div>
-            ))}
+          <div className="hero__media">
+            <img src="/images/instant-bulk-beans-1280.webp" srcSet="/images/instant-bulk-beans-640.webp 640w, /images/instant-bulk-beans-960.webp 960w, /images/instant-bulk-beans-1280.webp 1280w" sizes="(max-width: 800px) calc(100vw - 34px), 48vw" alt={language === "tr" ? "Çuvalda yeşil kahve çekirdekleri" : "Green coffee beans in a jute sack"} width="1280" height="960" fetchPriority="high" decoding="async" />
+            <div className="hero__card"><Sprout aria-hidden="true" /><span>{language === "tr" ? "Kahve kimliği menşede başlar" : "Coffee identity starts at origin"}</span></div>
           </div>
         </div>
       </section>
 
-      <section className="products-section page-shell">
-        <SectionHeading
-          eyebrow="The core collection"
-          title="One coffee category. Three different experiences."
-          copy="Choose by texture, cup direction and use case. Detailed commercial specifications remain tied to the confirmed product and batch."
-          action={<Link className="text-link" to="/learn">Compare the processes <ArrowRight aria-hidden="true" /></Link>}
-        />
-        <div className="product-grid">
-          {products.map((product) => <ProductCard key={product.id} product={product} onAdd={onAdd} cartQuantity={cartQuantities[product.id] || 0} />)}
+      <section className="service-strip"><div className="shell"><div><MapPin aria-hidden="true" /><span>{language === "tr" ? "Menşe bağlamı" : "Origin context"}</span></div><div><Coffee aria-hidden="true" /><span>{language === "tr" ? "Fincan yönü" : "Cup direction"}</span></div><div><PackageCheck aria-hidden="true" /><span>{language === "tr" ? "Belge teyidi" : "Document confirmation"}</span></div><div><Ship aria-hidden="true" /><span>{language === "tr" ? "Talebe göre lojistik" : "Logistics by inquiry"}</span></div></div></section>
+
+      <section className="section shell">
+        <SectionHeading eyebrow={language === "tr" ? "Başlangıç profilleri" : "Starting profiles"} title={language === "tr" ? "Önce fincan yönünü bulun." : "Find the cup direction first."} copy={language === "tr" ? "Bunlar canlı stok veya fiyat teklifi değil, ilk görüşmeyi netleştiren temsili menşe profilleridir." : "These are representative origin profiles—not live stock or offers—designed to make the first conversation more precise."} action={<Link className="text-link" to="/coffees">{language === "tr" ? "Tüm profiller" : "All profiles"}<ArrowRight aria-hidden="true" /></Link>} />
+        <div className="profile-grid">{featured.map((profile) => <ProfileCard key={profile.id} profile={profile} language={language} selected={selected.includes(profile.id)} onToggle={onToggle} copy={copy} />)}</div>
+      </section>
+
+      <section className="section section--green">
+        <div className="shell story-grid">
+          <div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Daha iyi bir talep yolu" : "A better inquiry pathway"}</p><h2>{language === "tr" ? "Kahveyi yalnızca bir isim olarak değil, bir karar dizisi olarak görün." : "See coffee as a sequence of decisions, not only a name."}</h2><p>{language === "tr" ? "Menşe, işleme, fincan hedefi, hacim, zamanlama ve belgeler aynı görüşmede ele alınmalıdır." : "Origin, process, cup goal, volume, timing and documentation belong in the same conversation."}</p><Link className="button button--light" to="/approach">{language === "tr" ? "Yaklaşımı incele" : "Explore the approach"}<ArrowRight aria-hidden="true" /></Link></div>
+          <ol className="story-steps"><li><span>01</span><div><strong>{language === "tr" ? "Profil" : "Profile"}</strong><p>{language === "tr" ? "Fincan ve kullanım yönünü tanımlayın." : "Define the cup and program direction."}</p></div></li><li><span>02</span><div><strong>{language === "tr" ? "Uygunluk" : "Fit"}</strong><p>{language === "tr" ? "Hacim, takvim ve pazar bağlamını paylaşın." : "Share volume, timing and market context."}</p></div></li><li><span>03</span><div><strong>{language === "tr" ? "Teyit" : "Confirm"}</strong><p>{language === "tr" ? "Numune, belge ve koşulları doğrudan doğrulayın." : "Verify samples, documents and terms directly."}</p></div></li></ol>
         </div>
       </section>
 
-      <section className="format-story">
-        <div className="page-shell format-story__grid">
-          <div className="format-story__intro">
-            <p className="eyebrow eyebrow--light">The difference is in the drying</p>
-            <h2>Same simple cup. A very different journey.</h2>
-            <p>
-              Soluble coffee begins as roasted coffee extract. The final drying method shapes the
-              product’s texture, appearance, positioning and handling.
-            </p>
-            <Link className="button button--cream" to="/learn#how-it-is-made">See how it is made</Link>
-          </div>
-          <ol className="format-story__steps">
-            {products.map((product) => {
-              const Icon = processIcons[product.id];
-              return (
-                <li key={product.id}>
-                  <div><Icon aria-hidden="true" /></div>
-                  <span>{product.number}</span>
-                  <h3>{product.shortName}</h3>
-                  <p>{product.processLabel}</p>
-                </li>
-              );
-            })}
-          </ol>
-        </div>
-      </section>
-
-      <section className="bulk-feature page-shell">
-        <div className="bulk-feature__visual">
-          <img
-            src="/images/instant-bulk-beans.webp"
-            srcSet={BULK_IMAGE_SRC_SET}
-            sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(50vw - 54px), 575px"
-            alt="Coffee beans in a natural fibre sack"
-            loading="lazy"
-            decoding="async"
-            width="900"
-            height="640"
-          />
-          <span className="bulk-feature__stamp"><Box aria-hidden="true" /> Built for scale</span>
-        </div>
-        <div className="bulk-feature__content">
-          <p className="eyebrow">Bulk & business</p>
-          <h2>From a product idea to a commercially useful brief.</h2>
-          <p>
-            Tell us the format, cup direction, expected volume, destination and packaging route.
-            We will keep the conversation grounded in what can actually be confirmed.
-          </p>
-          <ul className="check-list">
-            <li><Check aria-hidden="true" /> Commercial-volume requests</li>
-            <li><Check aria-hidden="true" /> Packaging and private-label planning</li>
-            <li><Check aria-hidden="true" /> Specification-led product matching</li>
-            <li><Check aria-hidden="true" /> Destination and logistics context</li>
-          </ul>
-          <Link className="button button--dark" to="/bulk">Build a bulk brief <ArrowRight aria-hidden="true" /></Link>
-        </div>
-      </section>
-
-      <section className="learning-section page-shell">
-        <SectionHeading
-          eyebrow="Coffee, unpacked"
-          title="Understand the product behind the convenience."
-          copy="Clear language for curious drinkers, product teams and commercial buyers."
-        />
-        <div className="learning-grid">
-          {learningCards.map((card, index) => (
-            <Link key={card.title} className="learning-card" to={card.to}>
-              <span>0{index + 1}</span>
-              <p>{card.label}</p>
-              <h3>{card.title}</h3>
-              <small>{card.copy}</small>
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      <section className="sustainability-teaser">
-        <div className="page-shell sustainability-teaser__grid">
-          <div>
-            <p className="eyebrow">A framework before a claim</p>
-            <h2>Better coffee begins with measurable questions.</h2>
-          </div>
-          <div>
-            <p>
-              Energy, water, responsible sourcing and packaging all matter in soluble coffee. Our
-              sustainability page separates the standards we expect from the achievements that
-              still need verified evidence.
-            </p>
-            <Link className="text-link" to="/sustainability">Explore the framework <ArrowRight aria-hidden="true" /></Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="faq-section page-shell">
-        <SectionHeading eyebrow="Good questions" title="Before your first spoonful—or first pallet." />
-        <div className="faq-grid">
-          <details>
-            <summary>What makes instant coffee soluble?<Plus aria-hidden="true" /></summary>
-            <p>The brewed coffee solids have already been extracted and dried. Adding water rehydrates those soluble solids into a prepared cup.</p>
-          </details>
-          <details>
-            <summary>Which format is the most premium?<Plus aria-hidden="true" /></summary>
-            <p>Freeze dried is commonly positioned at the premium end, but the right format depends on the desired cup, presentation, application and budget.</p>
-          </details>
-          <details>
-            <summary>Can I buy for a business?<Plus aria-hidden="true" /></summary>
-            <p>Yes. The bulk brief captures format, volume, destination, packaging and product direction so the commercial conversation starts with useful context.</p>
-          </details>
-          <details>
-            <summary>Are prices and certifications confirmed?<Plus aria-hidden="true" /></summary>
-            <p>Only configured retail prices and documentation tied to a confirmed product should be treated as final. We do not apply unsupported certification or sustainability claims.</p>
-          </details>
-        </div>
-      </section>
+      <section className="section comparison-teaser"><div className="shell"><div><GitCompareArrows aria-hidden="true" /><p className="eyebrow">{language === "tr" ? "Karşılaştırma masası" : "Comparison desk"}</p><h2>{language === "tr" ? "Profilleri yan yana görün." : "Put the profiles side by side."}</h2><p>{language === "tr" ? "Menşe, süreç, fincan yönü ve kullanım amacını tek bir görünümde karşılaştırın." : "Compare origin, process, cup direction and intended use in one focused view."}</p></div><Link className="button button--dark" to="/compare">{copy.compareAction}<ArrowRight aria-hidden="true" /></Link></div></section>
     </>
   );
 }
 
-function ShopPage({ onAdd, cartQuantities }) {
+function CoffeesPage({ language, copy, selected, onToggle }) {
+  usePageMeta(language === "tr" ? "Yeşil kahve profilleri — Coffendi" : "Green coffee profiles — Coffendi", language === "tr" ? "Temsili Coffendi yeşil kahve profillerini keşfedin ve karşılaştırın." : "Explore and compare representative Coffendi green coffee profiles.", "/coffees");
+  return <><PageHero eyebrow={language === "tr" ? "Yeşil kahve kütüphanesi" : "Green coffee library"} title={language === "tr" ? "Kahve seçimi net bir yönle başlar." : "Coffee selection starts with a clear direction."} copy={language === "tr" ? "Temsili profilleri keşfedin. Güncel ürün, kalite, miktar ve lojistik ayrıntıları her talepte ayrıca teyit edilir." : "Explore representative profiles. Current product, quality, quantity and logistics details are confirmed separately for every inquiry."} marker={`0${coffeeProfiles.length}`} /><section className="section shell"><div className="catalog-note"><Bean aria-hidden="true" /><p>{copy.sourceNote}</p></div><div className="profile-grid profile-grid--catalog">{coffeeProfiles.map((profile) => <ProfileCard key={profile.id} profile={profile} language={language} selected={selected.includes(profile.id)} onToggle={onToggle} copy={copy} />)}</div></section></>;
+}
+
+function CoffeePage({ language, copy, selected, onToggle }) {
+  const { coffeeId } = useParams();
+  const profile = coffeeProfiles.find(({ id }) => id === coffeeId);
   usePageMeta(
-    "Shop instant coffee — Coffendi",
-    "Compare and shop Coffendi spray dried, agglomerated and freeze dried instant coffee.",
+    profile ? `${localized(profile.name, language)} — Coffendi` : "Green coffee — Coffendi",
+    profile ? localized(profile.profile, language) : "Explore Coffendi green coffee profiles.",
+    profile ? `/coffees/${profile.id}` : "/coffees",
   );
-  return (
-    <>
-      <PageHero
-        eyebrow="The instant collection"
-        title="Choose your texture. Shape your cup."
-        copy="Compare texture, cup direction and use case in one clear view. Final retail prices appear when the live merchant catalog is connected."
-        marker="03 formats"
-      >
-        <a className="page-hero__jump" href="#format-spray-dried">
-          Start comparing <ArrowRight aria-hidden="true" />
-        </a>
-      </PageHero>
-      <section className="shop-intro page-shell">
-        <div className="shop-intro__note"><Sparkles aria-hidden="true" /><span>Every format starts with brewed coffee extract. The drying route makes the visible difference.</span></div>
-        <p className="format-switcher__hint">Swipe to compare all three formats <ArrowRight aria-hidden="true" /></p>
-        <nav className="format-switcher" aria-label="Choose an instant coffee format">
-          {products.map((product) => {
-            const Icon = processIcons[product.id];
-            return <a key={product.id} href={`#format-${product.id}`}><Icon aria-hidden="true" /><span><small>{product.format}</small><strong>{product.shortName}</strong></span><ArrowRight aria-hidden="true" /></a>;
-          })}
-        </nav>
-        <div className="product-grid">
-          {products.map((product) => <ProductCard key={product.id} product={product} onAdd={onAdd} cartQuantity={cartQuantities[product.id] || 0} />)}
-        </div>
-      </section>
-      <section className="shop-service page-shell">
-        <div><Truck aria-hidden="true" /><h3>Delivery clarity</h3><p>Available regions, timing, duties and shipping cost are confirmed before payment.</p></div>
-        <div><ShieldCheck aria-hidden="true" /><h3>Secure payment boundary</h3><p>Payment details are handled on the configured hosted checkout—not stored in this application.</p></div>
-        <div><PackageCheck aria-hidden="true" /><h3>Product confirmation</h3><p>Final pack, specification and availability remain visible before the order is placed.</p></div>
-      </section>
-    </>
-  );
+  if (!profile) return <Navigate to="/coffees" replace />;
+  return <><section className="profile-detail"><div className="shell profile-detail__grid"><div className="profile-detail__media"><img src={profile.image} alt={localized(profile.alt, language)} width="960" height="720" fetchPriority="high" decoding="async" /><span>{localized(profile.country, language)}</span></div><div className="profile-detail__copy"><Link className="breadcrumbs" to="/coffees">{copy.backCoffees}<ChevronRight aria-hidden="true" /></Link><p className="eyebrow">{profile.region}</p><h1>{localized(profile.name, language)}</h1><p className="profile-detail__lede">{localized(profile.profile, language)}</p><dl className="detail-facts"><div><dt>{language === "tr" ? "Menşe" : "Origin"}</dt><dd>{localized(profile.country, language)}</dd></div><div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "İşleme" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div><div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div><div><dt>{language === "tr" ? "Hasat bağlamı" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div></dl><div className="detail-actions"><button className={`button button--compare ${selected.includes(profile.id) ? "is-selected" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selected.includes(profile.id)}>{selected.includes(profile.id) ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selected.includes(profile.id) ? copy.removeCompare : copy.addCompare}</button><Link className="button button--dark" to="/contact">{copy.requestInfo}<ArrowRight aria-hidden="true" /></Link></div><p className="source-note">{copy.sourceNote}</p></div></div></section><section className="section shell"><SectionHeading eyebrow={language === "tr" ? "Karar çerçevesi" : "Decision framework"} title={language === "tr" ? "Bir sonraki görüşmede neyi teyit etmelisiniz?" : "What should the next conversation confirm?"} /><div className="decision-grid"><article><Coffee aria-hidden="true" /><h3>{language === "tr" ? "Fincan" : "Cup"}</h3><p>{language === "tr" ? "Numuneyi hedef kavurma ve demleme yaklaşımıyla değerlendirin." : "Evaluate a sample against the intended roast and brewing approach."}</p></article><article><ClipboardCheck aria-hidden="true" /><h3>{language === "tr" ? "Belge" : "Documentation"}</h3><p>{language === "tr" ? "Menşe, süreç ve gereken belgeleri sözleşmeden önce teyit edin." : "Confirm origin, process and required documents before any agreement."}</p></article><article><Ship aria-hidden="true" /><h3>{language === "tr" ? "Lojistik" : "Logistics"}</h3><p>{language === "tr" ? "Hacim, teslim noktası ve zamanlamayı gerçek taleple eşleştirin." : "Align volume, destination and timing with the actual brief."}</p></article></div></section></>;
 }
 
-function ProductPage({ onAdd, cartQuantities }) {
-  const { productId } = useParams();
-  const product = getProduct(productId);
-  const cartQuantity = cartQuantities[productId] || 0;
-  const purchaseActionRef = useRef(null);
-  const [showMobileBuy, setShowMobileBuy] = useState(false);
-  const [purchaseQuantity, setPurchaseQuantity] = useState(1);
-  usePageMeta(
-    product ? `${product.name} — Coffendi` : "Instant coffee — Coffendi",
-    product
-      ? `${product.intro} Explore the process, texture, uses and retail or bulk buying paths.`
-      : "Explore Coffendi instant coffee.",
-    product ? { type: "product", image: product.image } : {},
-  );
-
-  useEffect(() => {
-    const purchaseAction = purchaseActionRef.current;
-    if (!purchaseAction || typeof IntersectionObserver === "undefined") return undefined;
-    const footer = document.querySelector(".site-footer");
-    let purchasePassed = false;
-    let footerVisible = false;
-    const updateBuyBar = () => setShowMobileBuy(purchasePassed && !footerVisible);
-    const purchaseObserver = new IntersectionObserver(([entry]) => {
-      purchasePassed = !entry.isIntersecting && entry.boundingClientRect.top < 0;
-      updateBuyBar();
-    }, { rootMargin: "-84px 0px 0px", threshold: 0.1 });
-    const footerObserver = footer
-      ? new IntersectionObserver(([entry]) => {
-          footerVisible = entry.isIntersecting;
-          updateBuyBar();
-        }, { rootMargin: "0px 0px 72px" })
-      : null;
-    purchaseObserver.observe(purchaseAction);
-    if (footer) footerObserver.observe(footer);
-    return () => {
-      purchaseObserver.disconnect();
-      footerObserver?.disconnect();
-    };
-  }, [productId]);
-
-  useEffect(() => setPurchaseQuantity(1), [productId]);
-
-  if (!product) return <Navigate to="/shop" replace />;
-  const Icon = processIcons[product.id];
-  const updatePurchaseQuantity = (value) => {
-    const quantity = Number(value);
-    setPurchaseQuantity(Number.isFinite(quantity) ? Math.max(1, Math.min(20, Math.round(quantity))) : 1);
-  };
-  const addSelectedQuantity = () => {
-    onAdd(product.id, purchaseQuantity);
-    setPurchaseQuantity(1);
-  };
-
-  const productSchema = {
-    "@type": "Product",
-    "@id": `${SITE_URL}/products/${product.id}#product`,
-    name: product.name,
-    ...(product.sku ? { sku: product.sku } : {}),
-    category: "Instant coffee",
-    image: `${SITE_URL}${product.image}`,
-    description: product.intro,
-    brand: { "@type": "Brand", name: "Coffendi" },
-    ...(product.priceCents && product.packSize && product.availability !== "unconfirmed"
-      ? {
-          offers: {
-            "@type": "Offer",
-            url: `${SITE_URL}/products/${product.id}`,
-            priceCurrency: storeCurrency,
-            price: (product.priceCents / 100).toFixed(2),
-            ...(product.availability === "available" ? { availability: "https://schema.org/InStock" } : {}),
-            ...(product.availability === "preorder" ? { availability: "https://schema.org/PreOrder" } : {}),
-            ...(product.availability === "unavailable" ? { availability: "https://schema.org/OutOfStock" } : {}),
-            ...(merchantProfile.legalName ? { seller: { "@type": "Organization", name: merchantProfile.legalName } } : {}),
-          },
-        }
-      : {}),
-  };
-
-  return (
-    <div className="product-page">
-      <StructuredData
-        data={{
-          "@context": "https://schema.org",
-          "@graph": [
-            productSchema,
-            {
-              "@type": "BreadcrumbList",
-              itemListElement: [
-                { "@type": "ListItem", position: 1, name: "Shop", item: `${SITE_URL}/shop` },
-                { "@type": "ListItem", position: 2, name: product.name, item: `${SITE_URL}/products/${product.id}` },
-              ],
-            },
-          ],
-        }}
-      />
-      <section className={`product-detail product-detail--${product.tone}`}>
-        <div className="page-shell product-detail__grid">
-          <div className="product-detail__media">
-            <img
-              src={product.image}
-              srcSet={product.imageSrcSet}
-              sizes="(max-width: 760px) calc(100vw - 40px), (max-width: 1100px) calc(50vw - 54px), 610px"
-              alt={product.alt}
-              fetchPriority="high"
-              decoding="async"
-              width="1254"
-              height="1254"
-            />
-            <span className="product-detail__index">{product.number}</span>
-          </div>
-          <div className="product-detail__content">
-            <div className="breadcrumbs"><Link to="/shop">Shop</Link><ChevronRight aria-hidden="true" />{product.shortName}</div>
-            <p className="eyebrow">{product.descriptor}</p>
-            <h1>{product.name}</h1>
-            <p className="product-detail__lede">{product.intro}</p>
-            <div className="product-price">
-              <strong>{formatPrice(product.priceCents)}</strong>
-              <span>{product.packSize || "Consumer pack size pending"} · {availabilityLabel(product.availability)}</span>
-            </div>
-            <div className="product-purchase">
-              <div className="product-purchase__quantity">
-                <span id={`purchase-quantity-label-${product.id}`}>Quantity</span>
-                <div className="quantity-control quantity-control--purchase" role="group" aria-labelledby={`purchase-quantity-label-${product.id}`}>
-                  <button type="button" onClick={() => updatePurchaseQuantity(purchaseQuantity - 1)} disabled={purchaseQuantity === 1} aria-label={`Decrease purchase quantity for ${product.name}`} aria-controls={`purchase-quantity-${product.id}`}><Minus aria-hidden="true" /></button>
-                  <input id={`purchase-quantity-${product.id}`} type="number" min="1" max="20" step="1" inputMode="numeric" value={purchaseQuantity} onChange={(event) => updatePurchaseQuantity(event.target.value)} aria-label={`Purchase quantity for ${product.name}`} />
-                  <button type="button" onClick={() => updatePurchaseQuantity(purchaseQuantity + 1)} disabled={purchaseQuantity === 20} aria-label={`Increase purchase quantity for ${product.name}`} aria-controls={`purchase-quantity-${product.id}`}><Plus aria-hidden="true" /></button>
-                </div>
-              </div>
-              <button ref={purchaseActionRef} className="button button--dark button--large" type="button" onClick={addSelectedQuantity}>
-                {purchaseQuantity > 1 ? `Add ${purchaseQuantity} to selection` : cartQuantity ? "Add another" : product.priceCents ? "Add to cart" : "Add to selection"} <ShoppingBag aria-hidden="true" />
-              </button>
-            </div>
-            {cartQuantity > 0 && <p className="product-in-cart" aria-live="polite"><Check aria-hidden="true" /> {cartQuantity} {cartQuantity === 1 ? "pack" : "packs"} currently in your cart</p>}
-            <Link className="text-link" to={`/bulk?product=${product.id}`}>Need this in bulk? Build a commercial brief <ArrowRight aria-hidden="true" /></Link>
-            <ul className="purchase-notes" aria-label="Purchase information">
-              <li><PackageCheck aria-hidden="true" /> Pack and availability reviewed before payment</li>
-              <li><ShieldCheck aria-hidden="true" /> Secure hosted payment boundary</li>
-            </ul>
-            <dl className="product-facts">
-              <div><dt>Format</dt><dd>{product.format}</dd></div>
-              <div><dt>Cup direction</dt><dd>{product.cupDirection}</dd></div>
-              <div><dt>Choose it for</dt><dd>{product.decisionCue}</dd></div>
-              <div><dt>Consumer pack</dt><dd>{product.packSize || "Confirmed before purchase"}</dd></div>
-            </dl>
-          </div>
-        </div>
-      </section>
-      <section className="product-explainer page-shell">
-        <div>
-          <p className="eyebrow">How it takes shape</p>
-          <h2>Designed by the final drying step.</h2>
-        </div>
-        <div className="product-explainer__story">
-          <span><Icon aria-hidden="true" /></span>
-          <p>{product.story}</p>
-          <div><strong>Well suited to</strong><p>{product.idealFor}</p></div>
-        </div>
-      </section>
-      <section className="product-specifications page-shell">
-        <SectionHeading
-          eyebrow="Confirmed product information"
-          title="The pack remains the source of truth."
-          copy="Commercial facts are published only when they have been supplied and approved by the merchant."
-        />
-        <dl className="product-specifications__grid">
-          <div><dt>Availability</dt><dd>{availabilityLabel(product.availability)}</dd></div>
-          <div><dt>SKU</dt><dd>{product.sku || "Assigned with the final retail catalog"}</dd></div>
-          <div><dt>Ingredients</dt><dd>{product.ingredients || "Confirmed on the final retail pack"}</dd></div>
-          <div><dt>Allergen information</dt><dd>{product.allergens || "Confirmed on the final retail pack"}</dd></div>
-          <div><dt>Preparation</dt><dd>{product.preparation || "Follow the directions on the confirmed pack"}</dd></div>
-          <div><dt>Storage</dt><dd>{product.storage || "Follow the directions on the confirmed pack"}</dd></div>
-          <div><dt>Shelf life</dt><dd>{product.shelfLife || "Shown on the confirmed pack"}</dd></div>
-          <div><dt>Manufacture / origin</dt><dd>{product.manufactureOrigin || "Confirmed with the final product specification"}</dd></div>
-          <div><dt>Verified certifications</dt><dd>{product.certifications.length ? product.certifications.join(" · ") : "No certification claim is currently published"}{product.evidenceUrl && <><br /><a className="text-link" href={product.evidenceUrl} target="_blank" rel="noreferrer">View supporting evidence <ArrowRight aria-hidden="true" /></a></>}</dd></div>
-        </dl>
-      </section>
-      <section className="preparation-section">
-        <div className="page-shell">
-          <SectionHeading eyebrow="Make it yours" title="A simple cup, with room to adjust." copy="The confirmed pack remains the final source for dose and preparation instructions." />
-          <ol className="preparation-grid">
-            <li><span>01</span><Coffee aria-hidden="true" /><h3>Start with the pack</h3><p>Use the dose and serving size supplied with the confirmed retail product.</p></li>
-            <li><span>02</span><Droplets aria-hidden="true" /><h3>Add fresh water</h3><p>Use fresh hot water below a rolling boil and add it gradually for easier strength control.</p></li>
-            <li><span>03</span><Sparkles aria-hidden="true" /><h3>Stir, taste, refine</h3><p>Stir until dissolved, then adjust water, milk or ice to suit the cup you want.</p></li>
-          </ol>
-        </div>
-      </section>
-      <section className="next-products page-shell">
-        <SectionHeading eyebrow="Keep comparing" title="The other forms in the collection." />
-        <div className="next-products__grid">
-          {products.filter((item) => item.id !== product.id).map((item) => (
-            <Link key={item.id} to={`/products/${item.id}`}>
-              <img src={item.thumbnailImage} alt="" loading="lazy" decoding="async" width="320" height="320" />
-              <div className="next-products__content"><span>{item.number}</span><h3>{item.name}</h3><p>{item.format}</p><small>{item.cupDirection}</small></div>
-              <ArrowRight aria-hidden="true" />
-            </Link>
-          ))}
-        </div>
-      </section>
-      <div className={`mobile-buy-bar ${showMobileBuy ? "is-visible" : ""}`} aria-label={`Buy ${product.name}`} aria-hidden={!showMobileBuy} inert={!showMobileBuy ? true : undefined}>
-        <span><strong>{product.shortName}</strong><small>{cartQuantity ? `${cartQuantity} in cart` : formatPrice(product.priceCents)}</small></span>
-        <button className="button button--cream" type="button" onClick={addSelectedQuantity}>
-          {purchaseQuantity > 1 ? `Add ${purchaseQuantity}` : cartQuantity ? "Add another" : product.priceCents ? "Add to cart" : "Add to selection"} <ShoppingBag aria-hidden="true" />
-        </button>
-      </div>
-    </div>
-  );
+function OriginsPage({ language }) {
+  usePageMeta(language === "tr" ? "Yeşil kahve menşeleri — Coffendi" : "Green coffee origins — Coffendi", language === "tr" ? "Coffendi'nin yeşil kahve menşe yaklaşımını keşfedin." : "Explore Coffendi’s green coffee origin framework.", "/origins");
+  return <><PageHero eyebrow={language === "tr" ? "Menşe bağlamı" : "Origin context"} title={language === "tr" ? "Her menşe, tek bir tat tanımından daha fazlasıdır." : "Every origin is more than one flavour description."} copy={language === "tr" ? "Bölge, çeşit, işleme, hasat, üretici yapısı ve lojistik birlikte değerlendirilmelidir." : "Region, variety, process, harvest, producer structure and logistics should be considered together."} marker={language === "tr" ? "Küresel" : "Global"} /><section className="section shell"><div className="origin-grid">{coffeeProfiles.map((profile, index) => <article key={profile.id} className={index === 0 ? "origin-card origin-card--lead" : "origin-card"}><img src={profile.image} alt="" loading="lazy" decoding="async" width="720" height="540" /><div><span>0{index + 1}</span><p className="eyebrow">{profile.region}</p><h2>{localized(profile.country, language)}</h2><p>{localized(profile.profile, language)}</p><Link className="text-link" to={`/coffees/${profile.id}`}>{language === "tr" ? "Temsili profili gör" : "See representative profile"}<ArrowRight aria-hidden="true" /></Link></div></article>)}</div></section></>;
 }
 
-function PageHero({ eyebrow, title, copy, marker, children }) {
-  return (
-    <section className="page-hero">
-      <div className="page-shell page-hero__grid">
-        <div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1></div>
-        <div><span>{marker}</span><p>{copy}</p>{children}</div>
-      </div>
-    </section>
-  );
+function ComparePage({ language, copy, selected, onToggle }) {
+  usePageMeta(language === "tr" ? "Yeşil kahve karşılaştırması — Coffendi" : "Green coffee comparison — Coffendi", language === "tr" ? "Temsili yeşil kahve profillerini yan yana karşılaştırın." : "Compare representative green coffee profiles side by side.", "/compare");
+  const profiles = coffeeProfiles.filter(({ id }) => selected.includes(id));
+  return <><PageHero eyebrow={language === "tr" ? "Karşılaştırma masası" : "Comparison desk"} title={language === "tr" ? "Farkları tek bakışta görün." : "See the differences in one view."} copy={language === "tr" ? "En fazla üç profili seçin; menşe, süreç, fincan yönü ve kullanım amacını karşılaştırın." : "Choose up to three profiles and compare origin, process, cup direction and intended use."} marker={`${selected.length}/3`} /><section className="section shell"><div className="compare-picker" aria-label={language === "tr" ? "Karşılaştırma profilleri" : "Comparison profiles"}>{coffeeProfiles.map((profile) => <button key={profile.id} type="button" className={selected.includes(profile.id) ? "is-selected" : ""} onClick={() => onToggle(profile.id)} aria-pressed={selected.includes(profile.id)}><span>{localized(profile.country, language)}</span><strong>{localized(profile.name, language)}</strong>{selected.includes(profile.id) && <Check aria-hidden="true" />}</button>)}</div>{profiles.length ? <div className="compare-table" style={{ "--comparison-columns": profiles.length }} role="table" aria-label={language === "tr" ? "Yeşil kahve profil karşılaştırması" : "Green coffee profile comparison"}><div className="compare-table__row compare-table__row--head" role="row"><span role="columnheader">{language === "tr" ? "Kriter" : "Attribute"}</span>{profiles.map((profile) => <strong key={profile.id} role="columnheader">{localized(profile.country, language)}</strong>)}</div>{[[language === "tr" ? "Profil" : "Profile", "name"], [language === "tr" ? "Bölge" : "Region", "region"], [language === "tr" ? "İşleme" : "Process", "process"], [language === "tr" ? "Fincan yönü" : "Cup direction", "profile"], [language === "tr" ? "Program yönü" : "Program direction", "use"], [language === "tr" ? "Hasat bağlamı" : "Harvest context", "harvest"]].map(([label, key]) => <div className="compare-table__row" role="row" key={key}><span role="rowheader">{label}</span>{profiles.map((profile) => <p role="cell" data-label={label} key={profile.id}>{localized(profile[key], language)}</p>)}</div>)}</div> : <div className="empty-state"><GitCompareArrows aria-hidden="true" /><h2>{copy.comparisonEmpty}</h2></div>}<p className="catalog-note catalog-note--plain">{copy.sourceNote}</p></section></>;
 }
 
-function LearnPage() {
-  usePageMeta(
-    "How instant coffee is made — Coffendi",
-    "Understand extraction, spray drying, agglomeration and freeze drying in clear, practical language.",
-  );
-  return (
-    <>
-      <PageHero
-        eyebrow="Coffee knowledge"
-        title="Convenient to make. Fascinating to understand."
-        copy="A clear introduction to how roasted coffee becomes a soluble powder, granule or crystal."
-        marker="Learn"
-      />
-      <nav className="section-index page-shell" aria-label="On this page">
-        <span>Explore this guide</span>
-        <a href="#how-it-is-made">How it is made <ArrowRight aria-hidden="true" /></a>
-        <a href="#compare-formats">Compare formats <ArrowRight aria-hidden="true" /></a>
-      </nav>
-      <section id="how-it-is-made" className="making-process page-shell">
-        <SectionHeading eyebrow="From bean to soluble" title="Four stages before the kettle." />
-        <ol>
-          <li><span>01</span><div><Coffee aria-hidden="true" /><h3>Select & roast</h3><p>The coffee and roast direction establish the sensory foundation before extraction begins.</p></div></li>
-          <li><span>02</span><div><Droplets aria-hidden="true" /><h3>Extract</h3><p>Roasted coffee is brewed at production scale to capture its soluble coffee solids.</p></div></li>
-          <li><span>03</span><div><Factory aria-hidden="true" /><h3>Concentrate</h3><p>Part of the water is removed so the extract is ready for an efficient final drying step.</p></div></li>
-          <li><span>04</span><div><Wind aria-hidden="true" /><h3>Choose the drying route</h3><p>Spray drying, agglomeration or freeze drying creates the format you recognise in the cup.</p></div></li>
-        </ol>
-      </section>
-      <section id="compare-formats" className="comparison-section">
-        <div className="page-shell">
-          <SectionHeading eyebrow="Compare the formats" title="A quick view of what changes." />
-          <div className="comparison-table" role="table" aria-label="Instant coffee format comparison" tabIndex="0">
-            <div className="comparison-row comparison-row--header" role="row"><span role="columnheader">Format</span><span role="columnheader">Appearance</span><span role="columnheader">Process cue</span><span role="columnheader">Typical positioning</span><span role="columnheader">Explore</span></div>
-            {products.map((product) => (
-              <div className="comparison-row" role="row" key={product.id}>
-                <strong role="rowheader"><Link to={`/products/${product.id}`}>{product.shortName}</Link></strong><span role="cell" data-label="Appearance">{product.format}</span><span role="cell" data-label="Process cue">{product.processLabel}</span><span role="cell" data-label="Typical positioning">{product.profile}</span><span className="comparison-row__action" role="cell"><Link to={`/products/${product.id}`} aria-label={`Explore ${product.name}`}>View product <ArrowRight aria-hidden="true" /></Link></span>
-              </div>
-            ))}
-          </div>
-        </div>
-      </section>
-      <section className="making-notes page-shell">
-        <div><h2>For the best cup</h2><p>Use fresh water below a rolling boil, then follow the dose on the confirmed product pack or specification. Strength is easier to adjust when you add water gradually.</p></div>
-        <div><h2>For product teams</h2><p>A useful brief goes beyond the drying format. Define the target cup, application, pack, consumer, destination and expected volume.</p></div>
-      </section>
-    </>
-  );
+function ApproachPage({ language }) {
+  usePageMeta(language === "tr" ? "Yaklaşımımız — Coffendi" : "Our approach — Coffendi", language === "tr" ? "Coffendi'nin bilgi, teyit ve sorumlu yeşil kahve görüşmesi yaklaşımı." : "Coffendi’s framework for information, confirmation and responsible green coffee conversations.", "/approach");
+  const pillars = language === "tr" ? [["Bağlam", "Menşe ve profil bilgisi, güncel ürün iddiasından ayrı tutulur."], ["Teyit", "Numune, kalite, miktar, belgeler ve teslimat koşulları doğrudan doğrulanır."], ["İzlenebilirlik", "Yalnızca destekleyici kayıtları olan bilgiler yayımlanır."], ["İlerleme", "Sürdürülebilirlik iddiaları ölçülebilir kapsam ve kanıt gerektirir."]] : [["Context", "Origin and profile information stays separate from current-product claims."], ["Confirmation", "Samples, quality, quantity, documents and delivery terms are verified directly."], ["Traceability", "Only information supported by the appropriate records should be published."], ["Progress", "Sustainability claims require measurable scope and evidence."]];
+  return <><section className="approach-hero"><div className="shell"><p className="eyebrow eyebrow--gold">{language === "tr" ? "Sorumlu bilgi" : "Responsible information"}</p><h1>{language === "tr" ? "Güven, neyin bilindiğini ve neyin teyit edilmesi gerektiğini açıkça söylemekle başlar." : "Trust starts by stating what is known—and what still needs confirmation."}</h1><p>{language === "tr" ? "Coffendi, menşe keşfi ile ticari teyit arasındaki sınırı görünür tutar." : "Coffendi keeps the boundary between origin discovery and commercial confirmation visible."}</p></div></section><section className="section shell"><div className="pillar-grid">{pillars.map(([title, text], index) => <article key={title}><span>0{index + 1}</span>{[Globe2, ClipboardCheck, HandHeart, Leaf].map((Icon, iconIndex) => iconIndex === index && <Icon key={title} aria-hidden="true" />)}<h2>{title}</h2><p>{text}</p></article>)}</div></section><section className="section section--cream"><div className="shell approach-feature"><img src="/images/coffee-roastery.jpg" alt={language === "tr" ? "Kavurma ekipmanı ve kalite çalışma alanı" : "Roasting equipment and a quality workspace"} loading="lazy" decoding="async" width="960" height="720" /><div><p className="eyebrow">{language === "tr" ? "Her görüşmede" : "In every conversation"}</p><h2>{language === "tr" ? "Fincandan evraka kadar aynı netlik." : "The same clarity from cup to documentation."}</h2><ul><li><Check aria-hidden="true" />{language === "tr" ? "Numune ve duyusal hedef" : "Sample and sensory target"}</li><li><Check aria-hidden="true" />{language === "tr" ? "Menşe ve süreç kaydı" : "Origin and process record"}</li><li><Check aria-hidden="true" />{language === "tr" ? "Hacim ve zamanlama" : "Volume and timing"}</li><li><Check aria-hidden="true" />{language === "tr" ? "Gerekli belge ve teslim bağlamı" : "Required documentation and delivery context"}</li></ul></div></div></section></>;
 }
 
-function SustainabilityPage() {
-  usePageMeta(
-    "Sustainability framework — Coffendi",
-    "Explore Coffendi's evidence-led sustainability framework for energy, water, supply chains and packaging.",
-  );
-  return (
-    <>
-      <section className="sustainability-hero">
-        <div className="page-shell sustainability-hero__grid">
-          <div className="sustainability-hero__copy">
-            <p className="eyebrow eyebrow--light">Sustainability</p>
-            <h1>Progress should be specific enough to measure.</h1>
-            <a className="button button--cream" href="#sustainability-framework">See the framework <ArrowRight aria-hidden="true" /></a>
-          </div>
-          <div className="sustainability-hero__orb"><Leaf aria-hidden="true" /><span>Evidence before claims</span></div>
-        </div>
-      </section>
-      <section id="sustainability-framework" className="sustainability-intro page-shell">
-        <p className="eyebrow">Our approach</p>
-        <div>
-          <h2>A framework for the questions that matter most in soluble coffee.</h2>
-          <p>
-            Coffee cultivation is exposed to climate pressure, while soluble processing makes energy,
-            water and packaging material topics. Coffendi will publish achievements only when the
-            scope, baseline, period and evidence are clear.
-          </p>
-        </div>
-      </section>
-      <section className="pillar-grid page-shell">
-        {sustainabilityPillars.map((pillar, index) => {
-          const icons = [Factory, Droplets, ShieldCheck, PackageCheck];
-          const Icon = icons[index];
-          return <article key={pillar.id}><span><Icon aria-hidden="true" /></span><small>0{index + 1}</small><h3>{pillar.title}</h3><p>{pillar.copy}</p></article>;
-        })}
-      </section>
-      <section className="evidence-section">
-        <div className="page-shell evidence-section__grid">
-          <div><p className="eyebrow eyebrow--light">The evidence standard</p><h2>What a credible claim should include.</h2></div>
-          <ul>
-            <li><span>01</span><div><strong>A defined boundary</strong><p>Which product, facility, supplier group or pack is covered?</p></div></li>
-            <li><span>02</span><div><strong>A meaningful baseline</strong><p>What period or operating condition is the comparison measured against?</p></div></li>
-            <li><span>03</span><div><strong>A current result</strong><p>When was it measured, and is the result absolute or intensity-based?</p></div></li>
-            <li><span>04</span><div><strong>Verifiable support</strong><p>Which report, audit, certificate or data owner can substantiate it?</p></div></li>
-          </ul>
-        </div>
-      </section>
-      <section className="sustainability-cta page-shell"><div><Leaf aria-hidden="true" /><h2>Have product-specific sustainability requirements?</h2><p>Put them into the commercial brief so sourcing and documentation can be assessed together.</p></div><Link className="button button--dark" to="/bulk">Start a responsible brief</Link></section>
-    </>
-  );
-}
-
-function BulkInquiryForm() {
-  const location = useLocation();
-  const searchParameters = new URLSearchParams(location.search);
-  const initialProduct = searchParameters.get("product") || "";
-  const initialSelection = searchParameters.get("selection") || "";
-  const [form, setForm] = useState({
-    product: initialProduct,
-    volume: "",
-    packaging: "",
-    name: "",
-    company: "",
-    email: "",
-    country: "",
-    timeline: "",
-    samples: "",
-    incoterm: "",
-    certification: "",
-    application: "",
-    targetPackSize: "",
-    annualVolume: "",
-    message: "",
-    consent: false,
-    website: "",
-  });
-  const [status, setStatus] = useState({ state: "idle", message: "" });
-
-  const update = (event) => {
-    const { checked, name, type, value } = event.target;
-    setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
-  };
+function InquiryForm({ language, copy }) {
+  const [state, setState] = useState({ status: "idle", message: "" });
   const handleSubmit = async (event) => {
     event.preventDefault();
-    setStatus({ state: "loading", message: "Sending your brief…" });
-    const productName = getProduct(form.product)?.name || "Open to recommendation";
-    const brief = [
-      `Instant coffee format: ${productName}`,
-      `Indicative volume: ${form.volume || "Not confirmed"}`,
-      `Packaging route: ${form.packaging || "Not confirmed"}`,
-      `Target application: ${form.application || "Not confirmed"}`,
-      `Target pack size: ${form.targetPackSize || "Not confirmed"}`,
-      `Annual volume: ${form.annualVolume || "Not confirmed"}`,
-      `Target timeline: ${form.timeline || "Not confirmed"}`,
-      `Samples: ${form.samples || "Not confirmed"}`,
-      `Incoterm preference: ${form.incoterm || "Not confirmed"}`,
-      `Certification requirement: ${form.certification || "Not confirmed"}`,
-      `Retail selection context: ${initialSelection || "None"}`,
-    ].join("\n");
+    const form = event.currentTarget;
+    const data = new FormData(form);
+    setState({ status: "submitting", message: "" });
     try {
-      const result = await submitRequest("/api/inquiries", {
-        name: form.name,
-        company: form.company,
-        email: form.email,
-        country: form.country,
-        volume: form.volume,
-        audience: "partner",
-        message: form.message || "Please contact me to develop this instant coffee bulk brief.",
-        brief,
-        source: "instant-coffee-bulk-page",
-        consent: form.consent,
-        website: form.website,
-      });
-      setStatus({ state: "success", message: `Brief received. Your reference is ${result.reference}.` });
-      setForm((current) => ({
-        ...current,
-        volume: "",
-        packaging: "",
-        timeline: "",
-        samples: "",
-        incoterm: "",
-        certification: "",
-        application: "",
-        targetPackSize: "",
-        annualVolume: "",
-        message: "",
-        consent: false,
-        website: "",
-      }));
-    } catch (error) {
-      setStatus({ state: "error", message: error.message });
+      await submitRequest("/api/inquiries", { name: data.get("name"), company: data.get("company"), email: data.get("email"), country: data.get("country"), volume: data.get("volume"), message: data.get("message"), audience: "roaster", consent: data.get("consent") === "on", source: `coffendi-green-${language}`, website: data.get("website") || "" });
+      form.reset();
+      setState({ status: "success", message: copy.form.success });
+    } catch {
+      setState({ status: "error", message: copy.form.error });
     }
   };
-
-  return (
-    <form className="bulk-form" onSubmit={handleSubmit}>
-      <div className="form-heading"><span>Commercial brief</span><h2>Tell us what the product needs to do.</h2><p>No unsupported price, lead-time or certification promise will be attached to your request.</p></div>
-      <div className="bulk-form__body">
-        <fieldset className="form-group">
-          <legend><span>01</span>Product & route</legend>
-          <div className="form-grid">
-            <label><span>Format</span><select name="product" value={form.product} onChange={update}><option value="">Recommend a format</option>{products.map((product) => <option key={product.id} value={product.id}>{product.name}</option>)}</select></label>
-            <label><span>Indicative volume</span><select name="volume" value={form.volume} onChange={update}><option value="">Select a range</option><option>Under 500 kg</option><option>500 kg–2 tonnes</option><option>2–10 tonnes</option><option>10+ tonnes</option><option>Still planning</option></select></label>
-            <label><span>Packaging route</span><select name="packaging" value={form.packaging} onChange={update}><option value="">Select a route</option><option>Bulk carton</option><option>Industrial sack / super sack</option><option>Retail or private label</option><option>Food service</option><option>Open to recommendation</option></select></label>
-            <label><span>Destination country</span><input name="country" value={form.country} onChange={update} autoComplete="country-name" required /></label>
-            <label><span>Target application</span><input name="application" value={form.application} onChange={update} placeholder="Retail jar, vending, beverage mix…" /></label>
-            <label><span>Target pack size</span><input name="targetPackSize" value={form.targetPackSize} onChange={update} placeholder="For example: 200 g or 25 kg" /></label>
-            <label><span>Indicative annual volume</span><input name="annualVolume" value={form.annualVolume} onChange={update} placeholder="Optional annual estimate" /></label>
-            <label><span>Target timeline</span><select name="timeline" value={form.timeline} onChange={update}><option value="">Select a timeline</option><option>Within 4 weeks</option><option>1–3 months</option><option>3–6 months</option><option>6+ months</option><option>Still planning</option></select></label>
-            <label><span>Sample requirement</span><select name="samples" value={form.samples} onChange={update}><option value="">Select an option</option><option>Samples required</option><option>Technical documents first</option><option>No samples required yet</option></select></label>
-            <label><span>Incoterm preference</span><select name="incoterm" value={form.incoterm} onChange={update}><option value="">Open / not confirmed</option><option>EXW</option><option>FCA</option><option>FOB</option><option>CFR</option><option>CIF</option><option>DAP</option><option>DDP</option></select></label>
-            <label className="form-grid__wide"><span>Certification or documentation requirement</span><input name="certification" value={form.certification} onChange={update} placeholder="State the required certificate, audit or product document" /></label>
-          </div>
-        </fieldset>
-        <details className="brief-review">
-          <summary>Review brief summary before sending</summary>
-          <dl>
-            <div><dt>Format</dt><dd>{getProduct(form.product)?.name || "Open to recommendation"}</dd></div>
-            <div><dt>Volume</dt><dd>{form.volume || "Not confirmed"}</dd></div>
-            <div><dt>Packaging</dt><dd>{form.packaging || "Not confirmed"}</dd></div>
-            <div><dt>Destination</dt><dd>{form.country || "Not confirmed"}</dd></div>
-            <div><dt>Timeline</dt><dd>{form.timeline || "Not confirmed"}</dd></div>
-            <div><dt>Samples</dt><dd>{form.samples || "Not confirmed"}</dd></div>
-          </dl>
-        </details>
-        <fieldset className="form-group">
-          <legend><span>02</span>Your details</legend>
-          <div className="form-grid">
-            <label><span>Name</span><input name="name" value={form.name} onChange={update} autoComplete="name" required /></label>
-            <label><span>Company</span><input name="company" value={form.company} onChange={update} autoComplete="organization" required /></label>
-            <label className="form-grid__wide"><span>Work email</span><input type="email" name="email" value={form.email} onChange={update} autoComplete="email" required /></label>
-          </div>
-        </fieldset>
-        <fieldset className="form-group">
-          <legend><span>03</span>Product direction</legend>
-          <div className="form-grid">
-            <label className="form-grid__wide"><span>Target cup, application or other requirements</span><textarea name="message" value={form.message} onChange={update} rows="5" placeholder="For example: a smooth milk-friendly profile for 200 g retail jars, destined for…" /></label>
-            <label className="consent-field form-grid__wide"><input type="checkbox" name="consent" checked={form.consent} onChange={update} required /><span>I agree that Coffendi may use this information to respond to my commercial request, as described in the <Link to="/privacy">privacy notice</Link>.</span></label>
-            <label className="bot-field" aria-hidden="true"><span>Website</span><input name="website" value={form.website} onChange={update} tabIndex="-1" autoComplete="off" /></label>
-          </div>
-        </fieldset>
-        <div className="form-submit"><button className="button button--cream button--large" type="submit" disabled={status.state === "loading"}>{status.state === "loading" ? "Sending…" : "Send bulk brief"}<ArrowRight aria-hidden="true" /></button><p aria-live="polite" className={`form-status form-status--${status.state}`}>{status.message}</p></div>
-      </div>
-    </form>
-  );
+  return <form className="inquiry-form" onSubmit={handleSubmit}><div className="form-grid"><label><span>{copy.form.name}</span><input name="name" autoComplete="name" minLength="2" maxLength="80" required /></label><label><span>{copy.form.company}</span><input name="company" autoComplete="organization" minLength="2" maxLength="120" required /></label><label><span>{copy.form.email}</span><input name="email" type="email" autoComplete="email" maxLength="160" required /></label><label><span>{copy.form.country}</span><input name="country" autoComplete="country-name" maxLength="100" /></label><label className="form-grid__wide"><span>{copy.form.volume}</span><input name="volume" maxLength="80" placeholder={language === "tr" ? "Örn. numune, 20 çuval, yıllık program" : "For example: sample, 20 bags, annual program"} /></label><label className="form-grid__wide"><span>{copy.form.message}</span><textarea name="message" rows="6" minLength="10" maxLength="2500" required /></label><label className="consent-field form-grid__wide"><input name="consent" type="checkbox" required /><span>{copy.form.consent} <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></span></label><label className="bot-field" aria-hidden="true">Website<input name="website" tabIndex="-1" autoComplete="off" /></label></div><div className="form-submit"><button className="button button--gold" type="submit" disabled={state.status === "submitting"}>{state.status === "submitting" ? copy.form.submitting : copy.form.submit}<Send aria-hidden="true" /></button>{state.message && <p className={`form-status is-${state.status}`} role="status">{state.message}</p>}</div></form>;
 }
 
-function BulkPage() {
-  usePageMeta(
-    "Bulk instant coffee — Coffendi",
-    "Build a bulk brief for spray dried, agglomerated or freeze dried instant coffee, including volume, packaging and destination.",
-  );
-  return (
-    <>
-      <section className="bulk-hero">
-        <div className="page-shell bulk-hero__grid">
-          <div><p className="eyebrow eyebrow--light">Bulk & business</p><h1>Scale starts with a better brief.</h1><p>For distributors, food-service teams, manufacturers and private-label planners.</p><a className="button button--cream" href="#bulk-brief">Start your brief <ArrowRight aria-hidden="true" /></a></div>
-          <div className="bulk-hero__facts"><div><Box aria-hidden="true" /><strong>3</strong><span>core formats</span></div><div><PackageCheck aria-hidden="true" /><strong>4</strong><span>packaging pathways</span></div><div><Truck aria-hidden="true" /><strong>1</strong><span>destination-led plan</span></div></div>
-        </div>
-      </section>
-      <section className="bulk-route page-shell">
-        <SectionHeading eyebrow="Choose the route" title="Product first. Then pack, volume and destination." />
-        <div className="bulk-route__grid">
-          <article><span>01</span><Factory aria-hidden="true" /><h3>Bulk ingredient</h3><p>For manufacturers, distributors and large-scale preparation where specification and logistics lead.</p></article>
-          <article><span>02</span><PackageCheck aria-hidden="true" /><h3>Private-label planning</h3><p>For retail concepts that need format, pack and target consumer considered together.</p></article>
-          <article><span>03</span><Coffee aria-hidden="true" /><h3>Food service</h3><p>For hospitality, office and vending applications with repeatable preparation needs.</p></article>
-        </div>
-      </section>
-      <section id="bulk-brief" className="bulk-form-section"><div className="page-shell"><BulkInquiryForm /></div></section>
-    </>
-  );
+function ContactPage({ language, copy }) {
+  usePageMeta(language === "tr" ? "İletişim — Coffendi" : "Contact — Coffendi", language === "tr" ? "Yeşil kahve talebinizi Coffendi ile paylaşın." : "Share your green coffee inquiry with Coffendi.", "/contact");
+  return <><PageHero eyebrow={language === "tr" ? "İletişim ve talepler" : "Contact and inquiries"} title={language === "tr" ? "Doğru görüşme, net bir özetle başlar." : "The right conversation starts with a clear brief."} copy={language === "tr" ? "Genel sorular için iletişim bilgilerini kullanın; kahve talepleri için formu doldurun." : "Use the contact details for general questions, or complete the form for a coffee inquiry."} marker={language === "tr" ? "İnsan desteği" : "Human follow-up"} /><section className="section shell contact-layout"><aside><div className="contact-card"><Mail aria-hidden="true" /><p className="eyebrow eyebrow--gold">Email</p><h2>{language === "tr" ? "Doğrudan iletişim" : "Direct contact"}</h2><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></div><div className="contact-note"><Warehouse aria-hidden="true" /><p>{language === "tr" ? "Ofis, telefon ve operasyon bilgileri doğrulandıktan sonra burada yayımlanacaktır." : "Office, phone and operating details will be published here after owner confirmation."}</p></div></aside><div className="form-panel"><p className="eyebrow">{copy.form.eyebrow}</p><h2>{copy.form.title}</h2><p>{copy.form.copy}</p><InquiryForm language={language} copy={copy} /></div></section></>;
 }
 
-function ContactPage() {
-  const location = useLocation();
-  const initialTopic = new URLSearchParams(location.search).get("topic") || "general";
-  const [form, setForm] = useState({
-    name: "",
-    company: "",
-    email: "",
-    topic: ["retail", "order", "returns", "bulk", "general"].includes(initialTopic) ? initialTopic : "general",
-    orderReference: "",
-    message: "",
-    consent: false,
-    website: "",
-  });
-  const [status, setStatus] = useState({ state: "idle", message: "" });
-  usePageMeta(
-    "Contact and support — Coffendi",
-    "Contact Coffendi about retail instant coffee, an order, returns, or bulk supply.",
-  );
-
-  const update = (event) => {
-    const { checked, name, type, value } = event.target;
-    setForm((current) => ({ ...current, [name]: type === "checkbox" ? checked : value }));
-  };
-  const handleSubmit = async (event) => {
-    event.preventDefault();
-    setStatus({ state: "loading", message: "Sending your message…" });
-    try {
-      const result = await submitRequest("/api/contact", {
-        ...form,
-        source: "instant-coffee-contact-page",
-      });
-      setStatus({ state: "success", message: `Message received. Your reference is ${result.reference}.` });
-      setForm((current) => ({ ...current, company: "", orderReference: "", message: "", consent: false, website: "" }));
-    } catch (error) {
-      setStatus({ state: "error", message: error.message });
-    }
-  };
-
-  const contactStructuredData = {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "ContactPage",
-        "@id": `${SITE_URL}/contact#page`,
-        name: "Contact and support — Coffendi",
-        url: `${SITE_URL}/contact`,
-      },
-      ...(merchantProfile.legalName ? [{
-        "@type": "Organization",
-        "@id": `${SITE_URL}/#organization`,
-        name: merchantProfile.legalName,
-        url: SITE_URL,
-        ...(merchantProfile.supportEmail ? {
-          contactPoint: {
-            "@type": "ContactPoint",
-            contactType: "customer support",
-            email: merchantProfile.supportEmail,
-            ...(merchantProfile.supportPhone ? { telephone: merchantProfile.supportPhone } : {}),
-          },
-        } : {}),
-      }] : []),
-    ],
-  };
-
-  return (
-    <>
-      <StructuredData data={contactStructuredData} />
-      <PageHero
-        eyebrow="Contact & support"
-        title="Start with the right conversation."
-        copy="Choose the topic and include enough context for Coffendi to route your message clearly."
-        marker="Human follow-up"
-      />
-      <section className="contact-page page-shell">
-        <aside className="contact-options">
-          <div><Headphones aria-hidden="true" /><h2>Support pathways</h2><p>Retail, order, return and commercial questions are kept distinct so the right workflow can respond.</p></div>
-          {merchantProfile.supportEmail ? <a href={`mailto:${merchantProfile.supportEmail}`}><Mail aria-hidden="true" /><span><small>Email</small><strong>{merchantProfile.supportEmail}</strong></span></a> : <div className="contact-option-pending"><Mail aria-hidden="true" /><span><small>Email</small><strong>Confirmed before retail launch</strong></span></div>}
-          {merchantProfile.supportPhone && <a href={`tel:${merchantProfile.supportPhone.replace(/[^+\d]/g, "")}`}><Phone aria-hidden="true" /><span><small>Phone</small><strong>{merchantProfile.supportPhone}</strong></span></a>}
-          {merchantProfile.businessHours && <p><strong>Business hours</strong><br />{merchantProfile.businessHours}</p>}
-          {merchantProfile.retailResponseTime && <p><strong>Retail response target</strong><br />{merchantProfile.retailResponseTime}</p>}
-          <Link className="text-link" to="/bulk">Need commercial quantities? Use the detailed bulk brief <ArrowRight aria-hidden="true" /></Link>
-        </aside>
-        <form className="contact-form" onSubmit={handleSubmit}>
-          <div><p className="eyebrow">Send a message</p><h2>How can Coffendi help?</h2></div>
-          <div className="contact-form__grid">
-            <label><span>Topic</span><select name="topic" value={form.topic} onChange={update} required><option value="general">General question</option><option value="retail">Retail product</option><option value="order">Existing order</option><option value="returns">Return or damaged order</option><option value="bulk">Bulk or private label</option></select></label>
-            <label><span>Order reference</span><input name="orderReference" value={form.orderReference} onChange={update} placeholder="Optional" /></label>
-            <label><span>Name</span><input name="name" value={form.name} onChange={update} autoComplete="name" required /></label>
-            <label><span>Company</span><input name="company" value={form.company} onChange={update} autoComplete="organization" /></label>
-            <label className="contact-form__wide"><span>Email</span><input type="email" name="email" value={form.email} onChange={update} autoComplete="email" required /></label>
-            <label className="contact-form__wide"><span>Message</span><textarea name="message" value={form.message} onChange={update} rows="7" required /></label>
-            <label className="contact-consent contact-form__wide"><input type="checkbox" name="consent" checked={form.consent} onChange={update} required /><span>I agree that Coffendi may use this information to respond to my request, as described in the <Link to="/privacy">privacy notice</Link>.</span></label>
-            <label className="bot-field" aria-hidden="true"><span>Website</span><input name="website" value={form.website} onChange={update} tabIndex="-1" autoComplete="off" /></label>
-          </div>
-          <div className="contact-form__submit"><button className="button button--dark button--large" type="submit" disabled={status.state === "loading"}>{status.state === "loading" ? "Sending…" : "Send message"}<ArrowRight aria-hidden="true" /></button><p className={`form-status form-status--${status.state}`} aria-live="polite">{status.message}</p></div>
-        </form>
-      </section>
-    </>
-  );
+function PrivacyPage({ language }) {
+  usePageMeta(language === "tr" ? "Gizlilik — Coffendi" : "Privacy — Coffendi", language === "tr" ? "Coffendi gizlilik bilgileri." : "Coffendi privacy information.", "/privacy");
+  return <section className="section shell policy"><p className="eyebrow">{language === "tr" ? "Gizlilik" : "Privacy"}</p><h1>{language === "tr" ? "Talep bilgileri yalnızca yanıt vermek için kullanılır." : "Inquiry details are used only to respond."}</h1><p>{language === "tr" ? "Formda paylaştığınız ad, şirket, e-posta ve kahve talebi bilgileri, talebinizi değerlendirmek ve sizinle iletişim kurmak amacıyla işlenir. Ödeme bilgisi toplanmaz." : "The name, company, email and coffee-brief information submitted through the form is processed to evaluate your inquiry and contact you. No payment information is collected."}</p><p>{language === "tr" ? "Saklama süresi, veri sorumlusu ve diğer yasal ayrıntılar işletme sahibi tarafından onaylandıktan sonra bu sayfada güncellenecektir." : "Retention periods, controller details and other required legal information will be updated here after confirmation by the business owner."}</p><a className="text-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}<ArrowRight aria-hidden="true" /></a></section>;
 }
 
-function CheckoutPage({ items, onIncrement, onDecrement, onRemove, commerceStatus }) {
-  const [status, setStatus] = useState({ state: "idle", message: "" });
-  const checkoutInFlight = useRef(false);
-  const onlineReady = commerceStatus.state === "ready" && commerceStatus.ready;
-  const salesPath = `/bulk${selectionSearch(items)}`;
-  usePageMeta(
-    "Checkout — Coffendi",
-    "Review your Coffendi instant coffee selection and continue to secure checkout.",
-    { robots: "noindex,nofollow" },
-  );
-
-  const startCheckout = async () => {
-    if (checkoutInFlight.current) return;
-    checkoutInFlight.current = true;
-    setStatus({ state: "loading", message: "Opening secure checkout…" });
-    try {
-      const result = await submitRequest("/api/checkout", {
-        items: items.map(({ product, quantity }) => ({ id: product.id, quantity })),
-      });
-      if (!result.url) throw new Error("The checkout service did not return a secure payment link.");
-      window.location.assign(result.url);
-    } catch (error) {
-      setStatus({ state: "error", message: error.message });
-    } finally {
-      checkoutInFlight.current = false;
-    }
-  };
-
-  if (!items.length) {
-    return <section className="checkout-empty page-shell"><ShoppingBag aria-hidden="true" /><p className="eyebrow">Checkout</p><h1>Your cart is empty.</h1><p>Start with one of the three instant-coffee formats.</p><Link className="button button--dark" to="/shop">Explore products</Link></section>;
-  }
-
-  const priced = items.every(({ product }) => product.priceCents);
-  const subtotal = items.reduce((total, { product, quantity }) => total + (product.priceCents || 0) * quantity, 0);
-  return (
-    <section className="checkout-page page-shell">
-      <div className="checkout-page__heading"><p className="eyebrow">Secure checkout</p><h1>Review your instant-coffee selection.</h1><p>Final live pricing, delivery, taxes and availability are presented before payment.</p></div>
-      <aside className={`commerce-readiness ${onlineReady ? "commerce-readiness--ready" : "commerce-readiness--pending"}`} aria-live="polite">
-        {onlineReady ? <ShieldCheck aria-hidden="true" /> : <AlertTriangle aria-hidden="true" />}
-        <div>
-          <strong>{onlineReady ? "Secure checkout is available" : "Online checkout is not active yet"}</strong>
-          <p>{commerceStatus.message || "The Coffendi team can confirm this selection through the commercial brief."}</p>
-        </div>
-      </aside>
-      <ol className="checkout-steps" aria-label="Checkout progress"><li className="is-active" aria-current="step"><span>1</span>Review</li><li><span>2</span>Delivery</li><li><span>3</span>Payment</li></ol>
-      <div className="checkout-layout">
-        <div className="checkout-items">
-          {items.map(({ product, quantity }) => (
-            <article key={product.id}><img src={product.thumbnailImage} alt="" width="320" height="320" decoding="async" /><div><Link to={`/products/${product.id}`}>{product.name}</Link><span>{formatPrice(product.priceCents)}</span><div className="quantity-control"><button type="button" onClick={() => onDecrement(product.id)} aria-label={`Decrease ${product.name} quantity`}><Minus aria-hidden="true" /></button><output aria-label="Quantity">{quantity}</output><button type="button" onClick={() => onIncrement(product.id)} aria-label={`Increase ${product.name} quantity`}><Plus aria-hidden="true" /></button></div></div><button className="remove-button" type="button" onClick={() => onRemove(product.id)} aria-label={`Remove ${product.name}`}><Trash2 aria-hidden="true" /></button></article>
-          ))}
-        </div>
-        <aside className="checkout-summary">
-          <h2>Order summary</h2>
-          <div><span>{priced ? "Subtotal" : "Product pricing"}</span><strong>{priced ? formatPrice(subtotal) : "Shown in hosted checkout"}</strong></div>
-          <div><span>Shipping & taxes</span><strong>Confirmed before payment</strong></div>
-          <p className="checkout-summary__policies">By continuing, you can review the final payment, shipping and contact details under our <Link to="/terms">terms</Link>, <Link to="/shipping-returns">shipping & returns framework</Link> and <Link to="/privacy">privacy notice</Link>.</p>
-          {onlineReady ? (
-            <button className="button button--dark button--full button--large" type="button" onClick={startCheckout} disabled={status.state === "loading"}>{status.state === "loading" ? "Opening checkout…" : "Continue to secure payment"}<ArrowRight aria-hidden="true" /></button>
-          ) : (
-            <Link className="button button--dark button--full button--large" to={salesPath}>Send selection for confirmation <ArrowRight aria-hidden="true" /></Link>
-          )}
-          <p className="checkout-summary__secure"><ShieldCheck aria-hidden="true" /> Payment card details are collected by the configured hosted payment provider.</p>
-          <p className={`form-status form-status--${status.state}`} aria-live="polite">{status.message}</p>
-          <Link className="text-link text-link--center" to="/bulk">Buying for a business? Request bulk terms</Link>
-        </aside>
-      </div>
-    </section>
-  );
+function PageHero({ eyebrow, title, copy, marker }) {
+  return <section className="page-hero"><div className="shell page-hero__grid"><div><p className="eyebrow">{eyebrow}</p><h1>{title}</h1></div><div><span>{marker}</span><p>{copy}</p></div></div></section>;
 }
 
-function CheckoutSuccessPage({ onClearCart }) {
-  const location = useLocation();
-  const [verification, setVerification] = useState({ state: "loading", message: "Verifying your payment…", reference: "" });
-  const [copied, setCopied] = useState(false);
-  usePageMeta(
-    "Order received — Coffendi",
-    "Your Coffendi checkout has been completed.",
-    { robots: "noindex,nofollow" },
-  );
-  useEffect(() => {
-    const sessionId = new URLSearchParams(location.search).get("session_id");
-    if (!sessionId) {
-      setVerification({ state: "error", message: "No checkout reference was provided.", reference: "" });
-      return;
-    }
-    let active = true;
-    const controller = new AbortController();
-    const timeout = window.setTimeout(() => controller.abort(), 15_000);
-    fetch(`/api/checkout-session?session_id=${encodeURIComponent(sessionId)}`, {
-      credentials: "same-origin",
-      headers: { Accept: "application/json" },
-      signal: controller.signal,
-    })
-      .then(async (response) => {
-        const result = await response.json();
-        if (!response.ok) throw new Error(result.message || "Payment has not been confirmed yet.");
-        if (!result.paid) throw new Error("Payment is still pending. Keep this reference and check again before placing another order.");
-        if (active) {
-          onClearCart();
-          setVerification({ state: "success", message: "Payment confirmed.", reference: result.reference });
-        }
-      })
-      .catch((error) => {
-        const message = error.name === "AbortError"
-          ? "Payment verification timed out. Your cart has not been cleared; please try again."
-          : error.message;
-        if (active) setVerification({ state: "error", message, reference: sessionId });
-      })
-      .finally(() => window.clearTimeout(timeout));
-    return () => {
-      active = false;
-      window.clearTimeout(timeout);
-      controller.abort();
-    };
-  }, [location.search, onClearCart]);
-
-  const confirmed = verification.state === "success";
-  const copyReference = async () => {
-    if (!verification.reference || !navigator.clipboard) return;
-    await navigator.clipboard.writeText(verification.reference);
-    setCopied(true);
-  };
-  return <section className="checkout-empty checkout-success page-shell"><span className={`success-mark ${confirmed ? "" : "success-mark--pending"}`}>{confirmed ? <Check aria-hidden="true" /> : <ShieldCheck aria-hidden="true" />}</span><p className="eyebrow">{confirmed ? "Order received" : "Checkout verification"}</p><h1>{confirmed ? "Thank you. Your coffee is in motion." : "We are checking your payment."}</h1><p>{verification.message}{verification.reference ? ` Reference: ${verification.reference}.` : ""}</p>{verification.reference && <button className="button button--ghost" type="button" onClick={copyReference}>{copied ? <Check aria-hidden="true" /> : <Copy aria-hidden="true" />}{copied ? "Reference copied" : "Copy reference"}</button>}<Link className="button button--dark" to={confirmed ? "/" : "/checkout"}>{confirmed ? "Return home" : "Return to checkout"}</Link></section>;
+function Footer({ language, copy }) {
+  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmesi" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeden başlayın. İhtiyaçla netleştirin." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" alt="" width="256" height="243" loading="lazy" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>{language === "tr" ? "Coffendi" : "Coffendi"}</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><span>{language === "tr" ? "Telefon ve ofis bilgileri teyit bekliyor" : "Phone and office details awaiting confirmation"}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesi · Çevrimiçi satış yoktur" : "Informational website · No online sales"}</span></div></footer>;
 }
 
-const policyPages = {
-  privacy: {
-    eyebrow: "Privacy framework",
-    title: "A clear account of how customer information is handled.",
-    description: "Coffendi's pre-launch privacy framework for retail customers and commercial inquiries.",
-    intro: "This framework identifies the actual data flows in the storefront and the decisions the merchant must complete before launch. It is intentionally not presented as a final legal notice.",
-    sections: [
-      {
-        title: "Information used by the storefront",
-        copy: "The retail cart is stored in the visitor's browser. A bulk brief may include name, company, work email, destination, volume, packaging direction and product requirements. The inquiry endpoint rejects incomplete consent and stores accepted records in private application storage.",
-      },
-      {
-        title: "Payment information",
-        copy: "When commerce is activated, card details are collected by Stripe's hosted checkout. This application receives the resulting Checkout Session and fulfillment details; it does not collect raw card numbers.",
-      },
-      {
-        title: "Decisions still requiring merchant approval",
-        copy: "The business identity and contact, legal bases, retention periods, international transfers, cookie or analytics use, customer rights process, subprocessors and jurisdiction-specific disclosures must be completed and reviewed for the markets served.",
-      },
-    ],
-  },
-  terms: {
-    eyebrow: "Terms framework",
-    title: "The commercial rules should be as clear as the product.",
-    description: "Coffendi's pre-launch terms framework for the instant coffee storefront.",
-    intro: "Checkout is technically gated until the merchant confirms the legal and operational terms. The final document must match the selling entity, product catalog and countries actually served.",
-    sections: [
-      {
-        title: "Order formation",
-        copy: "The final terms must define when an order is accepted, how pricing errors or unavailable stock are handled, which payment methods are supported and when the customer receives confirmation.",
-      },
-      {
-        title: "Product and customer responsibilities",
-        copy: "Pack size, ingredient and allergen information, preparation guidance, storage, age or business eligibility where relevant, and the customer's responsibility for accurate delivery information must reflect the confirmed products.",
-      },
-      {
-        title: "Legal decisions still requiring approval",
-        copy: "The merchant must confirm cancellation rights, liability boundaries, dispute handling, governing law, business identity, contact information and any market-specific consumer protections before commerce is enabled.",
-      },
-    ],
-  },
-  shipping: {
-    eyebrow: "Delivery framework",
-    title: "Shipping and returns need operational answers, not generic promises.",
-    description: "Coffendi's pre-launch shipping and returns framework for retail instant coffee orders.",
-    intro: "The checkout endpoint will not accept payment until the merchant explicitly configures shipping as included in product pricing or attaches approved Stripe shipping rates.",
-    sections: [
-      {
-        title: "Delivery at checkout",
-        copy: "Allowed destination countries, available shipping choices, the delivery address and applicable tax settings are determined by the live commerce configuration and shown before payment. No shipping rate is assumed by the application.",
-      },
-      {
-        title: "Returns and damaged orders",
-        copy: "The final policy must set the return window, product-condition rules, food-safety exceptions, return-cost responsibility and a documented route for damaged, missing or incorrect orders.",
-      },
-      {
-        title: "Decisions still requiring merchant approval",
-        copy: "Dispatch locations, delivery estimates, carriers, duties, remote-area limits, customs responsibilities, refund timing and customer-support contact details must be confirmed for every served region.",
-      },
-    ],
-  },
-};
-
-function PolicyPage({ policyKey }) {
-  const policy = policyPages[policyKey];
-  const approved = publicStoreConfiguration.policiesApproved && supportContactReady();
-  usePageMeta(`${policy.eyebrow} — Coffendi`, policy.description, { robots: approved ? "index,follow" : "noindex,follow" });
-
-  return (
-    <>
-      <PageHero
-        eyebrow={policy.eyebrow}
-        title={policy.title}
-        copy={policy.description}
-        marker={approved ? "Current policy" : "Pre-launch"}
-      />
-      <section className="policy-page page-shell">
-        <aside className="policy-status">
-          <ShieldCheck aria-hidden="true" />
-          <div><strong>{approved ? "Merchant approved" : "Merchant review required"}</strong><p>{approved ? `Effective ${merchantProfile.policyEffectiveDate || "on the published approval date"}.` : "This framework is not legal advice and must be completed before live payment is enabled."}</p></div>
-        </aside>
-        <div className="policy-page__content">
-          <p className="policy-page__intro">{policy.intro}</p>
-          {policy.sections.map((section, index) => (
-            <section key={section.title}>
-              <span>0{index + 1}</span>
-              <div><h2>{section.title}</h2><p>{section.copy}</p></div>
-            </section>
-          ))}
-          {!approved && <div className="policy-next-step">
-            <strong>Launch control</strong>
-            <p>Keep <code>COMMERCE_LEGAL_READY</code> disabled until the final policy text, merchant details and operational workflow have been approved.</p>
-          </div>}
-        </div>
-      </section>
-    </>
-  );
-}
-
-function NotFoundPage() {
-  usePageMeta("Page not found — Coffendi", "The requested Coffendi page could not be found.", { robots: "noindex,nofollow" });
-  return <section className="checkout-empty page-shell"><Coffee aria-hidden="true" /><p className="eyebrow">404</p><h1>This cup has moved.</h1><p>Return to the collection and choose a fresh route.</p><Link className="button button--dark" to="/">Back to Coffendi</Link></section>;
-}
-
-function normalizeCart(value) {
-  if (!Array.isArray(value)) return [];
-  const quantities = new Map();
-  value.forEach((item) => {
-    const quantity = Number(item?.quantity);
-    if (!getProduct(item?.id) || !Number.isInteger(quantity) || quantity < 1) return;
-    quantities.set(item.id, Math.min(20, (quantities.get(item.id) || 0) + quantity));
-  });
-  return [...quantities].map(([id, quantity]) => ({ id, quantity }));
+function NotFound({ language }) {
+  return <section className="section shell not-found"><span>404</span><h1>{language === "tr" ? "Bu sayfa bulunamadı." : "This page could not be found."}</h1><Link className="button button--dark" to="/">{language === "tr" ? "Ana sayfaya dön" : "Return home"}</Link></section>;
 }
 
 export default function App() {
-  const [cart, setCart] = usePersistentState("coffendi-instant-cart", []);
-  const [cartOpen, setCartOpen] = useState(false);
-  const commerceStatus = useCommerceStatus();
-  const cartReturnFocus = useRef(null);
-  const normalizedCart = useMemo(() => normalizeCart(cart), [cart]);
-  const cartItems = useMemo(
-    () => normalizedCart.map((item) => ({ ...item, product: getProduct(item.id) })),
-    [normalizedCart],
-  );
-  const cartCount = normalizedCart.reduce((total, item) => total + item.quantity, 0);
-  const cartQuantities = useMemo(
-    () => Object.fromEntries(normalizedCart.map((item) => [item.id, item.quantity])),
-    [normalizedCart],
-  );
+  const [language, setLanguage] = usePersistentState("coffendi-language", "en");
+  const [selected, setSelected] = usePersistentState("coffendi-green-comparison", ["ethiopia-washed", "brazil-classic"]);
+  const copy = messages[language] || messages.en;
+  const safeSelected = useMemo(() => Array.isArray(selected) ? selected.filter((id) => coffeeProfiles.some((profile) => profile.id === id)).slice(0, 3) : [], [selected]);
 
-  useEffect(() => {
-    if (JSON.stringify(cart) !== JSON.stringify(normalizedCart)) setCart(normalizedCart);
-  }, [cart, normalizedCart, setCart]);
-
-  const addToCart = useCallback((id, amount = 1) => {
-    const quantityToAdd = Number.isInteger(amount) ? Math.max(1, Math.min(20, amount)) : 1;
-    cartReturnFocus.current = document.activeElement;
-    setCart((current) => {
-      const safeCart = normalizeCart(current);
-      const existing = safeCart.find((item) => item.id === id);
-      if (existing) return safeCart.map((item) => item.id === id ? { ...item, quantity: Math.min(item.quantity + quantityToAdd, 20) } : item);
-      return [...safeCart, { id, quantity: quantityToAdd }];
+  useEffect(() => { document.documentElement.lang = language; }, [language]);
+  const toggleCompare = (id) => {
+    setSelected((current) => {
+      const safe = Array.isArray(current) ? current.filter((value) => coffeeProfiles.some((profile) => profile.id === value)).slice(0, 3) : [];
+      if (safe.includes(id)) return safe.filter((value) => value !== id);
+      return safe.length < 3 ? [...safe, id] : [...safe.slice(1), id];
     });
-    setCartOpen(true);
-  }, [setCart]);
-  const increment = useCallback((id) => setCart((current) => normalizeCart(current).map((item) => item.id === id ? { ...item, quantity: Math.min(item.quantity + 1, 20) } : item)), [setCart]);
-  const decrement = useCallback((id) => setCart((current) => normalizeCart(current).flatMap((item) => item.id !== id ? [item] : item.quantity > 1 ? [{ ...item, quantity: item.quantity - 1 }] : [])), [setCart]);
-  const remove = useCallback((id) => setCart((current) => normalizeCart(current).filter((item) => item.id !== id)), [setCart]);
-  const clearCart = useCallback(() => setCart([]), [setCart]);
-  const openCart = useCallback(() => {
-    cartReturnFocus.current = document.activeElement;
-    setCartOpen(true);
-  }, []);
-  const closeCart = useCallback(() => setCartOpen(false), []);
+  };
 
-  return (
-    <div className="app-shell">
-      <ScrollManager />
-      <MotionManager />
-      <div className="site-frame" inert={cartOpen} aria-hidden={cartOpen ? "true" : undefined}>
-        <a className="skip-link" href="#main-content">Skip to main content</a>
-        <AnnouncementBar />
-        <Header cartCount={cartCount} onOpenCart={openCart} />
-        <main id="main-content" tabIndex="-1">
-          <Routes>
-            <Route path="/" element={<HomePage onAdd={addToCart} cartQuantities={cartQuantities} />} />
-            <Route path="/shop" element={<ShopPage onAdd={addToCart} cartQuantities={cartQuantities} />} />
-            <Route path="/products/:productId" element={<ProductPage onAdd={addToCart} cartQuantities={cartQuantities} />} />
-            <Route path="/learn" element={<LearnPage />} />
-            <Route path="/sustainability" element={<SustainabilityPage />} />
-            <Route path="/bulk" element={<BulkPage />} />
-            <Route path="/contact" element={<ContactPage />} />
-            <Route path="/checkout" element={<CheckoutPage items={cartItems} onIncrement={increment} onDecrement={decrement} onRemove={remove} commerceStatus={commerceStatus} />} />
-            <Route path="/checkout/success" element={<CheckoutSuccessPage onClearCart={clearCart} />} />
-            <Route path="/privacy" element={<PolicyPage policyKey="privacy" />} />
-            <Route path="/terms" element={<PolicyPage policyKey="terms" />} />
-            <Route path="/shipping-returns" element={<PolicyPage policyKey="shipping" />} />
-            <Route path="*" element={<NotFoundPage />} />
-          </Routes>
-        </main>
-        <Footer />
-      </div>
-      <CartDrawer open={cartOpen} items={cartItems} onClose={closeCart} onIncrement={increment} onDecrement={decrement} onRemove={remove} returnFocusRef={cartReturnFocus} commerceStatus={commerceStatus} />
-    </div>
-  );
+  return <div className="app-shell"><a className="skip-link" href="#main-content">{language === "tr" ? "İçeriğe geç" : "Skip to content"}</a><ScrollManager /><Header language={language} setLanguage={setLanguage} copy={copy} /><main id="main-content"><Routes><Route path="/" element={<HomePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/coffees" element={<CoffeesPage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/coffees/:coffeeId" element={<CoffeePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/origins" element={<OriginsPage language={language} />} /><Route path="/compare" element={<ComparePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/approach" element={<ApproachPage language={language} />} /><Route path="/contact" element={<ContactPage language={language} copy={copy} />} /><Route path="/privacy" element={<PrivacyPage language={language} />} /><Route path="*" element={<NotFound language={language} />} /></Routes></main><Footer language={language} copy={copy} /></div>;
 }

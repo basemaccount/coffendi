@@ -1,29 +1,25 @@
 import { writeFileSync } from "node:fs";
-import { products } from "../src/storefrontData.js";
 
 const baseUrl = String(process.env.PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
-
+const profiles = ["ethiopia-washed", "colombia-balanced", "brazil-classic", "guatemala-structured", "kenya-vivid", "rwanda-sweet"];
 const routes = [
   ["/", "weekly", "1.0"],
-  ["/shop", "weekly", "0.95"],
-  ...products.map((product) => [`/products/${product.id}`, "monthly", "0.9"]),
-  ["/bulk", "monthly", "0.85"],
-  ["/learn", "monthly", "0.75"],
-  ["/sustainability", "monthly", "0.75"],
+  ["/coffees", "monthly", "0.9"],
+  ...profiles.map((profile) => [`/coffees/${profile}`, "monthly", "0.8"]),
+  ["/origins", "monthly", "0.8"],
+  ["/compare", "monthly", "0.8"],
+  ["/approach", "monthly", "0.7"],
   ["/contact", "monthly", "0.7"],
+  ["/privacy", "yearly", "0.4"],
 ];
 
 const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-${routes
-  .map(
-    ([path, changefreq, priority]) => `  <url>
+${routes.map(([path, changefreq, priority]) => `  <url>
     <loc>${baseUrl}${path}</loc>
     <changefreq>${changefreq}</changefreq>
     <priority>${priority}</priority>
-  </url>`,
-  )
-  .join("\n")}
+  </url>`).join("\n")}
 </urlset>
 `;
 

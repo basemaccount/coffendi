@@ -11,6 +11,15 @@ const responsiveWidths = {
   "hero.png": [640, 960, 1280],
   "spray-dried.png": [320, 480, 640, 800, 960],
 };
+const greenSourceFiles = [
+  "cherry-harvest.jpg",
+  "coffee-farmer.jpg",
+  "coffee-roastery.jpg",
+  "drying-beds.jpg",
+  "farmer-guatemala.jpg",
+  "green-beans-sack.jpg",
+  "green-cherries.jpg",
+];
 const instantImages = (await readdir(instantSourceDirectory))
   .filter((file) => /\.(png|jpe?g)$/i.test(file))
   .map((file) => ({
@@ -46,6 +55,19 @@ for (const { file, source, destination } of instantImages) {
   for (const width of responsiveWidths[file] || []) {
     if (width >= image.width) continue;
     await encodeWebp(image, width, `${basename}-${width}.webp`, 78);
+  }
+}
+
+for (const file of greenSourceFiles) {
+  const source = path.join(imageDirectory, file);
+  const image = await loadImage(source);
+  const stem = file.replace(/\.jpe?g$/i, "");
+  const maximumWidth = Math.min(image.width, 1200);
+  sourceBytes += (await stat(source)).size;
+  await encodeWebp(image, maximumWidth, path.join(imageDirectory, `green-${stem}.webp`), 78);
+  for (const width of [480, 720, 960]) {
+    if (width >= image.width) continue;
+    await encodeWebp(image, width, path.join(imageDirectory, `green-${stem}-${width}.webp`), 76);
   }
 }
 

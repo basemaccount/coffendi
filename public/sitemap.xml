@@ -6,43 +6,63 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://coffendi.vercel.app/shop</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.95</priority>
-  </url>
-  <url>
-    <loc>https://coffendi.vercel.app/products/spray-dried</loc>
+    <loc>https://coffendi.vercel.app/coffees</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://coffendi.vercel.app/products/agglomerated</loc>
+    <loc>https://coffendi.vercel.app/coffees/ethiopia-washed</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://coffendi.vercel.app/products/freeze-dried</loc>
+    <loc>https://coffendi.vercel.app/coffees/colombia-balanced</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://coffendi.vercel.app/bulk</loc>
+    <loc>https://coffendi.vercel.app/coffees/brazil-classic</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.85</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://coffendi.vercel.app/learn</loc>
+    <loc>https://coffendi.vercel.app/coffees/guatemala-structured</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
+    <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://coffendi.vercel.app/sustainability</loc>
+    <loc>https://coffendi.vercel.app/coffees/kenya-vivid</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.75</priority>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/coffees/rwanda-sweet</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/origins</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/compare</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/approach</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://coffendi.vercel.app/contact</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://coffendi.vercel.app/privacy</loc>
+    <changefreq>yearly</changefreq>
+    <priority>0.4</priority>
   </url>
 </urlset>

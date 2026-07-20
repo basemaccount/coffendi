@@ -18,20 +18,12 @@ assert.match(headerMap.get("strict-transport-security") || "", /max-age=31536000
 const browser = await chromium.launch();
 const failures = [];
 
-for (const path of ["/", "/products/freeze-dried", "/contact"]) {
+for (const path of ["/", "/coffees/ethiopia-washed", "/compare", "/contact"]) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
   const policyErrors = [];
 
   await page.route("**/*", async (route) => {
-    if (route.request().url().includes("/api/commerce-status")) {
-      await route.fulfill({
-        status: 200,
-        contentType: "application/json",
-        body: JSON.stringify({ ok: true, ready: false, purchasePath: "inquiry", message: "Online checkout is being prepared." }),
-      });
-      return;
-    }
     if (route.request().resourceType() !== "document") {
       await route.continue();
       return;
@@ -53,12 +45,11 @@ for (const path of ["/", "/products/freeze-dried", "/contact"]) {
   const checks = await page.evaluate(() => ({
     appMounted: Boolean(document.querySelector("#root main")),
     fontAvailable: document.fonts.check("16px Manrope"),
-    structuredData: [...document.querySelectorAll('script[type="application/ld+json"]')]
-      .some((element) => element.textContent?.includes('"@context":"https://schema.org"')),
+    thirdPartyScripts: [...document.scripts].filter((script) => script.src && new URL(script.src).origin !== location.origin).length,
   }));
   if (!checks.appMounted) failures.push(`${path}: application did not mount under the configured CSP`);
   if (!checks.fontAvailable) failures.push(`${path}: primary web font was not available under the configured CSP`);
-  if (!checks.structuredData) failures.push(`${path}: structured data was not present under the configured CSP`);
+  if (checks.thirdPartyScripts) failures.push(`${path}: unexpected third-party scripts were present`);
   if (policyErrors.length) failures.push(`${path}: ${policyErrors.join(" | ")}`);
   await context.close();
 }
@@ -69,5 +60,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log("Deployment security headers parsed and the production CSP allowed the app, fonts, images, and structured data on audited routes.");
+  console.log("Deployment security headers parsed and the production CSP allowed the informational app, fonts and images without third-party scripts.");
 }
