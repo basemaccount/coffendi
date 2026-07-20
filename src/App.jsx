@@ -22,6 +22,7 @@ import {
   X,
 } from "lucide-react";
 import { Link, NavLink, Navigate, Route, Routes, useLocation, useParams } from "react-router-dom";
+import ExperienceLayer from "./components/ExperienceLayer";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
 
@@ -220,7 +221,7 @@ function Header({ language, setLanguage, copy }) {
   useEffect(() => {
     const pageRegions = [document.querySelector("#main-content"), document.querySelector(".site-footer")].filter(Boolean);
     pageRegions.forEach((region) => { region.inert = menuOpen; });
-    if (!menuOpen && menuWasOpen.current) requestAnimationFrame(() => menuButton.current?.focus());
+    if (!menuOpen && menuWasOpen.current) menuButton.current?.focus();
     menuWasOpen.current = menuOpen;
     return () => pageRegions.forEach((region) => { region.inert = false; });
   }, [menuOpen]);
@@ -420,5 +421,5 @@ export default function App() {
     });
   };
 
-  return <div className="app-shell"><a className="skip-link" href="#main-content">{language === "tr" ? "İçeriğe geç" : "Skip to content"}</a><ScrollManager /><Header language={language} setLanguage={setLanguage} copy={copy} /><main id="main-content"><Routes><Route path="/" element={<HomePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/coffees" element={<CoffeesPage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/coffees/:coffeeId" element={<CoffeePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/origins" element={<OriginsPage language={language} />} /><Route path="/compare" element={<ComparePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/approach" element={<ApproachPage language={language} />} /><Route path="/contact" element={<ContactPage language={language} copy={copy} />} /><Route path="/privacy" element={<PrivacyPage language={language} />} /><Route path="*" element={<NotFound language={language} />} /></Routes></main><Footer language={language} copy={copy} /></div>;
+  return <div className="app-shell"><a className="skip-link" href="#main-content">{language === "tr" ? "İçeriğe geç" : "Skip to content"}</a><ScrollManager /><ExperienceLayer language={language} /><Header language={language} setLanguage={setLanguage} copy={copy} /><main id="main-content"><Routes><Route path="/" element={<HomePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/coffees" element={<CoffeesPage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/coffees/:coffeeId" element={<CoffeePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/origins" element={<OriginsPage language={language} />} /><Route path="/compare" element={<ComparePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} />} /><Route path="/approach" element={<ApproachPage language={language} />} /><Route path="/contact" element={<ContactPage language={language} copy={copy} />} /><Route path="/privacy" element={<PrivacyPage language={language} />} /><Route path="*" element={<NotFound language={language} />} /></Routes></main><Footer language={language} copy={copy} /></div>;
 }
