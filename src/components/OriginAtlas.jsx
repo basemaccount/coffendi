@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { flushSync } from "react-dom";
 import { ArrowRight, Coffee, MapPin, Sprout } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -10,6 +11,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
   const imageCache = useRef(new Map());
   const selectionRequest = useRef(0);
   const mounted = useRef(true);
+  const visual = useRef(null);
   const activeIndex = Math.max(0, profiles.findIndex(({ id }) => id === activeId));
   const active = profiles[activeIndex] || profiles[0];
 
@@ -53,8 +55,31 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
     warmProfile(profile)
       .then(() => {
         if (!mounted.current || request !== selectionRequest.current) return;
-        setActiveId(profile.id);
-        setPendingId(null);
+        let committed = false;
+        const commitSelection = () => {
+          if (committed || !mounted.current || request !== selectionRequest.current) return;
+          committed = true;
+          setActiveId(profile.id);
+          setPendingId(null);
+        };
+        const transitionRoot = visual.current;
+        const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+        if (!reduceMotion && typeof transitionRoot?.startViewTransition === "function") {
+          try {
+            transitionRoot.activeViewTransition?.skipTransition?.();
+            const transition = transitionRoot.startViewTransition(() => flushSync(commitSelection));
+            transition?.ready?.catch(() => {});
+            transition?.updateCallbackDone?.catch(() => {});
+            transition?.finished?.catch(() => {});
+            return;
+          } catch {
+            commitSelection();
+            return;
+          }
+        }
+
+        commitSelection();
       })
       .catch(() => {
         if (mounted.current && request === selectionRequest.current) setPendingId(null);
@@ -97,7 +122,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
           </div>
           <span className="origin-atlas__swipe-cue" aria-hidden="true" />
 
-          <div className="origin-atlas__visual" data-optical>
+          <div ref={visual} className="origin-atlas__visual" data-optical>
             <img key={active.id} src={active.image} srcSet={active.srcSet} sizes="(max-width: 760px) calc(100vw - 34px), 46vw" alt={local(active.alt, language)} width="1200" height="800" loading="lazy" decoding="async" />
             <span className="material-lens" aria-hidden="true"><Sprout /></span>
             <div className="origin-atlas__location"><MapPin aria-hidden="true" /><span><strong>{local(active.country, language)}</strong><small>{active.region}</small></span></div>

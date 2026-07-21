@@ -68,6 +68,35 @@ await page.waitForURL((url) => url.pathname === "/");
 await page.waitForTimeout(750);
 assert(Math.abs(await page.evaluate(() => scrollY) - scrollBefore) <= 1, "Back did not restore the previous scroll position");
 
+const chapterNavigator = page.locator(".chapter-navigator");
+assert(await chapterNavigator.locator("button").count() > 1, "home did not expose multiple page chapters");
+assert(await chapterNavigator.evaluate((element) => element.classList.contains("is-visible") && element.getAttribute("aria-hidden") === "false"), "chapter navigator did not become available after scrolling");
+const targetChapterIndex = Math.min(2, await chapterNavigator.locator("button").count() - 1);
+const targetChapterButton = chapterNavigator.locator("button").nth(targetChapterIndex);
+const targetChapterId = await targetChapterButton.getAttribute("aria-controls");
+await targetChapterButton.click();
+await page.waitForTimeout(850);
+assert(await targetChapterButton.getAttribute("aria-current") === "step", "chapter selection did not update its current state");
+assert(await page.locator(`#${targetChapterId}`).evaluate((element) => Math.abs(element.getBoundingClientRect().top - 96) < 8), "chapter selection did not align the target below the sticky header");
+const documentTitle = await page.title();
+assert((await page.locator(".experience-announcer").textContent()).includes(documentTitle), `route announcement did not include the current title: ${documentTitle}`);
+const progressMode = await page.locator(".scroll-progress span").evaluate((element) => ({
+  supported: CSS.supports("animation-timeline: scroll(root block)"),
+  timeline: getComputedStyle(element).animationTimeline,
+}));
+assert(!progressMode.supported || progressMode.timeline !== "auto", "native scroll timeline support was not used for page progress");
+
+await page.goto(baseUrl, { waitUntil: "networkidle" });
+await page.locator(".origin-atlas").scrollIntoViewIfNeeded();
+const atlasButtons = page.locator(".origin-atlas__controls button");
+await atlasButtons.evaluateAll((buttons) => buttons.slice(1).forEach((button) => button.click()));
+await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
+assert(await atlasButtons.last().getAttribute("aria-pressed") === "true", "rapid atlas selection did not settle on the last requested origin");
+await page.locator(".origin-atlas__visual").evaluate((element) => Object.defineProperty(element, "startViewTransition", { configurable: true, value: () => { throw new Error("forced scoped transition failure"); } }));
+await atlasButtons.first().click();
+await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
+assert(await atlasButtons.first().getAttribute("aria-pressed") === "true", "atlas did not recover from a scoped transition failure");
+
 await context.close();
 
 const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
@@ -83,6 +112,15 @@ assert(await mobile.locator(".menu-button").evaluate((element) => document.activ
 const mobileTargets = await mobile.evaluate(() => [document.querySelector(".menu-button"), ...document.querySelectorAll(".language-switcher button")].map((element) => ({ width: element.offsetWidth, height: element.offsetHeight })));
 assert(mobileTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile header has a touch target below 44px");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile home has horizontal overflow");
+await mobile.evaluate(() => window.scrollTo(0, 1000));
+await mobile.waitForTimeout(180);
+const mobileChapterNavigator = mobile.locator(".chapter-navigator");
+assert(await mobileChapterNavigator.getAttribute("aria-hidden") === "false", "mobile chapter navigator did not become available after scrolling");
+const mobileChapterTargets = await mobileChapterNavigator.locator("button").evaluateAll((buttons) => buttons.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
+assert(mobileChapterTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile chapter navigator has a touch target below 44px");
+const dockBounds = await mobileChapterNavigator.boundingBox();
+const topBounds = await mobile.locator(".back-to-top").boundingBox();
+assert(dockBounds && topBounds && dockBounds.x + dockBounds.width <= topBounds.x - 4, "mobile chapter navigator overlaps the back-to-top control");
 await mobileContext.close();
 
 const throwContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
@@ -119,5 +157,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard and modified clicks, rapid navigation, exact history restoration, mobile menu/touch targets, and transition failure recovery.`);
+  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard and modified clicks, rapid navigation, exact history restoration, responsive chapter navigation, native scroll progress, atlas interruption safety, mobile touch targets, and transition failure recovery.`);
 }

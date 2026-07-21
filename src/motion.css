@@ -44,6 +44,124 @@ html.route-changing .route-loader span { animation: route-loader-sweep 720ms var
   will-change: transform;
 }
 
+@supports (animation-timeline: scroll(root block)) {
+  .scroll-progress span {
+    animation: page-scroll-progress linear both;
+    animation-timeline: scroll(root block);
+  }
+}
+
+.experience-announcer {
+  position: fixed;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.chapter-navigator {
+  position: fixed;
+  z-index: 690;
+  left: max(12px, calc((100vw - 1280px) / 2));
+  bottom: max(14px, env(safe-area-inset-bottom));
+  width: min(560px, calc(100vw - 82px));
+  min-height: 58px;
+  display: grid;
+  grid-template-columns: minmax(118px, 1fr) auto;
+  align-items: center;
+  gap: 8px;
+  padding: 6px;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--green) 91%, transparent);
+  box-shadow: 0 18px 48px rgba(15, 48, 38, 0.24);
+  color: var(--white);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(12px) scale(0.97);
+  transition: opacity 220ms ease, transform 360ms var(--ease), border-color 220ms ease;
+  backdrop-filter: blur(18px) saturate(1.15);
+  contain: layout paint style;
+}
+
+.chapter-navigator.is-visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: none;
+}
+
+body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
+
+.chapter-navigator__meta {
+  min-width: 0;
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 1px 10px;
+  padding-inline: 10px 6px;
+}
+
+.chapter-navigator__meta small {
+  color: var(--gold-light);
+  font-size: 8px;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.chapter-navigator__meta strong {
+  color: #d7e2dc;
+  font-size: 9px;
+  letter-spacing: 0.08em;
+}
+
+.chapter-navigator__meta > span {
+  grid-column: 1 / -1;
+  overflow: hidden;
+  font-family: var(--serif);
+  font-size: 13px;
+  line-height: 1.2;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.chapter-navigator__track {
+  max-width: min(264px, 46vw);
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  scrollbar-width: none;
+}
+
+.chapter-navigator__track::-webkit-scrollbar { display: none; }
+
+.chapter-navigator__track button {
+  width: 44px;
+  height: 44px;
+  flex: 0 0 44px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #c8d7d0;
+  transition: border-color 180ms ease, background-color 180ms ease, color 180ms ease, transform 240ms var(--ease);
+}
+
+.chapter-navigator__track button span {
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+}
+
+.chapter-navigator__track button:hover { border-color: rgba(239, 201, 121, 0.52); color: var(--white); }
+.chapter-navigator__track button:active { transform: scale(0.92); }
+.chapter-navigator__track button.is-active { border-color: var(--gold-light); background: var(--gold-light); color: var(--green); }
+
 .site-header {
   transition: background-color 260ms ease, border-color 260ms ease, box-shadow 320ms var(--ease);
 }
@@ -172,6 +290,11 @@ html.route-changing .route-loader span { animation: route-loader-sweep 720ms var
   to { transform: translateX(340%); }
 }
 
+@keyframes page-scroll-progress {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
 @keyframes mobile-media-arrive {
   from { opacity: 0; transform: translate3d(20px, -10px, 0) scale(0.95); clip-path: inset(0 22% 0 0 round 72px 6px 6px 6px); }
   to { opacity: 1; transform: none; clip-path: inset(0 0 0 0 round 72px 6px 6px 6px); }
@@ -200,6 +323,9 @@ html.route-changing .route-loader span { animation: route-loader-sweep 720ms var
 @media (max-width: 760px) {
   .motion-ready [data-reveal="true"] { translate: 0 14px; }
   .back-to-top { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 44px; height: 44px; }
+  .chapter-navigator { left: 12px; width: calc(100vw - 78px); min-height: 56px; border-radius: 14px; }
+  .chapter-navigator__meta { padding-inline: 7px 3px; }
+  .chapter-navigator__track { max-width: min(176px, 43vw); }
 
   .motion-ready .hero__media { animation: mobile-media-arrive 760ms var(--ease) both; }
   .motion-ready .hero__copy > * { animation: mobile-rise 560ms var(--ease) both; }
@@ -246,6 +372,27 @@ html.route-changing .route-loader span { animation: route-loader-sweep 720ms var
   .motion-ready .origin-atlas__readout > :nth-child(6) { animation-delay: 185ms; }
 }
 
+@media (min-width: 1360px) {
+  .chapter-navigator {
+    top: 50%;
+    bottom: auto;
+    left: max(16px, calc((100vw - 1380px) / 2));
+    width: 56px;
+    min-height: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    border-radius: 18px;
+    transform: translate(-10px, -50%) scale(0.97);
+  }
+
+  .chapter-navigator.is-visible { transform: translate(0, -50%); }
+  .chapter-navigator__meta { width: 44px; display: block; padding: 9px 2px 7px; text-align: center; }
+  .chapter-navigator__meta small, .chapter-navigator__meta > span { display: none; }
+  .chapter-navigator__meta strong { font-size: 8px; }
+  .chapter-navigator__track { max-width: none; flex-direction: column; overflow: visible; }
+}
+
 @media (hover: none) and (pointer: coarse) {
   .button:active,
   .circle-link:active,
@@ -258,7 +405,8 @@ html.route-changing .route-loader span { animation: route-loader-sweep 720ms var
 
 @media (prefers-reduced-motion: reduce) {
   .route-loader { display: none; }
-  .scroll-progress span { will-change: auto; }
+  .scroll-progress { display: none; }
+  .chapter-navigator { transition: none; }
   [data-reveal="true"] { opacity: 1 !important; translate: none !important; }
   .back-to-top, .menu-button svg, .mobile-navigation nav a, .mobile-navigation__foot, .hero__copy > *, .hero__media, .hero__card, .profile-card__content > *, .origin-card > div > *, .story-steps > li > *, .footer-grid > * > *, .footer-lead > * > *, .origin-atlas__controls button, .origin-atlas__readout > * { animation: none !important; }
 }

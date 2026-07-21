@@ -29,19 +29,29 @@ const REVEAL_SELECTOR = [
 export default function ExperienceLayer({ language }) {
   const { pathname } = useLocation();
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [showChapterNavigator, setShowChapterNavigator] = useState(false);
+  const [footerInView, setFooterInView] = useState(false);
+  const [chapters, setChapters] = useState([]);
+  const [activeChapterId, setActiveChapterId] = useState("");
+  const [routeAnnouncement, setRouteAnnouncement] = useState("");
   const frame = useRef(0);
 
   useEffect(() => {
+    const nativeScrollTimeline = window.CSS?.supports?.("animation-timeline: scroll(root block)") ?? false;
     const updateScrollState = () => {
       frame.current = 0;
       const root = document.documentElement;
-      const scrollRange = Math.max(0, root.scrollHeight - window.innerHeight);
-      const progress = scrollRange > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollRange)) : 0;
       const nextBackToTop = window.scrollY > Math.max(520, window.innerHeight * 0.75);
+      const nextChapterNavigator = window.scrollY > Math.max(240, window.innerHeight * 0.34);
 
-      root.style.setProperty("--page-progress", String(progress));
+      if (!nativeScrollTimeline) {
+        const scrollRange = Math.max(0, root.scrollHeight - window.innerHeight);
+        const progress = scrollRange > 0 ? Math.min(1, Math.max(0, window.scrollY / scrollRange)) : 0;
+        root.style.setProperty("--page-progress", String(progress));
+      }
       document.querySelector(".site-header")?.classList.toggle("is-scrolled", window.scrollY > 18);
       setShowBackToTop((current) => current === nextBackToTop ? current : nextBackToTop);
+      setShowChapterNavigator((current) => current === nextChapterNavigator ? current : nextChapterNavigator);
     };
 
     const queueUpdate = () => {
@@ -56,8 +66,68 @@ export default function ExperienceLayer({ language }) {
       window.removeEventListener("scroll", queueUpdate);
       window.removeEventListener("resize", queueUpdate);
       if (frame.current) window.cancelAnimationFrame(frame.current);
+      if (!nativeScrollTimeline) document.documentElement.style.removeProperty("--page-progress");
     };
   }, [pathname]);
+
+  useLayoutEffect(() => {
+    const main = document.querySelector("#main-content");
+    if (!main) return undefined;
+
+    const routeKey = pathname.replace(/[^a-z0-9]+/gi, "-").replace(/^-|-$/g, "") || "home";
+    const sectionNodes = Array.from(main.children).filter((element) => (
+      element.tagName === "SECTION"
+      && (element.querySelector("h1, h2") || element.hasAttribute("aria-label") || element.hasAttribute("aria-labelledby"))
+    ));
+    const nextChapters = sectionNodes.map((section, index) => {
+      const heading = section.querySelector("h1, h2");
+      const fallback = language === "tr" ? `Bölüm ${index + 1}` : `Section ${index + 1}`;
+      const label = heading?.textContent?.replace(/\s+/g, " ").trim() || section.getAttribute("aria-label") || fallback;
+      const generatedId = !section.id;
+      if (generatedId) section.id = `chapter-${routeKey}-${String(index + 1).padStart(2, "0")}`;
+      if (generatedId) section.dataset.experienceChapterId = "true";
+      return { id: section.id, label, number: index + 1 };
+    });
+
+    setChapters(nextChapters);
+    setActiveChapterId(nextChapters[0]?.id || "");
+
+    const chapterObserver = "IntersectionObserver" in window && nextChapters.length > 1
+      ? new IntersectionObserver((entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((first, second) => first.boundingClientRect.top - second.boundingClientRect.top);
+        if (visible[0]) setActiveChapterId(visible[0].target.id);
+      }, { rootMargin: "-18% 0px -72% 0px", threshold: 0 })
+      : null;
+
+    sectionNodes.forEach((section) => chapterObserver?.observe(section));
+
+    const footer = document.querySelector(".site-footer");
+    const footerObserver = footer && "IntersectionObserver" in window
+      ? new IntersectionObserver(([entry]) => setFooterInView(entry.isIntersecting), { rootMargin: "0px 0px -10% 0px" })
+      : null;
+    if (footer) footerObserver?.observe(footer);
+
+    return () => {
+      chapterObserver?.disconnect();
+      footerObserver?.disconnect();
+      sectionNodes.forEach((section) => {
+        if (section.dataset.experienceChapterId === "true") {
+          section.removeAttribute("id");
+          delete section.dataset.experienceChapterId;
+        }
+      });
+    };
+  }, [pathname, language]);
+
+  useEffect(() => {
+    const timer = window.setTimeout(() => {
+      const suffix = language === "tr" ? "Sayfa yüklendi." : "Page loaded.";
+      setRouteAnnouncement(`${document.title}. ${suffix}`);
+    }, 80);
+    return () => window.clearTimeout(timer);
+  }, [pathname, language]);
 
   useLayoutEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -137,10 +207,53 @@ export default function ExperienceLayer({ language }) {
     window.scrollTo({ top: 0, behavior });
   };
 
+  const goToChapter = (chapterId) => {
+    const target = document.getElementById(chapterId);
+    if (!target) return;
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    setActiveChapterId(chapterId);
+    target.scrollIntoView({ block: "start", behavior });
+  };
+
+  const activeIndex = Math.max(0, chapters.findIndex(({ id }) => id === activeChapterId));
+  const chapterNavigatorVisible = showChapterNavigator && !footerInView && chapters.length > 1;
+
   return (
     <>
+      <p className="experience-announcer" role="status" aria-live="polite" aria-atomic="true">{routeAnnouncement}</p>
       <div className="route-loader" aria-hidden="true"><span /></div>
       <div className="scroll-progress" aria-hidden="true"><span /></div>
+      <nav
+        className={`chapter-navigator ${chapterNavigatorVisible ? "is-visible" : ""}`}
+        aria-label={language === "tr" ? "Sayfa bölümleri" : "Page sections"}
+        aria-hidden={!chapterNavigatorVisible}
+      >
+        <div className="chapter-navigator__meta" aria-hidden="true">
+          <small>{language === "tr" ? "Bölüm" : "Chapter"}</small>
+          <strong>{String(activeIndex + 1).padStart(2, "0")} / {String(chapters.length).padStart(2, "0")}</strong>
+          <span>{chapters[activeIndex]?.label}</span>
+        </div>
+        <div className="chapter-navigator__track">
+          {chapters.map((chapter) => {
+            const active = chapter.id === activeChapterId;
+            return (
+              <button
+                key={chapter.id}
+                type="button"
+                className={active ? "is-active" : ""}
+                aria-current={active ? "step" : undefined}
+                aria-controls={chapter.id}
+                aria-label={`${language === "tr" ? "Bölüme git" : "Go to section"}: ${chapter.label}`}
+                tabIndex={chapterNavigatorVisible ? 0 : -1}
+                title={chapter.label}
+                onClick={() => goToChapter(chapter.id)}
+              >
+                <span aria-hidden="true">{String(chapter.number).padStart(2, "0")}</span>
+              </button>
+            );
+          })}
+        </div>
+      </nav>
       <button
         className={`back-to-top ${showBackToTop ? "is-visible" : ""}`}
         type="button"

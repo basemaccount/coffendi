@@ -1,7 +1,7 @@
 @supports (view-transition-name: page-content) {
   main { view-transition-name: page-content; }
   .site-header { view-transition-name: site-header; }
-  .route-loader, .scroll-progress, .back-to-top, .mobile-navigation { view-transition-name: none; }
+  .route-loader, .scroll-progress, .chapter-navigator, .experience-announcer, .back-to-top, .mobile-navigation { view-transition-name: none; }
 
   ::view-transition-group(*) {
     animation-duration: 480ms;
