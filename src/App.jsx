@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Navigate, Route, Routes, useLocation, useNavigationType, useParams } from "react-router-dom";
 import ExperienceLayer from "./components/ExperienceLayer";
+import InquiryProgress from "./components/InquiryProgress";
 import OriginAtlas from "./components/OriginAtlas";
 import { Link, NavLink } from "./components/TransitionLink";
 import { usePersistentState } from "./hooks/usePersistentState";
@@ -207,10 +208,17 @@ function ScrollManager() {
       positions.current.set(currentKey.current, window.scrollY);
       ignoreScrollEvents.current = true;
     };
+    const restoreAfterCache = (event) => {
+      if (!event.persisted) return;
+      ignoreScrollEvents.current = false;
+      document.documentElement.classList.remove("is-restoring-scroll", "route-changing");
+      positions.current.set(currentKey.current, window.scrollY);
+    };
 
     window.history.scrollRestoration = "manual";
     window.addEventListener("scroll", rememberPosition, { passive: true });
     window.addEventListener("pagehide", rememberPosition);
+    window.addEventListener("pageshow", restoreAfterCache);
     window.addEventListener("popstate", rememberBeforeNavigation);
     window.addEventListener("app:before-navigation", rememberBeforeNavigation);
 
@@ -219,6 +227,7 @@ function ScrollManager() {
       window.history.scrollRestoration = previousRestoration;
       window.removeEventListener("scroll", rememberPosition);
       window.removeEventListener("pagehide", rememberPosition);
+      window.removeEventListener("pageshow", restoreAfterCache);
       window.removeEventListener("popstate", rememberBeforeNavigation);
       window.removeEventListener("app:before-navigation", rememberBeforeNavigation);
     };
@@ -230,8 +239,15 @@ function ScrollManager() {
     const top = Number.isFinite(savedPosition) ? savedPosition : 0;
     const root = document.documentElement;
     root.classList.add("is-restoring-scroll");
-    window.scrollTo({ top, left: 0, behavior: "instant" });
-    positions.current.set(location.key, top);
+    let settleFrame = 0;
+    let remainingSettleFrames = navigationType === "POP" ? 4 : 1;
+    const settlePosition = () => {
+      window.scrollTo({ top, left: 0, behavior: "instant" });
+      positions.current.set(location.key, top);
+      remainingSettleFrames -= 1;
+      if (remainingSettleFrames > 0) settleFrame = window.requestAnimationFrame(settlePosition);
+    };
+    settlePosition();
     const releaseTimer = window.setTimeout(() => {
       root.classList.remove("is-restoring-scroll");
       ignoreScrollEvents.current = false;
@@ -240,6 +256,7 @@ function ScrollManager() {
 
     return () => {
       window.clearTimeout(releaseTimer);
+      if (settleFrame) window.cancelAnimationFrame(settleFrame);
       root.classList.remove("is-restoring-scroll");
     };
   }, [location.key, navigationType]);
@@ -255,6 +272,11 @@ function Header({ language, setLanguage, copy }) {
   const menuWasOpen = useRef(false);
 
   useEffect(() => setMenuOpen(false), [location.pathname]);
+  useEffect(() => {
+    const restoreFromCache = () => setMenuOpen(false);
+    window.addEventListener("app:pageshow", restoreFromCache);
+    return () => window.removeEventListener("app:pageshow", restoreFromCache);
+  }, []);
   useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === "Escape") setMenuOpen(false);
@@ -423,6 +445,7 @@ function ApproachPage({ language }) {
 
 function InquiryForm({ language, copy }) {
   const [state, setState] = useState({ status: "idle", message: "" });
+  const formRef = useRef(null);
   const handleSubmit = async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
@@ -436,7 +459,7 @@ function InquiryForm({ language, copy }) {
       setState({ status: "error", message: copy.form.error });
     }
   };
-  return <form className="inquiry-form" onSubmit={handleSubmit}><div className="form-grid"><label><span>{copy.form.name}</span><input name="name" autoComplete="name" minLength="2" maxLength="80" required /></label><label><span>{copy.form.company}</span><input name="company" autoComplete="organization" minLength="2" maxLength="120" required /></label><label><span>{copy.form.email}</span><input name="email" type="email" autoComplete="email" maxLength="160" required /></label><label><span>{copy.form.country}</span><input name="country" autoComplete="country-name" maxLength="100" /></label><label className="form-grid__wide"><span>{copy.form.volume}</span><input name="volume" maxLength="80" placeholder={language === "tr" ? "Örn. numune, 20 çuval, yıllık program" : "For example: sample, 20 bags, annual program"} /></label><label className="form-grid__wide"><span>{copy.form.message}</span><textarea name="message" rows="6" minLength="10" maxLength="2500" required /></label><label className="consent-field form-grid__wide"><input name="consent" type="checkbox" required /><span>{copy.form.consent} <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></span></label><label className="bot-field" aria-hidden="true">Website<input name="website" tabIndex="-1" autoComplete="off" /></label></div><div className="form-submit"><button className="button button--gold" type="submit" disabled={state.status === "submitting"}>{state.status === "submitting" ? copy.form.submitting : copy.form.submit}<Send aria-hidden="true" /></button>{state.message && <p className={`form-status is-${state.status}`} role="status">{state.message}</p>}</div></form>;
+  return <form ref={formRef} className="inquiry-form" onSubmit={handleSubmit} aria-busy={state.status === "submitting"}><InquiryProgress formRef={formRef} language={language} /><div className="form-grid"><label><span>{copy.form.name}</span><input name="name" autoComplete="name" minLength="2" maxLength="80" required /></label><label><span>{copy.form.company}</span><input name="company" autoComplete="organization" minLength="2" maxLength="120" required /></label><label><span>{copy.form.email}</span><input name="email" type="email" autoComplete="email" maxLength="160" required /></label><label><span>{copy.form.country}</span><input name="country" autoComplete="country-name" maxLength="100" /></label><label className="form-grid__wide"><span>{copy.form.volume}</span><input name="volume" maxLength="80" placeholder={language === "tr" ? "Örn. numune, 20 çuval, yıllık program" : "For example: sample, 20 bags, annual program"} /></label><label className="form-grid__wide"><span>{copy.form.message}</span><textarea name="message" rows="6" minLength="10" maxLength="2500" required /></label><label className="consent-field form-grid__wide"><input name="consent" type="checkbox" required /><span>{copy.form.consent} <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></span></label><label className="bot-field" aria-hidden="true">Website<input name="website" tabIndex="-1" autoComplete="off" /></label></div><div className="form-submit"><button className="button button--gold" type="submit" disabled={state.status === "submitting"}>{state.status === "submitting" ? copy.form.submitting : copy.form.submit}<Send aria-hidden="true" /></button>{state.message && <p className={`form-status is-${state.status}`} role="status">{state.message}</p>}</div></form>;
 }
 
 function ContactPage({ language, copy }) {

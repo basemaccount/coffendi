@@ -34,6 +34,7 @@ export default function ExperienceLayer({ language }) {
   const [chapters, setChapters] = useState([]);
   const [activeChapterId, setActiveChapterId] = useState("");
   const [routeAnnouncement, setRouteAnnouncement] = useState("");
+  const [connectionNotice, setConnectionNotice] = useState(null);
   const frame = useRef(0);
 
   useEffect(() => {
@@ -70,6 +71,45 @@ export default function ExperienceLayer({ language }) {
     };
   }, [pathname]);
 
+  useEffect(() => {
+    let wasOffline = !navigator.onLine;
+    let clearTimer = 0;
+    const handleOffline = () => {
+      wasOffline = true;
+      window.clearTimeout(clearTimer);
+      setConnectionNotice("offline");
+    };
+    const handleOnline = () => {
+      if (!wasOffline) return;
+      wasOffline = false;
+      window.clearTimeout(clearTimer);
+      setConnectionNotice("online");
+      clearTimer = window.setTimeout(() => setConnectionNotice(null), 3600);
+    };
+    const handlePageShow = (event) => {
+      if (!event.persisted) return;
+      const root = document.documentElement;
+      root.classList.remove("route-changing", "is-restoring-scroll");
+      document.body.classList.remove("no-scroll");
+      document.querySelector("#main-content")?.removeAttribute("inert");
+      document.querySelector(".site-footer")?.removeAttribute("inert");
+      window.dispatchEvent(new Event("app:pageshow"));
+      window.requestAnimationFrame(() => window.dispatchEvent(new Event("scroll")));
+    };
+
+    if (!navigator.onLine) handleOffline();
+    window.addEventListener("offline", handleOffline);
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("pageshow", handlePageShow);
+
+    return () => {
+      window.clearTimeout(clearTimer);
+      window.removeEventListener("offline", handleOffline);
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("pageshow", handlePageShow);
+    };
+  }, []);
+
   useLayoutEffect(() => {
     const main = document.querySelector("#main-content");
     if (!main) return undefined;
@@ -86,6 +126,7 @@ export default function ExperienceLayer({ language }) {
       const generatedId = !section.id;
       if (generatedId) section.id = `chapter-${routeKey}-${String(index + 1).padStart(2, "0")}`;
       if (generatedId) section.dataset.experienceChapterId = "true";
+      if (index >= 2) section.dataset.renderDeferred = "true";
       return { id: section.id, label, number: index + 1 };
     });
 
@@ -113,6 +154,7 @@ export default function ExperienceLayer({ language }) {
       chapterObserver?.disconnect();
       footerObserver?.disconnect();
       sectionNodes.forEach((section) => {
+        delete section.dataset.renderDeferred;
         if (section.dataset.experienceChapterId === "true") {
           section.removeAttribute("id");
           delete section.dataset.experienceChapterId;
@@ -152,10 +194,7 @@ export default function ExperienceLayer({ language }) {
       });
     }, { rootMargin: "0px 0px -7% 0px", threshold: 0.12 });
 
-    targets.forEach((element) => {
-      if (element.getBoundingClientRect().top <= window.innerHeight * 0.92) reveal(element);
-      else observer.observe(element);
-    });
+    targets.forEach((element) => observer.observe(element));
 
     return () => observer.disconnect();
   }, [pathname]);
@@ -203,14 +242,14 @@ export default function ExperienceLayer({ language }) {
   }, [pathname]);
 
   const returnToTop = () => {
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
     window.scrollTo({ top: 0, behavior });
   };
 
   const goToChapter = (chapterId) => {
     const target = document.getElementById(chapterId);
     if (!target) return;
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
     setActiveChapterId(chapterId);
     target.scrollIntoView({ block: "start", behavior });
   };
@@ -221,6 +260,7 @@ export default function ExperienceLayer({ language }) {
   return (
     <>
       <p className="experience-announcer" role="status" aria-live="polite" aria-atomic="true">{routeAnnouncement}</p>
+      {connectionNotice && <div className={`connection-notice is-${connectionNotice}`} role="status" aria-live="polite"><span aria-hidden="true" /><div><strong>{language === "tr" ? connectionNotice === "offline" ? "Bağlantı kesildi" : "Bağlantı yeniden kuruldu" : connectionNotice === "offline" ? "You’re offline" : "Connection restored"}</strong><small>{language === "tr" ? connectionNotice === "offline" ? "Bazı görseller ve talep gönderimi kullanılamayabilir." : "Gezinmeye ve talep göndermeye devam edebilirsiniz." : connectionNotice === "offline" ? "Some images and inquiry submission may be unavailable." : "You can continue browsing and submit an inquiry."}</small></div></div>}
       <div className="route-loader" aria-hidden="true"><span /></div>
       <div className="scroll-progress" aria-hidden="true"><span /></div>
       <nav

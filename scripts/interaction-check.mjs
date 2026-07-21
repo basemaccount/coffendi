@@ -55,7 +55,12 @@ assert(!await page.locator("html.route-changing").count(), "rapid navigation lef
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.waitForTimeout(750);
-await page.mouse.wheel(0, 1300);
+const deferredRendering = await page.evaluate(() => ({
+  supported: CSS.supports("content-visibility: auto"),
+  values: [...document.querySelectorAll('[data-render-deferred="true"]')].map((section) => getComputedStyle(section).contentVisibility),
+}));
+assert(!deferredRendering.supported || deferredRendering.values.length > 0 && deferredRendering.values.every((value) => value === "auto"), "deep sections did not opt into native deferred rendering");
+await page.mouse.wheel(0, 3600);
 await page.waitForTimeout(100);
 const scrollBefore = await page.evaluate(() => scrollY);
 const navBounds = await page.locator('.desktop-nav a[href="/coffees"]').boundingBox();
@@ -74,7 +79,9 @@ assert(await chapterNavigator.evaluate((element) => element.classList.contains("
 const targetChapterIndex = Math.min(2, await chapterNavigator.locator("button").count() - 1);
 const targetChapterButton = chapterNavigator.locator("button").nth(targetChapterIndex);
 const targetChapterId = await targetChapterButton.getAttribute("aria-controls");
-await targetChapterButton.click();
+const targetChapterBounds = await targetChapterButton.boundingBox();
+assert(Boolean(targetChapterBounds), "chapter selection did not expose a clickable target");
+if (targetChapterBounds) await page.mouse.click(targetChapterBounds.x + targetChapterBounds.width / 2, targetChapterBounds.y + targetChapterBounds.height / 2);
 await page.waitForTimeout(850);
 assert(await targetChapterButton.getAttribute("aria-current") === "step", "chapter selection did not update its current state");
 assert(await page.locator(`#${targetChapterId}`).evaluate((element) => Math.abs(element.getBoundingClientRect().top - 96) < 8), "chapter selection did not align the target below the sticky header");
@@ -97,6 +104,17 @@ await atlasButtons.first().click();
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
 assert(await atlasButtons.first().getAttribute("aria-pressed") === "true", "atlas did not recover from a scoped transition failure");
 
+await page.goto(`${baseUrl}/contact`, { waitUntil: "networkidle" });
+const inquiryProgress = page.locator(".inquiry-progress__meter");
+assert(await inquiryProgress.getAttribute("aria-valuemax") === "5", "inquiry readiness did not identify the five required fields");
+await page.locator('[name="name"]').fill("Test Person");
+await page.locator('[name="company"]').fill("Test Company");
+await page.locator('[name="email"]').fill("test@example.com");
+await page.locator('[name="message"]').fill("A complete test coffee brief.");
+await page.locator('[name="consent"]').check();
+await page.waitForFunction(() => document.querySelector(".inquiry-progress__meter")?.getAttribute("aria-valuenow") === "5");
+assert(await page.locator(".inquiry-progress.is-ready").count() === 1, "completed inquiry did not expose its ready state");
+
 await context.close();
 
 const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
@@ -109,6 +127,21 @@ assert(await mobile.locator("#main-content").evaluate((element) => element.inert
 await mobile.keyboard.press("Escape");
 assert(!await mobile.locator("#main-content").evaluate((element) => element.inert), "mobile menu left page content inert");
 assert(await mobile.locator(".menu-button").evaluate((element) => document.activeElement === element), "mobile menu did not restore focus");
+await mobile.locator(".menu-button").click();
+await mobile.evaluate(() => {
+  document.documentElement.classList.add("route-changing", "is-restoring-scroll");
+  window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
+});
+await mobile.waitForTimeout(80);
+assert(!await mobile.locator(".mobile-navigation.is-open").count(), "BFCache restoration left the mobile menu open");
+assert(!await mobile.locator("html.route-changing, html.is-restoring-scroll").count(), "BFCache restoration left transient document classes active");
+assert(!await mobile.locator("#main-content").evaluate((element) => element.inert), "BFCache restoration left page content inert");
+await mobile.evaluate(() => window.dispatchEvent(new Event("offline")));
+await mobile.waitForTimeout(30);
+assert(await mobile.locator(".connection-notice.is-offline").count() === 1, "offline state did not surface a connection notice");
+await mobile.evaluate(() => window.dispatchEvent(new Event("online")));
+await mobile.waitForTimeout(30);
+assert(await mobile.locator(".connection-notice.is-online").count() === 1, "reconnection did not update the connection notice");
 const mobileTargets = await mobile.evaluate(() => [document.querySelector(".menu-button"), ...document.querySelectorAll(".language-switcher button")].map((element) => ({ width: element.offsetWidth, height: element.offsetHeight })));
 assert(mobileTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile header has a touch target below 44px");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile home has horizontal overflow");
@@ -122,6 +155,22 @@ const dockBounds = await mobileChapterNavigator.boundingBox();
 const topBounds = await mobile.locator(".back-to-top").boundingBox();
 assert(dockBounds && topBounds && dockBounds.x + dockBounds.width <= topBounds.x - 4, "mobile chapter navigator overlaps the back-to-top control");
 await mobileContext.close();
+
+const reducedContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, reducedMotion: "reduce" });
+const reducedPage = await reducedContext.newPage();
+await reducedPage.goto(baseUrl, { waitUntil: "networkidle" });
+await reducedPage.evaluate(() => window.scrollTo(0, 1000));
+await reducedPage.waitForTimeout(80);
+assert(await reducedPage.locator(".scroll-progress").evaluate((element) => getComputedStyle(element).display) === "none", "reduced motion did not disable animated scroll progress");
+const reducedChapter = reducedPage.locator(".chapter-navigator button").nth(2);
+const reducedChapterId = await reducedChapter.getAttribute("aria-controls");
+await reducedChapter.click();
+await reducedPage.waitForTimeout(50);
+assert(await reducedPage.locator(`#${reducedChapterId}`).evaluate((element) => {
+  const expectedTop = Number.parseFloat(getComputedStyle(document.documentElement).scrollPaddingTop) || 0;
+  return Math.abs(element.getBoundingClientRect().top - expectedTop) < 8;
+}), "reduced-motion chapter jump was not immediate");
+await reducedContext.close();
 
 const throwContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
 await throwContext.addInitScript(() => Object.defineProperty(document, "startViewTransition", { configurable: true, value: () => { throw new Error("forced transition failure"); } }));
@@ -157,5 +206,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard and modified clicks, rapid navigation, exact history restoration, responsive chapter navigation, native scroll progress, atlas interruption safety, mobile touch targets, and transition failure recovery.`);
+  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard and modified clicks, rapid navigation, deep history restoration, deferred rendering, responsive chapters, inquiry readiness, BFCache/offline recovery, reduced motion, atlas interruption safety, mobile touch targets, and transition failure recovery.`);
 }
