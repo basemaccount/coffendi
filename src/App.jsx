@@ -230,7 +230,7 @@ function ScrollManager() {
     const top = Number.isFinite(savedPosition) ? savedPosition : 0;
     const root = document.documentElement;
     root.classList.add("is-restoring-scroll");
-    window.scrollTo({ top, left: 0, behavior: "auto" });
+    window.scrollTo({ top, left: 0, behavior: "instant" });
     positions.current.set(location.key, top);
     const releaseTimer = window.setTimeout(() => {
       root.classList.remove("is-restoring-scroll");
