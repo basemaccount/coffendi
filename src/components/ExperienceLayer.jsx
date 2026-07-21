@@ -15,7 +15,6 @@ const REVEAL_SELECTOR = [
   ".comparison-teaser .shell > *",
   ".decision-grid > article",
   ".origin-card",
-  ".compare-picker > button",
   ".compare-table",
   ".pillar-grid > article",
   ".approach-feature > *",
@@ -175,6 +174,10 @@ export default function ExperienceLayer({ language }) {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const targets = Array.from(document.querySelectorAll(REVEAL_SELECTOR));
     const reveal = (element) => element.classList.add("is-revealed");
+    const revealAll = () => targets.forEach(reveal);
+    const revealPassedViewport = () => targets.forEach((element) => {
+      if (element.getBoundingClientRect().top < window.innerHeight) reveal(element);
+    });
 
     targets.forEach((element, index) => {
       element.dataset.reveal = "true";
@@ -182,21 +185,28 @@ export default function ExperienceLayer({ language }) {
     });
 
     if (reduceMotion || !("IntersectionObserver" in window)) {
-      targets.forEach(reveal);
+      revealAll();
       return undefined;
     }
 
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => {
-        if (!entry.isIntersecting) return;
+        const aboveViewport = entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0);
+        if (!entry.isIntersecting && !aboveViewport) return;
         reveal(entry.target);
         observer.unobserve(entry.target);
       });
     }, { rootMargin: "0px 0px -7% 0px", threshold: 0.12 });
 
     targets.forEach((element) => observer.observe(element));
+    const revealFailsafe = window.setTimeout(revealPassedViewport, 1400);
+    window.addEventListener("app:pageshow", revealPassedViewport);
 
-    return () => observer.disconnect();
+    return () => {
+      window.clearTimeout(revealFailsafe);
+      window.removeEventListener("app:pageshow", revealPassedViewport);
+      observer.disconnect();
+    };
   }, [pathname]);
 
   useEffect(() => {

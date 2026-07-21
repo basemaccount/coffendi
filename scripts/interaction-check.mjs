@@ -44,6 +44,15 @@ const modifierPrevented = await page.locator('.desktop-nav a[href="/coffees"]').
 });
 assert(modifierPrevented === false, "modified click was captured by application navigation");
 
+await page.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" });
+await page.evaluate(() => window.scrollTo(0, 520));
+const sameRouteHistoryLength = await page.evaluate(() => history.length);
+await page.locator('.desktop-nav a[href="/compare"]').click();
+await page.waitForTimeout(850);
+assert(await page.evaluate(() => scrollY) === 0, "current-route navigation did not return to the top");
+assert(await page.evaluate(() => history.length) === sameRouteHistoryLength, "current-route navigation added a duplicate history entry");
+assert(!await page.locator("html.route-changing").count(), "current-route navigation started a redundant page transition");
+
 for (let index = 0; index < 16; index += 1) {
   const target = rapidTargets[index % rapidTargets.length];
   await page.evaluate((href) => document.querySelector(`.desktop-nav a[href="${href}"]`)?.click(), target);
@@ -103,6 +112,36 @@ await page.locator(".origin-atlas__visual").evaluate((element) => Object.defineP
 await atlasButtons.first().click();
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
 assert(await atlasButtons.first().getAttribute("aria-pressed") === "true", "atlas did not recover from a scoped transition failure");
+
+await page.reload({ waitUntil: "networkidle" });
+await page.locator(".origin-atlas").scrollIntoViewIfNeeded();
+await page.evaluate(() => {
+  window.Image = class FailingPreloadImage {
+    set sizes(value) { this._sizes = value; }
+    set srcset(value) { this._srcset = value; }
+    set src(value) { this._src = value; queueMicrotask(() => this.onerror?.(new Event("error"))); }
+  };
+});
+const fallbackAtlasButtons = page.locator(".origin-atlas__controls button");
+await fallbackAtlasButtons.nth(1).click();
+await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
+assert(await fallbackAtlasButtons.nth(1).getAttribute("aria-pressed") === "true", "atlas left a click pending after image preloading failed");
+
+await page.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" });
+const clearComparison = page.locator(".compare-toolbar__clear");
+if (await clearComparison.count()) await clearComparison.click();
+const comparisonButtons = page.locator(".compare-picker button");
+for (const index of [0, 2, 4]) await comparisonButtons.nth(index).click();
+await page.waitForTimeout(280);
+assert(await comparisonButtons.evaluateAll((buttons) => buttons.filter((button) => button.getAttribute("aria-pressed") === "true").length) === 3, "comparison did not retain three explicit selections");
+assert(await comparisonButtons.evaluateAll((buttons) => buttons.filter((button) => button.disabled).length) === 3, "comparison limit did not disable only the unselected profiles");
+assert(await comparisonButtons.evaluateAll((buttons) => buttons.every((button) => Number.parseFloat(getComputedStyle(button).opacity) > 0.35 && !button.dataset.reveal)), "comparison state change recreated the invisible-control screenshot bug");
+await comparisonButtons.nth(0).click();
+await comparisonButtons.nth(5).click();
+await page.waitForTimeout(280);
+assert(await comparisonButtons.nth(5).getAttribute("aria-pressed") === "true", "comparison did not accept a new profile after one was removed");
+assert(await comparisonButtons.evaluateAll((buttons) => buttons.every((button) => Number.parseFloat(getComputedStyle(button).opacity) > 0.35)), "comparison controls became invisible after replacing a selection");
+assert(await page.locator('.compare-table [role="cell"]').first().getAttribute("data-label") !== "Profile", "responsive comparison cells did not retain their profile identity");
 
 await page.goto(`${baseUrl}/contact`, { waitUntil: "networkidle" });
 const inquiryProgress = page.locator(".inquiry-progress__meter");
@@ -198,6 +237,33 @@ assert(await stallPage.evaluate(() => window.__skipped) === 1, "stalled transiti
 assert(!await stallPage.locator("html.route-changing").count(), "stalled transition left the document locked");
 await stallContext.close();
 
+const storageSyncContext = await browser.newContext({ viewport: { width: 1024, height: 800 } });
+await storageSyncContext.addInitScript(() => {
+  window.__storageEvents = 0;
+  window.addEventListener("storage", () => { window.__storageEvents += 1; });
+});
+const storageSourcePage = await storageSyncContext.newPage();
+const storageMirrorPage = await storageSyncContext.newPage();
+await Promise.all([storageSourcePage.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" }), storageMirrorPage.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" })]);
+if (await storageSourcePage.locator(".compare-toolbar__clear").count()) await storageSourcePage.locator(".compare-toolbar__clear").click();
+await storageMirrorPage.waitForFunction(() => document.querySelectorAll('.compare-picker button[aria-pressed="true"]').length === 0);
+await storageSourcePage.locator(".compare-picker button").first().click();
+await storageMirrorPage.waitForFunction(() => document.querySelectorAll('.compare-picker button[aria-pressed="true"]').length === 1);
+assert(await storageSourcePage.evaluate(() => window.__storageEvents) + await storageMirrorPage.evaluate(() => window.__storageEvents) <= 3, "comparison storage synchronization echoed between tabs");
+await storageSyncContext.close();
+
+const blockedStorageContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+await blockedStorageContext.addInitScript(() => {
+  Storage.prototype.getItem = () => { throw new DOMException("Storage blocked", "SecurityError"); };
+  Storage.prototype.setItem = () => { throw new DOMException("Storage blocked", "SecurityError"); };
+});
+const blockedStoragePage = await blockedStorageContext.newPage();
+await blockedStoragePage.goto(baseUrl, { waitUntil: "networkidle" });
+assert(await blockedStoragePage.locator("h1").count() === 1, "blocked browser storage prevented the application from loading");
+await blockedStoragePage.locator('.language-switcher button').nth(1).click();
+assert(await blockedStoragePage.locator("html").getAttribute("lang") === "tr", "blocked browser storage prevented an in-memory language change");
+await blockedStorageContext.close();
+
 assert(runtimeErrors.length === 0, `runtime errors: ${runtimeErrors.join(" | ")}`);
 await browser.close();
 
@@ -206,5 +272,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard and modified clicks, rapid navigation, deep history restoration, deferred rendering, responsive chapters, inquiry readiness, BFCache/offline recovery, reduced motion, atlas interruption safety, mobile touch targets, and transition failure recovery.`);
+  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, stable comparison selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
 }

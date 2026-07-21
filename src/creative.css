@@ -285,6 +285,14 @@
   .origin-atlas__location { animation: atlas-readout-in 480ms 100ms var(--ease) both; }
 }
 
+@media (max-width: 760px) {
+  @supports (view-transition-name: page-content) {
+    ::view-transition-group(*) { animation-duration: 340ms; }
+    ::view-transition-old(page-content) { animation-duration: 130ms; }
+    ::view-transition-new(page-content) { animation-duration: 310ms; }
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   [data-optical] > img { translate: none !important; }

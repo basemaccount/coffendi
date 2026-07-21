@@ -1,4 +1,4 @@
-import { Link as RouterLink, NavLink as RouterNavLink, useNavigate } from "react-router-dom";
+import { Link as RouterLink, NavLink as RouterNavLink, useLocation, useNavigate, useResolvedPath } from "react-router-dom";
 
 const TRANSITION_TIMEOUT_MS = 1200;
 let activeTransition = null;
@@ -16,6 +16,8 @@ function useSafeTransitionClick({
   download,
 }) {
   const navigate = useNavigate();
+  const location = useLocation();
+  const resolved = useResolvedPath(to);
 
   return (event) => {
     onClick?.(event);
@@ -32,6 +34,19 @@ function useSafeTransitionClick({
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (!isPlainNavigation) return;
+
+    const sameDestination = !replace
+      && state == null
+      && resolved.pathname === location.pathname
+      && resolved.search === location.search
+      && resolved.hash === location.hash;
+    if (sameDestination) {
+      event.preventDefault();
+      const targetElement = resolved.hash ? document.querySelector(resolved.hash) : null;
+      if (targetElement) targetElement.scrollIntoView({ block: "start", behavior: reduceMotion ? "instant" : "smooth" });
+      else window.scrollTo({ top: 0, left: 0, behavior: reduceMotion ? "instant" : "smooth" });
+      return;
+    }
 
     window.dispatchEvent(new Event("app:before-navigation"));
 

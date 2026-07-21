@@ -10,6 +10,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
   const [pendingId, setPendingId] = useState(null);
   const imageCache = useRef(new Map());
   const selectionRequest = useRef(0);
+  const selectionTimer = useRef(0);
   const mounted = useRef(true);
   const visual = useRef(null);
   const activeIndex = Math.max(0, profiles.findIndex(({ id }) => id === activeId));
@@ -20,6 +21,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
     return () => {
       mounted.current = false;
       selectionRequest.current += 1;
+      window.clearTimeout(selectionTimer.current);
     };
   }, []);
 
@@ -52,9 +54,14 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
     if (profile.id === active.id) return;
     const request = ++selectionRequest.current;
     setPendingId(profile.id);
-    warmProfile(profile)
+    window.clearTimeout(selectionTimer.current);
+    const deadline = new Promise((resolve) => {
+      selectionTimer.current = window.setTimeout(resolve, 900);
+    });
+    Promise.race([warmProfile(profile).catch(() => undefined), deadline])
       .then(() => {
         if (!mounted.current || request !== selectionRequest.current) return;
+        window.clearTimeout(selectionTimer.current);
         let committed = false;
         const commitSelection = () => {
           if (committed || !mounted.current || request !== selectionRequest.current) return;
@@ -107,7 +114,8 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
                 key={profile.id}
                 className={`${profile.id === active.id ? "is-active" : ""} ${profile.id === pendingId ? "is-pending" : ""}`.trim()}
                 type="button"
-                aria-pressed={profile.id === active.id}
+                aria-pressed={profile.id === (pendingId || active.id)}
+                aria-busy={profile.id === pendingId}
                 onPointerEnter={() => warmProfile(profile).catch(() => {})}
                 onFocus={() => warmProfile(profile).catch(() => {})}
                 onTouchStart={() => warmProfile(profile).catch(() => {})}
