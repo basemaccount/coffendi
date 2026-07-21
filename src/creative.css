@@ -1,7 +1,7 @@
 @supports (view-transition-name: page-content) {
   main { view-transition-name: page-content; }
   .site-header { view-transition-name: site-header; }
-  .scroll-progress, .back-to-top, .mobile-navigation { view-transition-name: none; }
+  .route-loader, .scroll-progress, .back-to-top, .mobile-navigation { view-transition-name: none; }
 
   ::view-transition-group(*) {
     animation-duration: 480ms;
@@ -114,6 +114,7 @@
 .origin-atlas__intro p { color: #58615c; font-size: 14px; line-height: 1.8; }
 
 .origin-atlas__workspace {
+  position: relative;
   display: grid;
   grid-template-columns: minmax(180px, 0.48fr) minmax(350px, 1.1fr) minmax(300px, 0.78fr);
   align-items: stretch;
@@ -158,6 +159,24 @@
 .origin-atlas__controls button.is-active { background: var(--green); color: var(--white); transform: translateX(4px); }
 .origin-atlas__controls button.is-active::after { opacity: 1; transform: scaleY(1); }
 .origin-atlas__controls button.is-active small, .origin-atlas__controls button.is-active > span { color: var(--gold-light); }
+.origin-atlas__controls button.is-pending { cursor: progress; }
+.origin-atlas__controls button.is-pending strong,
+.origin-atlas__controls button.is-pending small { opacity: 0.62; }
+.origin-atlas__control-status {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+  width: 15px;
+  height: 15px;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%);
+}
+.origin-atlas__controls button.is-pending .origin-atlas__control-status { opacity: 0.72; animation: atlas-loading-spin 680ms linear infinite; }
+.origin-atlas__swipe-cue { display: none; }
 
 .origin-atlas__visual {
   position: relative;
@@ -212,6 +231,15 @@
   to { opacity: 1; transform: none; }
 }
 
+@keyframes atlas-loading-spin {
+  to { transform: translateY(-50%) rotate(1turn); }
+}
+
+@keyframes atlas-swipe-cue {
+  0%, 100% { opacity: 0.52; transform: translateX(-4px) rotate(-45deg); }
+  50% { opacity: 1; transform: translateX(3px) rotate(-45deg); }
+}
+
 @keyframes page-dissolve-out {
   to { opacity: 0; transform: translateY(-8px); }
 }
@@ -238,7 +266,7 @@
   .origin-atlas__intro { grid-template-columns: 58px 1fr; gap: 12px; }
   .origin-atlas__intro p { font-size: 13px; }
   .origin-atlas__workspace { display: flex; flex-direction: column; gap: 14px; }
-  .origin-atlas__controls { order: 1; display: flex; gap: 8px; padding: 0 0 8px; overflow-x: auto; border: 0; border-radius: 0; background: transparent; box-shadow: none; scroll-padding-inline: 2px; scroll-snap-type: x mandatory; scrollbar-width: none; backdrop-filter: none; }
+  .origin-atlas__controls { order: 1; display: flex; gap: 8px; padding: 0 34px 8px 0; overflow-x: auto; overscroll-behavior-inline: contain; border: 0; border-radius: 0; background: transparent; box-shadow: none; scroll-padding-inline: 2px 34px; scroll-snap-type: x mandatory; scrollbar-width: none; backdrop-filter: none; -webkit-overflow-scrolling: touch; }
   .origin-atlas__controls::-webkit-scrollbar { display: none; }
   .origin-atlas__controls button { min-width: 155px; min-height: 76px; flex: 0 0 auto; border: 1px solid var(--line); border-radius: 11px; background: rgba(255, 250, 241, 0.72); scroll-snap-align: start; }
   .origin-atlas__controls button:last-child { border-bottom: 1px solid var(--line); }
@@ -252,11 +280,14 @@
   .origin-atlas__readout dl { margin-top: 24px; }
   .origin-atlas__readout .button { width: 100%; }
   .material-lens { display: none; }
+  .origin-atlas__swipe-cue { position: absolute; z-index: 8; top: 29px; right: -1px; width: 31px; height: 31px; display: grid; place-items: center; border: 1px solid rgba(23, 61, 49, 0.16); border-radius: 50%; background: rgba(255, 250, 241, 0.92); box-shadow: 0 8px 22px rgba(23, 61, 49, 0.14); pointer-events: none; backdrop-filter: blur(8px); }
+  .origin-atlas__swipe-cue::after { width: 8px; height: 8px; border-right: 2px solid var(--gold-ink); border-bottom: 2px solid var(--gold-ink); content: ""; animation: atlas-swipe-cue 1.35s var(--ease) infinite; }
+  .origin-atlas__location { animation: atlas-readout-in 480ms 100ms var(--ease) both; }
 }
 
 @media (prefers-reduced-motion: reduce) {
   ::view-transition-group(*), ::view-transition-old(*), ::view-transition-new(*) { animation: none !important; }
   [data-optical] > img { translate: none !important; }
   .material-lens { display: none; }
-  .origin-atlas__visual > img, .origin-atlas__readout { animation: none !important; }
+  .origin-atlas__visual > img, .origin-atlas__readout, .origin-atlas__location, .origin-atlas__control-status, .origin-atlas__swipe-cue::after { animation: none !important; }
 }

@@ -1,3 +1,29 @@
+.is-restoring-scroll { scroll-behavior: auto !important; }
+
+.route-loader {
+  position: fixed;
+  z-index: 1300;
+  inset: 0 0 auto;
+  height: 3px;
+  overflow: hidden;
+  background: rgba(239, 201, 121, 0.12);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 100ms ease 120ms;
+}
+
+.route-loader span {
+  width: 42%;
+  height: 100%;
+  display: block;
+  background: linear-gradient(90deg, transparent, var(--gold-light) 34%, var(--gold) 72%, transparent);
+  box-shadow: 0 0 16px rgba(198, 139, 44, 0.38);
+  transform: translateX(-110%);
+}
+
+html.route-changing .route-loader { opacity: 1; }
+html.route-changing .route-loader span { animation: route-loader-sweep 720ms var(--ease) infinite; }
+
 .scroll-progress {
   position: fixed;
   z-index: 1200;
@@ -142,13 +168,97 @@
   to { opacity: 1; transform: none; }
 }
 
+@keyframes route-loader-sweep {
+  to { transform: translateX(340%); }
+}
+
+@keyframes mobile-media-arrive {
+  from { opacity: 0; transform: translate3d(20px, -10px, 0) scale(0.95); clip-path: inset(0 22% 0 0 round 72px 6px 6px 6px); }
+  to { opacity: 1; transform: none; clip-path: inset(0 0 0 0 round 72px 6px 6px 6px); }
+}
+
+@keyframes mobile-rise {
+  from { opacity: 0; transform: translate3d(0, 17px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mobile-pop {
+  from { opacity: 0; transform: scale(0.72) rotate(-10deg); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mobile-card-content {
+  from { opacity: 0; transform: translate3d(0, 11px, 0); }
+  to { opacity: 1; transform: none; }
+}
+
+@keyframes mobile-step-line {
+  from { opacity: 0; transform: translate3d(-12px, 0, 0); }
+  to { opacity: 1; transform: none; }
+}
+
 @media (max-width: 760px) {
   .motion-ready [data-reveal="true"] { translate: 0 14px; }
   .back-to-top { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 44px; height: 44px; }
+
+  .motion-ready .hero__media { animation: mobile-media-arrive 760ms var(--ease) both; }
+  .motion-ready .hero__copy > * { animation: mobile-rise 560ms var(--ease) both; }
+  .motion-ready .hero__copy > :nth-child(1) { animation-delay: 100ms; }
+  .motion-ready .hero__copy > :nth-child(2) { animation-delay: 155ms; }
+  .motion-ready .hero__copy > :nth-child(3) { animation-delay: 210ms; }
+  .motion-ready .hero__copy > :nth-child(4) { animation-delay: 265ms; }
+  .motion-ready .hero__copy > :nth-child(5) { animation-delay: 320ms; }
+  .motion-ready .hero__card { animation: mobile-pop 520ms 330ms var(--ease) both; }
+
+  .motion-ready .service-strip .is-revealed svg,
+  .motion-ready .decision-grid article.is-revealed > svg,
+  .motion-ready .pillar-grid article.is-revealed > svg { animation: mobile-pop 460ms calc(var(--reveal-delay, 0ms) + 90ms) var(--ease) both; }
+
+  .motion-ready .profile-card.is-revealed .profile-card__content > *,
+  .motion-ready .origin-card.is-revealed > div > *,
+  .motion-ready .contact-layout > *.is-revealed > * { animation: mobile-card-content 520ms var(--ease) both; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(2),
+  .motion-ready .origin-card.is-revealed > div > :nth-child(2) { animation-delay: 55ms; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(3),
+  .motion-ready .origin-card.is-revealed > div > :nth-child(3) { animation-delay: 100ms; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(4),
+  .motion-ready .origin-card.is-revealed > div > :nth-child(4) { animation-delay: 145ms; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(5),
+  .motion-ready .origin-card.is-revealed > div > :nth-child(5) { animation-delay: 190ms; }
+
+  .motion-ready .story-steps > li.is-revealed > *,
+  .motion-ready .footer-grid > *.is-revealed > *,
+  .motion-ready .footer-lead > *.is-revealed > * { animation: mobile-step-line 520ms var(--ease) both; }
+  .motion-ready .story-steps > li.is-revealed > :nth-child(2),
+  .motion-ready .footer-grid > *.is-revealed > :nth-child(2) { animation-delay: 70ms; }
+  .motion-ready .footer-grid > *.is-revealed > :nth-child(3) { animation-delay: 120ms; }
+
+  .motion-ready .origin-atlas__controls.is-revealed button { animation: mobile-card-content 520ms var(--ease) both; }
+  .motion-ready .origin-atlas__controls.is-revealed button:nth-child(2) { animation-delay: 55ms; }
+  .motion-ready .origin-atlas__controls.is-revealed button:nth-child(3) { animation-delay: 110ms; }
+  .motion-ready .origin-atlas__controls.is-revealed button:nth-child(4) { animation-delay: 165ms; }
+  .motion-ready .origin-atlas__controls.is-revealed button:nth-child(5) { animation-delay: 220ms; }
+  .motion-ready .origin-atlas__readout > * { animation: mobile-card-content 480ms var(--ease) both; }
+  .motion-ready .origin-atlas__readout > :nth-child(2) { animation-delay: 45ms; }
+  .motion-ready .origin-atlas__readout > :nth-child(3) { animation-delay: 80ms; }
+  .motion-ready .origin-atlas__readout > :nth-child(4) { animation-delay: 115ms; }
+  .motion-ready .origin-atlas__readout > :nth-child(5) { animation-delay: 150ms; }
+  .motion-ready .origin-atlas__readout > :nth-child(6) { animation-delay: 185ms; }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .button:active,
+  .circle-link:active,
+  .profile-card__image:active,
+  .origin-card a:active,
+  .compare-picker button:active,
+  .origin-atlas__controls button:active,
+  .mobile-navigation nav a:active { scale: 0.97; filter: brightness(0.96); }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .route-loader { display: none; }
   .scroll-progress span { will-change: auto; }
   [data-reveal="true"] { opacity: 1 !important; translate: none !important; }
-  .back-to-top, .menu-button svg, .mobile-navigation nav a, .mobile-navigation__foot { animation: none !important; }
+  .back-to-top, .menu-button svg, .mobile-navigation nav a, .mobile-navigation__foot, .hero__copy > *, .hero__media, .hero__card, .profile-card__content > *, .origin-card > div > *, .story-steps > li > *, .footer-grid > * > *, .footer-lead > * > *, .origin-atlas__controls button, .origin-atlas__readout > * { animation: none !important; }
 }

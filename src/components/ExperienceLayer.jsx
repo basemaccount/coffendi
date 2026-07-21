@@ -139,6 +139,7 @@ export default function ExperienceLayer({ language }) {
 
   return (
     <>
+      <div className="route-loader" aria-hidden="true"><span /></div>
       <div className="scroll-progress" aria-hidden="true"><span /></div>
       <button
         className={`back-to-top ${showBackToTop ? "is-visible" : ""}`}

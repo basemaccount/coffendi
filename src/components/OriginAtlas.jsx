@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { ArrowRight, Coffee, MapPin, Sprout } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 
@@ -6,9 +6,60 @@ const local = (value, language) => typeof value === "object" && value !== null ?
 
 export default function OriginAtlas({ profiles, language, LinkComponent = RouterLink }) {
   const [activeId, setActiveId] = useState(profiles[0]?.id);
+  const [pendingId, setPendingId] = useState(null);
+  const imageCache = useRef(new Map());
+  const selectionRequest = useRef(0);
+  const mounted = useRef(true);
   const activeIndex = Math.max(0, profiles.findIndex(({ id }) => id === activeId));
   const active = profiles[activeIndex] || profiles[0];
+
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      selectionRequest.current += 1;
+    };
+  }, []);
+
   if (!active) return null;
+
+  const warmProfile = (profile) => {
+    if (!profile || profile.id === active.id) return Promise.resolve();
+    if (imageCache.current.has(profile.id)) return imageCache.current.get(profile.id);
+
+    const load = new Promise((resolve, reject) => {
+      const image = new Image();
+      image.sizes = "(max-width: 760px) calc(100vw - 34px), 46vw";
+      image.srcset = profile.srcSet;
+      image.onload = () => {
+        if (typeof image.decode === "function") image.decode().catch(() => {}).then(resolve);
+        else resolve();
+      };
+      image.onerror = reject;
+      image.src = profile.image;
+    }).catch((error) => {
+      imageCache.current.delete(profile.id);
+      throw error;
+    });
+
+    imageCache.current.set(profile.id, load);
+    return load;
+  };
+
+  const selectProfile = (profile) => {
+    if (profile.id === active.id) return;
+    const request = ++selectionRequest.current;
+    setPendingId(profile.id);
+    warmProfile(profile)
+      .then(() => {
+        if (!mounted.current || request !== selectionRequest.current) return;
+        setActiveId(profile.id);
+        setPendingId(null);
+      })
+      .catch(() => {
+        if (mounted.current && request === selectionRequest.current) setPendingId(null);
+      });
+  };
 
   return (
     <section className="section origin-atlas" aria-labelledby="origin-atlas-title">
@@ -24,22 +75,27 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
           </div>
         </div>
 
-        <div className="origin-atlas__workspace">
+        <div className="origin-atlas__workspace" aria-busy={Boolean(pendingId)}>
           <div className="origin-atlas__controls" aria-label={language === "tr" ? "Bir menşe seçin" : "Choose an origin"}>
             {profiles.map((profile, index) => (
               <button
                 key={profile.id}
-                className={profile.id === active.id ? "is-active" : ""}
+                className={`${profile.id === active.id ? "is-active" : ""} ${profile.id === pendingId ? "is-pending" : ""}`.trim()}
                 type="button"
                 aria-pressed={profile.id === active.id}
-                onClick={() => setActiveId(profile.id)}
+                onPointerEnter={() => warmProfile(profile).catch(() => {})}
+                onFocus={() => warmProfile(profile).catch(() => {})}
+                onTouchStart={() => warmProfile(profile).catch(() => {})}
+                onClick={() => selectProfile(profile)}
               >
                 <span>0{index + 1}</span>
                 <strong>{local(profile.country, language)}</strong>
                 <small>{local(profile.process, language)}</small>
+                <i className="origin-atlas__control-status" aria-hidden="true" />
               </button>
             ))}
           </div>
+          <span className="origin-atlas__swipe-cue" aria-hidden="true" />
 
           <div className="origin-atlas__visual" data-optical>
             <img key={active.id} src={active.image} srcSet={active.srcSet} sizes="(max-width: 760px) calc(100vw - 34px), 46vw" alt={local(active.alt, language)} width="1200" height="800" loading="lazy" decoding="async" />

@@ -474,8 +474,8 @@ p { text-wrap: pretty; }
   .brand strong { font-size: 21px; }
   .brand small { display: none; }
   .header-cta { display: none; }
-  .language-switcher button { width: 34px; min-height: 38px; }
-  .menu-button { width: 42px; height: 42px; }
+  .language-switcher button { width: 44px; min-height: 44px; }
+  .menu-button { width: 44px; height: 44px; }
   .mobile-navigation { inset: 68px 0 0; padding: 18px calc(17px + env(safe-area-inset-right)) calc(18px + env(safe-area-inset-bottom)) calc(17px + env(safe-area-inset-left)); }
   .mobile-navigation nav a { padding-block: 15px; font-size: clamp(27px,8vw,34px); }
   .hero__grid { gap: 26px; padding-block: 24px 48px; }
@@ -547,6 +547,7 @@ p { text-wrap: pretty; }
   .footer-lead { min-height: auto; align-items: flex-start; flex-direction: column; padding-block: 52px; }
   .footer-lead .button { width: 100%; }
   .footer-grid { grid-template-columns: 1fr 1fr; gap: 35px 24px; padding-block: 48px; }
+  .footer-grid a, .footer-grid span { min-height: 44px; }
   .footer-brand { grid-column: 1 / -1; }
   .footer-base { align-items: flex-start; flex-direction: column; justify-content: center; gap: 5px; padding-block: 15px; }
 }
@@ -555,7 +556,7 @@ p { text-wrap: pretty; }
   .brand img { width: 42px; height: 42px; }
   .brand strong { font-size: 19px; }
   .header-actions { gap: 5px; }
-  .language-switcher button { width: 30px; }
+  .language-switcher button { width: 44px; }
   .hero__media > img { height: 170px; }
   .hero h1 { font-size: 40px; }
   .hero__proof span:last-child { display: none; }
