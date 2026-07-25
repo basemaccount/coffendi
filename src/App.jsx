@@ -367,9 +367,21 @@ function Header({ language, setLanguage, copy }) {
     return () => window.removeEventListener("app:pageshow", restoreFromCache);
   }, []);
   useEffect(() => {
+    const desktop = window.matchMedia("(min-width: 1101px)");
+    const closeAtDesktop = () => {
+      if (desktop.matches) setMenuOpen(false);
+    };
+    closeAtDesktop();
+    desktop.addEventListener("change", closeAtDesktop);
+    return () => desktop.removeEventListener("change", closeAtDesktop);
+  }, []);
+  useEffect(() => {
     const handleEscape = (event) => {
       if (event.key === "Escape") setMenuOpen(false);
     };
+    const previousPaddingRight = document.body.style.paddingRight;
+    const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
+    if (menuOpen && scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
     document.body.classList.toggle("no-scroll", menuOpen);
     if (menuOpen) {
       document.addEventListener("keydown", handleEscape);
@@ -377,6 +389,7 @@ function Header({ language, setLanguage, copy }) {
     }
     return () => {
       document.body.classList.remove("no-scroll");
+      document.body.style.paddingRight = previousPaddingRight;
       document.removeEventListener("keydown", handleEscape);
     };
   }, [menuOpen]);
@@ -399,11 +412,11 @@ function Header({ language, setLanguage, copy }) {
   return (
     <>
       <header className="site-header">
-        <Link className="brand" to="/" aria-label="Coffendi home">
-          <img src="/coffendi-logo-160.webp" alt="" width="160" height="152" />
+        <Link className="brand" to="/" aria-label={language === "tr" ? "Coffendi ana sayfa" : "Coffendi home"}>
+          <img src="/coffendi-logo-160.webp" srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w" sizes="54px" alt="" width="160" height="152" decoding="async" />
           <span><strong>Coffendi</strong><small>Green coffee · clearly connected</small></span>
         </Link>
-        <nav className="desktop-nav" aria-label="Primary navigation">
+        <nav className="desktop-nav" aria-label={language === "tr" ? "Ana navigasyon" : "Primary navigation"}>
           {nav.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}
         </nav>
         <div className="header-actions">
@@ -416,8 +429,8 @@ function Header({ language, setLanguage, copy }) {
           <button ref={menuButton} className="menu-button" type="button" onClick={() => setMenuOpen((open) => !open)} aria-expanded={menuOpen} aria-controls="mobile-navigation" aria-label={menuOpen ? copy.menuClose : copy.menuOpen}>{menuOpen ? <X aria-hidden="true" /> : <Menu aria-hidden="true" />}</button>
         </div>
       </header>
-      <div ref={navigation} id="mobile-navigation" className={`mobile-navigation ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen} inert={!menuOpen ? true : undefined}>
-        <nav aria-label="Mobile navigation">
+      <div ref={navigation} id="mobile-navigation" className={`mobile-navigation ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen} inert={!menuOpen ? true : undefined} onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
+        <nav aria-label={language === "tr" ? "Mobil navigasyon" : "Mobile navigation"}>
           {nav.map(([label, to], index) => <NavLink key={to} to={to}><span>0{index + 1}</span>{label}<ArrowRight aria-hidden="true" /></NavLink>)}
           <NavLink to="/contact"><span>05</span>{copy.nav.contact}<ArrowRight aria-hidden="true" /></NavLink>
         </nav>
@@ -593,7 +606,7 @@ function PageHero({ eyebrow, title, copy, marker }) {
 }
 
 function Footer({ language, copy }) {
-  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmesi" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeden başlayın. İhtiyaçla netleştirin." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" alt="" width="256" height="243" loading="lazy" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>Coffendi</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><a href={`tel:${CONTACT_PHONE_HREF}`}>{CONTACT_PHONE}</a><span>{CONTACT_WEBSITE}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesi · Çevrimiçi satış yoktur" : "Informational website · No online sales"}</span></div></footer>;
+  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmesi" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeden başlayın. İhtiyaçla netleştirin." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w" sizes="118px" alt="Coffendi" width="256" height="243" loading="lazy" decoding="async" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>Coffendi</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><a href={`tel:${CONTACT_PHONE_HREF}`}>{CONTACT_PHONE}</a><span>{CONTACT_WEBSITE}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesi · Çevrimiçi satış yoktur" : "Informational website · No online sales"}</span></div></footer>;
 }
 
 function NotFound({ language }) {
@@ -601,12 +614,16 @@ function NotFound({ language }) {
 }
 
 export default function App() {
-  const [language, setLanguage] = usePersistentState("coffendi-language", "en");
+  const [storedLanguage, setLanguage] = usePersistentState("coffendi-language", "en");
   const [selected, setSelected] = usePersistentState("coffendi-green-comparison", ["ethiopia-washed", "brazil-classic"]);
+  const language = storedLanguage === "tr" ? "tr" : "en";
   const copy = messages[language] || messages.en;
   const safeSelected = useMemo(() => Array.isArray(selected) ? selected.filter((id) => coffeeProfiles.some((profile) => profile.id === id)).slice(0, 3) : [], [selected]);
 
   useEffect(() => { document.documentElement.lang = language; }, [language]);
+  useEffect(() => {
+    if (storedLanguage !== language) setLanguage(language);
+  }, [language, setLanguage, storedLanguage]);
   const toggleCompare = (id) => {
     setSelected((current) => {
       const safe = Array.isArray(current) ? current.filter((value) => coffeeProfiles.some((profile) => profile.id === value)).slice(0, 3) : [];

@@ -57,7 +57,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
     setPendingId(profile.id);
     window.clearTimeout(selectionTimer.current);
     const deadline = new Promise((resolve) => {
-      selectionTimer.current = window.setTimeout(resolve, 900);
+      selectionTimer.current = window.setTimeout(resolve, 420);
     });
     Promise.race([warmProfile(profile).catch(() => undefined), deadline])
       .then(() => {

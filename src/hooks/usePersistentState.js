@@ -13,7 +13,7 @@ export function usePersistentState(key, initialValue) {
       storedValueRef.current = JSON.stringify(initialValue);
       return initialValue;
     } catch {
-      storedValueRef.current = JSON.stringify(initialValue);
+      storedValueRef.current = null;
       return initialValue;
     }
   });

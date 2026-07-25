@@ -74,15 +74,6 @@ html.route-changing .route-loader span { animation: route-loader-sweep 720ms var
   white-space: nowrap;
 }
 
-@media (min-width: 761px) {
-  @supports (content-visibility: auto) {
-    #main-content > section[data-render-deferred="true"] {
-      content-visibility: auto;
-      contain-intrinsic-size: auto 900px;
-    }
-  }
-}
-
 .connection-notice {
   position: fixed;
   z-index: 1450;
@@ -327,13 +318,13 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 }
 
 @keyframes menu-icon-in {
-  from { opacity: 0; transform: rotate(-16deg) scale(0.8); }
-  to { opacity: 1; transform: none; }
+  from { transform: rotate(-16deg) scale(0.8); }
+  to { transform: none; }
 }
 
 @keyframes mobile-nav-in {
-  from { opacity: 0; transform: translateY(-10px); }
-  to { opacity: 1; transform: none; }
+  from { transform: translateY(-10px); }
+  to { transform: none; }
 }
 
 @keyframes route-loader-sweep {
@@ -363,23 +354,23 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 }
 
 @keyframes mobile-rise {
-  from { opacity: 0; transform: translate3d(0, 17px, 0); }
-  to { opacity: 1; transform: none; }
+  from { transform: translate3d(0, 17px, 0); }
+  to { transform: none; }
 }
 
 @keyframes mobile-pop {
-  from { opacity: 0; transform: scale(0.72) rotate(-10deg); }
-  to { opacity: 1; transform: none; }
+  from { transform: scale(0.72) rotate(-10deg); }
+  to { transform: none; }
 }
 
 @keyframes mobile-card-content {
-  from { opacity: 0; transform: translate3d(0, 11px, 0); }
-  to { opacity: 1; transform: none; }
+  from { transform: translate3d(0, 11px, 0); }
+  to { transform: none; }
 }
 
 @keyframes mobile-step-line {
-  from { opacity: 0; transform: translate3d(-12px, 0, 0); }
-  to { opacity: 1; transform: none; }
+  from { transform: translate3d(-12px, 0, 0); }
+  to { transform: none; }
 }
 
 @keyframes mobile-control-arrive {
@@ -389,6 +380,7 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 
 @media (max-width: 760px) {
   .motion-ready [data-reveal="true"] { translate: 0 14px; }
+  .motion-ready .page-hero__grid > * { animation: none; }
   .back-to-top { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 44px; height: 44px; }
   .chapter-navigator { left: 12px; width: calc(100vw - 78px); min-height: 56px; border-radius: 14px; }
   .chapter-navigator__meta { padding-inline: 7px 3px; }

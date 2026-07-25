@@ -29,6 +29,27 @@ for (const route of routes) {
   assert(response?.ok(), `${route}: direct load returned ${response?.status()}`);
   assert(await page.locator("h1").count() === 1, `${route}: direct load did not render one h1`);
   assert(await page.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), `${route}: horizontal overflow after direct load`);
+  const blockedTargets = await page.evaluate(() => [...document.querySelectorAll("a[href], button:not([disabled]), input:not([type='hidden']), textarea, select, summary")].flatMap((element) => {
+    const style = getComputedStyle(element);
+    const bounds = element.getBoundingClientRect();
+    const hidden = style.display === "none"
+      || style.visibility === "hidden"
+      || Number.parseFloat(style.opacity) < 0.1
+      || bounds.width < 1
+      || bounds.height < 1
+      || bounds.bottom <= 0
+      || bounds.top >= innerHeight
+      || bounds.right <= 0
+      || bounds.left >= innerWidth
+      || element.closest("[inert], [aria-hidden='true']");
+    if (hidden) return [];
+    const x = Math.max(0, Math.min(innerWidth - 1, bounds.left + bounds.width / 2));
+    const y = Math.max(0, Math.min(innerHeight - 1, bounds.top + bounds.height / 2));
+    const hit = document.elementFromPoint(x, y);
+    if (hit === element || element.contains(hit)) return [];
+    return [element.getAttribute("aria-label") || element.textContent?.replace(/\s+/g, " ").trim().slice(0, 60) || element.tagName];
+  }));
+  assert(blockedTargets.length === 0, `${route}: visible controls were blocked at their click point: ${blockedTargets.join(", ")}`);
   const expectedFlag = profileFlags.find(([profileRoute]) => profileRoute === route)?.[1];
   if (expectedFlag) {
     const heroFlag = page.locator(".profile-detail__origin-badge .origin-flag");
@@ -79,11 +100,20 @@ assert(!await page.locator("html.route-changing").count(), "rapid navigation lef
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.waitForTimeout(750);
-const deferredRendering = await page.evaluate(() => ({
-  supported: CSS.supports("content-visibility: auto"),
-  values: [...document.querySelectorAll('[data-render-deferred="true"]')].map((section) => getComputedStyle(section).contentVisibility),
-}));
-assert(!deferredRendering.supported || deferredRendering.values.length > 0 && deferredRendering.values.every((value) => value === "auto"), "deep sections did not opt into native deferred rendering");
+assert(await page.evaluate(() => [...document.querySelectorAll("#main-content > section")].every((section) => getComputedStyle(section).contentVisibility === "visible")), "a page section could be skipped and paint as an empty region");
+assert((await page.locator("html").evaluate((element) => getComputedStyle(element).scrollbarColor)) !== "auto", "the document scrollbar did not use the site color system");
+const headerLogo = page.locator(".brand img");
+assert(await headerLogo.evaluate((image) => image.complete && image.naturalWidth > 0), "header logo did not decode");
+assert((await headerLogo.getAttribute("srcset"))?.includes("coffendi-logo-256.webp"), "header logo did not expose a responsive source");
+const footerLogo = page.locator(".footer-brand img");
+await footerLogo.scrollIntoViewIfNeeded();
+await footerLogo.evaluate((image) => image.decode());
+const footerLogoState = await footerLogo.evaluate((image) => ({ naturalWidth: image.naturalWidth, filter: getComputedStyle(image).filter, opacity: getComputedStyle(image).opacity }));
+assert(footerLogoState.naturalWidth > 0, "footer logo did not decode");
+assert(!/brightness|invert/.test(footerLogoState.filter) && Number.parseFloat(footerLogoState.opacity) === 1, "footer logo colors were being flattened or hidden");
+await page.waitForTimeout(80);
+assert(!await page.locator(".back-to-top.is-visible").count(), "back-to-top control overlapped the footer");
+await page.evaluate(() => window.scrollTo({ top: 0, behavior: "instant" }));
 await page.mouse.wheel(0, 3600);
 await page.waitForTimeout(100);
 const scrollBefore = await page.evaluate(() => scrollY);
@@ -256,6 +286,26 @@ await mobile.keyboard.press("Escape");
 assert(!await mobile.locator("#main-content").evaluate((element) => element.inert), "mobile menu left page content inert");
 assert(await mobile.locator(".menu-button").evaluate((element) => document.activeElement === element), "mobile menu did not restore focus");
 await mobile.locator(".menu-button").click();
+const emptyMenuPoint = await mobile.locator("#mobile-navigation").evaluate((navigation) => {
+  const bounds = navigation.getBoundingClientRect();
+  for (let y = bounds.top + 8; y < bounds.bottom - 8; y += 16) {
+    for (let x = bounds.left + 8; x < bounds.right - 8; x += 16) {
+      if (document.elementFromPoint(x, y) === navigation) return { x, y };
+    }
+  }
+  return null;
+});
+assert(Boolean(emptyMenuPoint), "mobile navigation did not expose a dismissible backdrop");
+if (emptyMenuPoint) await mobile.mouse.click(emptyMenuPoint.x, emptyMenuPoint.y);
+assert(!await mobile.locator(".mobile-navigation.is-open").count(), "clicking the mobile navigation backdrop did not close it");
+await mobile.locator(".menu-button").click();
+await mobile.setViewportSize({ width: 1200, height: 844 });
+await mobile.waitForTimeout(80);
+assert(!await mobile.locator(".mobile-navigation.is-open").count(), "resizing to desktop left the mobile menu open");
+assert(!await mobile.locator("body.no-scroll").count(), "resizing to desktop left document scrolling locked");
+assert(!await mobile.locator("#main-content").evaluate((element) => element.inert), "resizing to desktop left page content inert");
+await mobile.setViewportSize({ width: 390, height: 844 });
+await mobile.locator(".menu-button").click();
 await mobile.evaluate(() => {
   document.documentElement.classList.add("route-changing", "is-restoring-scroll");
   window.dispatchEvent(new PageTransitionEvent("pageshow", { persisted: true }));
@@ -381,6 +431,39 @@ await blockedStoragePage.locator('.language-switcher button').nth(1).click();
 assert(await blockedStoragePage.locator("html").getAttribute("lang") === "tr", "blocked browser storage prevented an in-memory language change");
 await blockedStorageContext.close();
 
+const invalidStorageContext = await browser.newContext({ viewport: { width: 390, height: 844 } });
+await invalidStorageContext.addInitScript(() => localStorage.setItem("coffendi-language", JSON.stringify("unsupported")));
+const invalidStoragePage = await invalidStorageContext.newPage();
+await invalidStoragePage.goto(baseUrl, { waitUntil: "networkidle" });
+assert(await invalidStoragePage.locator("html").getAttribute("lang") === "en", "invalid stored language escaped into the document language");
+assert(await invalidStoragePage.locator('.language-switcher button[aria-pressed="true"]').textContent() === "EN", "invalid stored language left the language controls without an active option");
+assert(await invalidStoragePage.evaluate(() => localStorage.getItem("coffendi-language")) === JSON.stringify("en"), "invalid stored language was not repaired");
+await invalidStorageContext.close();
+
+const noScriptContext = await browser.newContext({ viewport: { width: 390, height: 844 }, javaScriptEnabled: false });
+const noScriptPage = await noScriptContext.newPage();
+await noScriptPage.goto(baseUrl, { waitUntil: "networkidle" });
+assert(await noScriptPage.locator(".boot-shell").isVisible(), "the initial document exposed an empty root while the application was unavailable");
+assert(await noScriptPage.locator(".boot-shell img").evaluate((image) => image.complete && image.naturalWidth > 0), "the initial loading state did not show a working Coffendi logo");
+assert((await noScriptPage.locator(".boot-shell noscript").textContent()).includes("requires JavaScript"), "the no-JavaScript state did not explain how to recover");
+await noScriptContext.close();
+
+for (const route of ["/", "/coffees", "/coffees/kenya-vivid", "/compare", "/contact"]) {
+  const readinessContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
+  const readinessPage = await readinessContext.newPage();
+  await readinessPage.goto(`${baseUrl}${route}`, { waitUntil: "domcontentloaded" });
+  const effectiveHeadingOpacity = await readinessPage.locator("h1").evaluate((heading) => {
+    let opacity = 1;
+    for (let element = heading; element; element = element.parentElement) {
+      opacity *= Number.parseFloat(getComputedStyle(element).opacity);
+      if (element.id === "main-content") break;
+    }
+    return opacity;
+  });
+  assert(effectiveHeadingOpacity >= 0.99, `${route}: critical heading was hidden while the page was becoming ready`);
+  await readinessContext.close();
+}
+
 assert(runtimeErrors.length === 0, `runtime errors: ${runtimeErrors.join(" | ")}`);
 await browser.close();
 
@@ -389,5 +472,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, six verified local SVG profile flags, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, map lenses, origin steppers, sorting, flags, profile constellations, spatial comparison, stable selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
+  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, paint-ready critical content, responsive logo integrity, pointer hit-testing, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, map lenses, origin steppers, sorting, flags, profile constellations, spatial comparison, stable selection, responsive chapters and menu release, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
 }
