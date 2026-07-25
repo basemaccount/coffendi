@@ -12,7 +12,11 @@ async function request(path) {
   assert.equal(response.ok, true, `${path} returned ${response.status}`);
   return response;
 }
-for (const route of routes) assert.match(await (await request(route)).text(), /<div id="root"><\/div>/, `${route} did not return the application shell`);
+for (const route of routes) {
+  const shell = await (await request(route)).text();
+  assert.match(shell, /<div id="root">/, `${route} did not return the application root`);
+  assert.match(shell, /class="boot-shell"/, `${route} did not return the resilient loading shell`);
+}
 const home = await request("/");
 assert.match(home.headers.get("content-security-policy") || "", /default-src 'self'/);
 assert.match(home.headers.get("strict-transport-security") || "", /max-age=31536000/);
