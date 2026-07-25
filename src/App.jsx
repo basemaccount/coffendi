@@ -22,7 +22,7 @@ import {
   Warehouse,
   X,
 } from "lucide-react";
-import { Navigate, Route, Routes, useLocation, useNavigationType, useParams } from "react-router-dom";
+import { Navigate, Route, Routes, useLocation, useNavigationType, useParams } from "react-router";
 import ExperienceLayer from "./components/ExperienceLayer";
 import InquiryProgress from "./components/InquiryProgress";
 import OriginAtlas from "./components/OriginAtlas";

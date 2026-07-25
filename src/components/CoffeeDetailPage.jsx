@@ -19,7 +19,7 @@ import {
   Sprout,
   Warehouse,
 } from "lucide-react";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams } from "react-router";
 import { coffees } from "../data";
 
 const varietyByCountry = {

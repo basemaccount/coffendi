@@ -13,7 +13,7 @@ import {
   ShieldCheck,
   X,
 } from "lucide-react";
-import { Link, useLocation, useParams } from "react-router-dom";
+import { Link, useLocation, useParams } from "react-router";
 import {
   makendiCatalogMeta,
   makendiGrades,

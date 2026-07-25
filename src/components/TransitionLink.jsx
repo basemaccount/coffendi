@@ -1,4 +1,4 @@
-import { Link as RouterLink, NavLink as RouterNavLink, useLocation, useNavigate, useResolvedPath } from "react-router-dom";
+import { Link as RouterLink, NavLink as RouterNavLink, useLocation, useNavigate, useResolvedPath } from "react-router";
 
 const TRANSITION_TIMEOUT_MS = 1200;
 let activeTransition = null;

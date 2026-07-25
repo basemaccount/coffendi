@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { ArrowRight, Coffee, MapPin, Sprout } from "lucide-react";
-import { Link as RouterLink } from "react-router-dom";
+import { Link as RouterLink } from "react-router";
 import OriginFlag from "./OriginFlag";
 
 const local = (value, language) => typeof value === "object" && value !== null ? value[language] : value;

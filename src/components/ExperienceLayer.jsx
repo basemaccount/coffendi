@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
-import { useLocation } from "react-router-dom";
+import { useLocation } from "react-router";
 
 const REVEAL_SELECTOR = [
   ".service-strip .shell > div",
