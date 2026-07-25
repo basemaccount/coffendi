@@ -139,10 +139,15 @@ for (const check of checks) {
     if ((await page.locator(".coffee-map__pin").count()) !== 6) failures.push(`${check.name}: interactive map pins were missing`);
     if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 7) failures.push(`${check.name}: flag filters were missing`);
     if ((await page.locator(".coffee-map__lenses button").count()) !== 3) failures.push(`${check.name}: map lenses were missing`);
+    if ((await page.locator(".coffee-map__scale button").count()) !== 2) failures.push(`${check.name}: World and Focus map controls were missing`);
+    if ((await page.locator('.coffee-map__canvas[data-map-view="focus"]').count()) !== 1) failures.push(`${check.name}: map did not begin in Focus view`);
+    if (!(await page.locator(".origin-explorer__country-index").evaluate((element) => element.scrollWidth > element.clientWidth))) failures.push(`${check.name}: country continuation was not horizontally scrollable`);
   }
 
-  if ((check.name === "mobile-profile" || check.name === "mobile-kenya") && (await page.locator(".origin-constellation__pin").count()) !== 6) {
-    failures.push("mobile-profile: responsive origin constellation was missing");
+  if (check.name === "mobile-profile" || check.name === "mobile-kenya") {
+    if ((await page.locator(".origin-constellation__pin").count()) !== 6) failures.push("mobile-profile: responsive origin constellation was missing");
+    if ((await page.locator(".origin-constellation__view-controls button").count()) !== 2) failures.push("mobile-profile: World and Focus controls were missing");
+    if (!(await page.locator(".origin-constellation__rail").evaluate((element) => element.scrollWidth > element.clientWidth))) failures.push("mobile-profile: origin continuation was not horizontally scrollable");
   }
 
   console.log(`${check.name}: ${audit.clientWidth}x${check.height}, scrollWidth=${audit.scrollWidth}, title="${audit.title}"`);

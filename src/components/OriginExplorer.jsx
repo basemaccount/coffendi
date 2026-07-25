@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { ArrowRight, ChevronLeft, ChevronRight, Crosshair, Layers3, Map, MapPin, Radar, Sprout } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight, Crosshair, Globe2, Layers3, LocateFixed, Map, MapPin, Radar, Sprout } from "lucide-react";
 import OriginFilters, { useCompactOriginLayout, useOriginProfileFilters } from "./OriginFilters";
 import OriginFlag from "./OriginFlag";
 import OriginMapAnchors, { originPinPosition } from "./OriginMapAnchors";
@@ -34,9 +34,20 @@ const styles = {
   actions: { position: "relative", zIndex: 1, display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(min(180px,100%),1fr))", gap: 8, marginTop: "auto", paddingTop: 22 },
   countryIndex: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(145px,1fr))", gap: 7, marginTop: 12 },
   countryButton: { minWidth: 0, minHeight: 74, display: "grid", gridTemplateColumns: "auto 1fr", alignContent: "center", alignItems: "center", gap: "2px 8px", padding: 9, border: "1px solid var(--line)", borderRadius: 10, color: "var(--green)", textAlign: "left", transition: "scale 220ms var(--ease),filter 180ms ease" },
+  countryIndexHeader: { display: "flex", alignItems: "end", justifyContent: "space-between", gap: 16, marginTop: 25, paddingInline: 2 },
+  countryIndexTitle: { display: "block", color: "var(--green)", fontFamily: "var(--serif)", fontSize: 23, fontWeight: 400 },
+  countryIndexCue: { display: "block", maxWidth: 210, marginTop: 4, color: "var(--muted)", fontSize: 8, lineHeight: 1.45 },
+  countryIndexCount: { flex: "0 0 auto", color: "var(--gold-ink)", fontSize: 8, fontWeight: 800, letterSpacing: ".08em" },
   hiddenIndex: { position: "absolute", opacity: 0 },
   countryName: { overflow: "hidden", fontFamily: "var(--serif)", fontSize: 15, fontWeight: 400, textOverflow: "ellipsis", whiteSpace: "nowrap" },
   countryMeta: { overflow: "hidden", color: "var(--muted)", fontSize: 6, fontWeight: 800, textOverflow: "ellipsis", textTransform: "uppercase", whiteSpace: "nowrap" },
+  mapScale: { display: "grid", gridTemplateColumns: "1fr auto", alignItems: "center", gap: 9, marginBottom: 8, padding: "3px 1px 0" },
+  mapScaleCopy: { minWidth: 0, display: "grid", gap: 2 },
+  mapScaleLabel: { color: "#8faaa0", fontSize: 6, fontWeight: 800, letterSpacing: ".09em", textTransform: "uppercase" },
+  mapScaleValue: { overflow: "hidden", color: "var(--white)", fontFamily: "var(--serif)", fontSize: 14, fontWeight: 400, textOverflow: "ellipsis", whiteSpace: "nowrap" },
+  mapScaleGroup: { display: "flex", gap: 3, padding: 3, border: "1px solid rgba(255,255,255,.14)", borderRadius: 10, background: "rgba(9,35,27,.55)" },
+  mapScaleButton: { minWidth: 47, minHeight: 44, display: "inline-grid", gridTemplateColumns: "16px auto", placeItems: "center", gap: 5, padding: "6px 8px", border: 0, borderRadius: 7, fontSize: 7, fontWeight: 800 },
+  mapScaleIcon: { width: 15 },
 };
 
 function lensValue(profile, lens, language) {
@@ -48,22 +59,32 @@ function lensValue(profile, lens, language) {
 function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }) {
   const viewport = useRef(null);
   const countryRail = useRef(null);
+  const [viewMode, setViewMode] = useState("focus");
   const constellationPoints = profiles.map(({ map }) => `${map.x * 10},${map.y * 5.2}`).join(" ");
   const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  const active = profiles.find(({ id }) => id === activeId) || profiles[0];
+  const overview = compact && viewMode === "overview";
+  const viewCopy = language === "tr"
+    ? { label: "Harita ölçeği", overview: "Dünya", focus: "Odak", overviewHint: "Kahve kuşağının tamamı", focusHint: "Bayrak ayrıntısı" }
+    : { label: "Map scale", overview: "World", focus: "Focus", overviewHint: "Full coffee-belt context", focusHint: "Detailed flag view" };
 
   useEffect(() => {
     const frame = window.requestAnimationFrame(() => {
       const element = viewport.current;
       const active = profiles.find(({ id }) => id === activeId);
-      if (!element || !active || element.scrollWidth <= element.clientWidth) return;
+      if (!element || !active) return;
+      if (compact && viewMode === "overview") {
+        element.scrollTo({ left: 0, behavior: reduceMotion ? "auto" : "smooth" });
+        return;
+      }
+      if (element.scrollWidth <= element.clientWidth) return;
       const desired = (element.scrollWidth * originPinPosition(active).x / 100) - (element.clientWidth / 2);
       const left = Math.max(0, Math.min(element.scrollWidth - element.clientWidth, desired));
-      const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       element.scrollTo({ left, behavior: reduceMotion || !element.dataset.mapReady ? "auto" : "smooth" });
       element.dataset.mapReady = "true";
     });
     return () => window.cancelAnimationFrame(frame);
-  }, [activeId, profiles]);
+  }, [activeId, compact, profiles, reduceMotion, viewMode]);
 
   useEffect(() => {
     const rail = countryRail.current;
@@ -103,8 +124,37 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           })}
         </div>
       )}
+      {compact && active && (
+        <div className="coffee-map__scale" style={styles.mapScale}>
+          <span style={styles.mapScaleCopy}>
+            <small style={styles.mapScaleLabel}>{viewCopy.label}</small>
+            <strong style={styles.mapScaleValue}>{viewMode === "overview" ? viewCopy.overviewHint : `${viewCopy.focusHint} · ${local(active.country, language)}`}</strong>
+          </span>
+          <div style={styles.mapScaleGroup} role="group" aria-label={viewCopy.label}>
+            {[["overview", viewCopy.overview, Globe2], ["focus", viewCopy.focus, LocateFixed]].map(([value, label, Icon]) => {
+              const selected = viewMode === value;
+              return (
+                <button
+                  key={value}
+                  type="button"
+                  style={{ ...styles.mapScaleButton, background: selected ? "var(--gold-light)" : "transparent", color: selected ? "var(--green)" : "#b8cbc1", boxShadow: selected ? "0 7px 18px rgba(0,0,0,.18)" : "none" }}
+                  onClick={() => setViewMode(value)}
+                  aria-pressed={selected}
+                >
+                  <Icon style={styles.mapScaleIcon} aria-hidden="true" />
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
       <div ref={viewport} className="coffee-map__viewport" style={compact ? { scrollbarWidth: "none", overscrollBehaviorInline: "contain", touchAction: "pan-x" } : undefined}>
-        <div className="coffee-map__canvas" style={compact ? { minWidth: 700 } : undefined}>
+        <div
+          className={`coffee-map__canvas ${overview ? "is-overview" : "is-focus"}`}
+          data-map-view={overview ? "overview" : "focus"}
+          style={compact ? { minWidth: overview ? "100%" : 700, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" } : undefined}
+        >
         <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
         <svg className="coffee-map__art" viewBox="0 0 1000 520" aria-hidden="true" preserveAspectRatio="none">
           <defs>
@@ -136,7 +186,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
             aria-pressed={selected}
             aria-label={`${language === "tr" ? "Haritada seç" : "Select on map"}: ${local(profile.country, language)}`}
           >
-            <OriginFlag profile={profile} size={compact && !selected ? "small" : "map"} style={compact && !selected ? { opacity: 0.84 } : undefined} />
+            <OriginFlag profile={profile} size={overview ? selected ? "small" : "tiny" : compact && !selected ? "small" : "map"} style={compact && !selected ? { opacity: overview ? 0.72 : 0.84 } : undefined} />
             {(!compact || selected) && <span className="coffee-map__pin-label"><strong>{local(profile.country, language)}</strong><small>{lensValue(profile, lens, language)}</small></span>}
           </button>;
         })}
@@ -151,6 +201,9 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
   const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(profiles, language);
   const [activeId, setActiveId] = useState(profiles[0]?.id || "");
   const [lens, setLens] = useState("geography");
+  const readout = useRef(null);
+  const countryIndex = useRef(null);
+  const revealCountry = useRef(false);
   const active = filteredProfiles.find(({ id }) => id === activeId) || filteredProfiles[0];
   const activeIndex = active ? filteredProfiles.findIndex(({ id }) => id === active.id) : -1;
   const signals = useMemo(() => active
@@ -167,7 +220,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       profile: "Temsili profili aç",
       empty: "Bu filtrelerle eşleşen menşe bulunamadı.",
       emptyCopy: "Başka bir bayrak, bölge veya işleme odağı deneyin.",
-      mobileCue: "Bir bayrağa dokunarak haritayı odaklayın; keşfetmek için haritayı yatay kaydırın.",
+      mobileCue: "Dünya görünümü bağlamı, Odak görünümü ayrıntıyı gösterir; yukarıdan bir bayrak seçin ve Odak haritasını yatay kaydırın.",
       lenses: "Harita görünümü",
       geography: "Coğrafya",
       processLens: "İşleme",
@@ -183,6 +236,8 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       regions: "bölgesel küme",
       directionsCount: "kahve yönü",
       countryIndex: "Filtrelenmiş menşe pasaportları",
+      continueTitle: "Kahve kuşağında devam edin",
+      continueCue: "Kaydırın ve pasaportu görünür alana getirmek için dokunun.",
       inquiry: "Bu menşeyi sorun",
     }
     : {
@@ -195,7 +250,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       profile: "Open representative profile",
       empty: "No origins match these filters.",
       emptyCopy: "Try another flag, region or process focus.",
-      mobileCue: "Tap a flag to focus the map; swipe the map horizontally to explore.",
+      mobileCue: "World shows context; Focus shows detail. Choose a flag above, then swipe the Focus map.",
       lenses: "Map lens",
       geography: "Geography",
       processLens: "Process",
@@ -211,6 +266,8 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       regions: "regional clusters",
       directionsCount: "coffee directions",
       countryIndex: "Filtered origin passports",
+      continueTitle: "Continue across the coffee belt",
+      continueCue: "Swipe, then tap to bring a passport into view.",
       inquiry: "Ask about this origin",
     };
   const lenses = [["geography", copy.geography], ["process", copy.processLens], ["profile", copy.profileLens]];
@@ -223,6 +280,24 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
   useEffect(() => {
     if (filteredProfiles.length && !filteredProfiles.some(({ id }) => id === activeId)) setActiveId(filteredProfiles[0].id);
   }, [activeId, filteredProfiles]);
+
+  useEffect(() => {
+    const rail = countryIndex.current;
+    const selected = rail?.querySelector('[aria-pressed="true"]');
+    if (compactLayout && rail && selected && rail.scrollWidth > rail.clientWidth) {
+      const left = Math.max(0, selected.offsetLeft - ((rail.clientWidth - selected.offsetWidth) / 2));
+      rail.scrollTo({ left, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
+    if (compactLayout && revealCountry.current && readout.current) {
+      readout.current.scrollIntoView({ block: "start", behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    }
+    revealCountry.current = false;
+  }, [activeId, compactLayout]);
+
+  const selectFromCountryIndex = (id) => {
+    revealCountry.current = compactLayout;
+    setActiveId(id);
+  };
 
   return (
     <section className="section origin-explorer" aria-labelledby="origin-explorer-title">
@@ -258,7 +333,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
               <p className="coffee-map__note"><MapPin aria-hidden="true" />{copy.orientation}</p>
             </div>
 
-            <article key={active.id} className="origin-explorer__readout" aria-live="polite">
+            <article ref={readout} key={active.id} className="origin-explorer__readout" style={{ scrollMarginTop: 84 }} aria-live="polite">
               <div className="origin-explorer__identity"><OriginFlag profile={active} size="large" /><span><small>{copy.passport} · {active.iso}</small><strong>{local(active.country, language)}</strong></span><Crosshair aria-hidden="true" /></div>
               <p className="eyebrow eyebrow--gold">{active.region}</p>
               <h3>{local(active.name, language)}</h3>
@@ -281,12 +356,26 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
         )}
 
         {filteredProfiles.length > 0 && (
-          <div className="origin-explorer__country-index" style={styles.countryIndex} role="group" aria-label={copy.countryIndex}>
-            {filteredProfiles.map((profile, index) => {
-              const isActive = profile.id === active.id;
-              return <button key={profile.id} type="button" className={isActive ? "is-active" : ""} style={{ ...styles.countryButton, background: isActive ? "var(--green-3)" : "rgba(255,255,255,.38)", boxShadow: isActive ? "inset 0 -3px var(--gold),0 10px 24px rgba(23,61,49,.08)" : "none" }} onClick={() => setActiveId(profile.id)} aria-pressed={isActive}><span style={styles.hiddenIndex} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span><OriginFlag profile={profile} size="small" style={{ gridRow: "1 / 3" }} /><strong style={styles.countryName}>{local(profile.country, language)}</strong><small style={styles.countryMeta}>{profile.iso} · {profile.region.split(" · ").length} {language === "tr" ? "bölge" : "regions"}</small></button>;
-            })}
-          </div>
+          <>
+            {compactLayout && (
+              <div className="origin-explorer__country-index-heading" style={styles.countryIndexHeader}>
+                <span style={{ minWidth: 0, display: "grid" }}><strong style={styles.countryIndexTitle}>{copy.continueTitle}</strong><small style={styles.countryIndexCue}>{copy.continueCue}</small></span>
+                <strong style={styles.countryIndexCount}>{String(activeIndex + 1).padStart(2, "0")} / {String(filteredProfiles.length).padStart(2, "0")}</strong>
+              </div>
+            )}
+            <div
+              ref={countryIndex}
+              className="origin-explorer__country-index"
+              style={compactLayout ? { ...styles.countryIndex, display: "flex", overflowX: "auto", padding: "2px 2px 10px", scrollPaddingInline: 2, scrollSnapType: "x mandatory", overscrollBehaviorInline: "contain", scrollbarWidth: "none" } : styles.countryIndex}
+              role="group"
+              aria-label={copy.countryIndex}
+            >
+              {filteredProfiles.map((profile, index) => {
+                const isActive = profile.id === active.id;
+                return <button key={profile.id} type="button" className={isActive ? "is-active" : ""} style={{ ...styles.countryButton, minWidth: compactLayout ? "min(76vw,270px)" : 0, flex: compactLayout ? "0 0 min(76vw,270px)" : undefined, scrollSnapAlign: compactLayout ? "center" : undefined, background: isActive ? "var(--green-3)" : "rgba(255,255,255,.38)", boxShadow: isActive ? "inset 0 -3px var(--gold),0 10px 24px rgba(23,61,49,.08)" : "none" }} onClick={() => selectFromCountryIndex(profile.id)} aria-pressed={isActive}><span style={styles.hiddenIndex} aria-hidden="true">{String(index + 1).padStart(2, "0")}</span><OriginFlag profile={profile} size="small" style={{ gridRow: "1 / 3" }} /><strong style={styles.countryName}>{local(profile.country, language)}</strong><small style={styles.countryMeta}>{profile.iso} · {profile.region.split(" · ").length} {language === "tr" ? "bölge" : "regions"}</small></button>;
+              })}
+            </div>
+          </>
         )}
 
       </div>
