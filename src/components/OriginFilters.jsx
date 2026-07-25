@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Globe2, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
 import OriginFlag from "./OriginFlag";
 
-const EMPTY_FILTERS = { query: "", zone: "all", process: "all", country: "all" };
+const EMPTY_FILTERS = { query: "", zone: "all", process: "all", country: "all", sort: "atlas" };
 
 const local = (value, language) => typeof value === "object" && value !== null ? value[language] : value;
 
@@ -20,12 +20,15 @@ function searchableText(profile, language) {
 
 export function filterOriginProfiles(profiles, filters, language) {
   const query = filters.query.trim().toLocaleLowerCase(language === "tr" ? "tr-TR" : "en");
-  return profiles.filter((profile) => (
+  const results = profiles.filter((profile) => (
     (filters.zone === "all" || profile.zone === filters.zone)
     && (filters.process === "all" || profile.processFamily === filters.process)
     && (filters.country === "all" || profile.id === filters.country)
     && (!query || searchableText(profile, language).includes(query))
   ));
+  if (filters.sort === "country") return results.toSorted((a, b) => local(a.country, language).localeCompare(local(b.country, language), language));
+  if (filters.sort === "process") return results.toSorted((a, b) => a.processFamily.localeCompare(b.processFamily) || local(a.country, language).localeCompare(local(b.country, language), language));
+  return results;
 }
 
 export function useOriginProfileFilters(profiles, language) {
@@ -60,6 +63,7 @@ export default function OriginFilters({
       searchPlaceholder: "Ülke, bölge veya fincan yönü",
       region: "Bölge",
       process: "İşleme odağı",
+      sort: "Sıralama",
       flag: "Bayrağa göre filtrele",
       all: "Tümü",
       africa: "Afrika",
@@ -67,6 +71,9 @@ export default function OriginFilters({
       washed: "Yıkanmış",
       natural: "Natural",
       mixed: "Çoklu süreç",
+      atlas: "Atlas sırası",
+      country: "Ülke A–Z",
+      processOrder: "İşleme göre",
       results: `${resultCount} menşe gösteriliyor`,
       reset: "Filtreleri sıfırla",
     }
@@ -77,6 +84,7 @@ export default function OriginFilters({
       searchPlaceholder: "Country, region or cup direction",
       region: "Region",
       process: "Process focus",
+      sort: "Order",
       flag: "Filter by flag",
       all: "All",
       africa: "Africa",
@@ -84,6 +92,9 @@ export default function OriginFilters({
       washed: "Washed",
       natural: "Natural",
       mixed: "Multi-process",
+      atlas: "Atlas order",
+      country: "Country A–Z",
+      processOrder: "By process",
       results: `${resultCount} ${resultCount === 1 ? "origin" : "origins"} showing`,
       reset: "Reset filters",
     };
@@ -112,6 +123,14 @@ export default function OriginFilters({
             <option value="washed">{copy.washed}</option>
             <option value="natural">{copy.natural}</option>
             <option value="mixed">{copy.mixed}</option>
+          </select>
+        </label>
+        <label className="origin-select origin-sort">
+          <span>{copy.sort}</span>
+          <select value={filters.sort} onChange={(event) => onChange("sort", event.target.value)}>
+            <option value="atlas">{copy.atlas}</option>
+            <option value="country">{copy.country}</option>
+            <option value="process">{copy.processOrder}</option>
           </select>
         </label>
         <div className="origin-zone-filter" role="group" aria-labelledby={`${idPrefix}-region-label`}>

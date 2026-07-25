@@ -44,7 +44,6 @@
 .detail-facts__origin,
 .compare-picker__country,
 .compare-table__origin { display: flex; align-items: center; gap: 8px; }
-.profile-card__origin .origin-flag { margin: -4px 0; }
 
 .profile-detail__media > .profile-detail__origin-badge {
   min-height: 58px;
@@ -105,7 +104,7 @@
   position: relative;
   z-index: 1;
   display: grid;
-  grid-template-columns: minmax(260px, 1.1fr) minmax(190px, 0.56fr) minmax(310px, 0.9fr);
+  grid-template-columns: minmax(240px, 1.1fr) minmax(150px, 0.5fr) minmax(150px, 0.5fr) minmax(290px, 0.9fr);
   gap: 12px;
   margin-top: 20px;
 }
@@ -256,7 +255,6 @@
 }
 
 .origin-explorer__heading h2 { max-width: 760px; margin-top: 15px; color: var(--green); font-size: clamp(45px, 5vw, 68px); letter-spacing: -0.035em; }
-.origin-explorer__heading > p { max-width: 540px; color: var(--muted); font-size: 15px; }
 
 .origin-explorer__workspace {
   position: relative;
@@ -318,6 +316,7 @@
 .coffee-map__equator { fill: none; stroke: rgba(239, 201, 121, 0.46); stroke-width: 1; stroke-dasharray: 7 8; vector-effect: non-scaling-stroke; }
 .coffee-map__belt { transform-origin: center; animation: coffee-belt-breathe 5.5s ease-in-out infinite alternate; }
 
+
 .coffee-map__pin {
   position: absolute;
   z-index: 4;
@@ -335,27 +334,37 @@
 }
 
 .coffee-map__pin .origin-flag { transition: border-color 180ms ease, box-shadow 260ms ease, filter 260ms ease, transform 300ms var(--ease); }
+.coffee-map__pin-label {
+  display: grid;
+  justify-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  border-radius: 9px;
+  background: rgba(15, 48, 39, 0.88);
+  backdrop-filter: blur(9px);
+  transition: color 180ms ease, background-color 180ms ease, transform 260ms var(--ease);
+}
 .coffee-map__pin strong {
   max-width: 94px;
-  padding: 4px 7px;
-  border: 1px solid rgba(255, 255, 255, 0.13);
-  border-radius: 999px;
-  background: rgba(15, 48, 39, 0.84);
+  padding: 4px 7px 2px;
   color: #dfe9e4;
   font-size: 7px;
   letter-spacing: 0.04em;
   line-height: 1.2;
   white-space: nowrap;
-  backdrop-filter: blur(9px);
-  transition: color 180ms ease, background-color 180ms ease, transform 260ms var(--ease);
 }
+.coffee-map__pin small { max-width: 102px; overflow: hidden; padding: 0 7px 4px; color: #9fb8ad; font-size: 5px; text-overflow: ellipsis; white-space: nowrap; }
 
 .coffee-map__pin:hover .origin-flag { border-color: var(--gold-light); box-shadow: 0 0 0 5px rgba(239, 201, 121, 0.14), 0 12px 28px rgba(0, 0, 0, 0.26); filter: saturate(1.1); transform: translateY(-4px) rotate(-3deg) scale(1.07); }
-.coffee-map__pin:hover strong { background: var(--paper); color: var(--green); transform: translateY(-2px); }
+.coffee-map__pin:hover .coffee-map__pin-label { background: var(--paper); transform: translateY(-2px); }
+.coffee-map__pin:hover strong { color: var(--green); }
 .coffee-map__pin.is-active { z-index: 6; }
 .coffee-map__pin.is-active .origin-flag { border-color: var(--gold-light); box-shadow: 0 0 0 5px rgba(239, 201, 121, 0.18), 0 15px 34px rgba(0, 0, 0, 0.3); transform: translateY(-3px) scale(1.1); }
-.coffee-map__pin.is-active strong { background: var(--gold-light); color: var(--green); transform: translateY(-2px); }
+.coffee-map__pin.is-active .coffee-map__pin-label { background: var(--gold-light); transform: translateY(-2px); }
+.coffee-map__pin.is-active strong { color: var(--green); }
+.coffee-map__pin.is-active small { color: #173d31; }
 .coffee-map__pin:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 4px; border-radius: 14px; }
+
 
 .coffee-map__note {
   display: flex;
@@ -404,7 +413,7 @@
 .origin-explorer__directions li > div { min-width: 0; display: grid; gap: 3px; }
 .origin-explorer__directions b { overflow: hidden; font-size: 10px; text-overflow: ellipsis; white-space: nowrap; }
 .origin-explorer__directions small { overflow: hidden; color: #aec2b9; font-size: 8px; text-overflow: ellipsis; white-space: nowrap; }
-.origin-explorer__readout .button { position: relative; z-index: 1; align-self: flex-start; margin-top: auto; }
+.origin-explorer__readout .button { align-self: flex-start; margin-top: 0; }
 
 @keyframes map-pin-arrive {
   from { filter: saturate(0.45); transform: translate(-50%, -50%) scale(0.62) translateY(18px); }
@@ -420,6 +429,8 @@
   from { filter: saturate(0.74); transform: translateX(18px) scale(0.98); }
   to { filter: saturate(1); transform: none; }
 }
+
+@keyframes origin-thread-flow { to { stroke-dashoffset: -120; } }
 
 @media (max-width: 1050px) {
   .origin-filter-panel__fields { grid-template-columns: 1fr 0.7fr; }
@@ -446,7 +457,6 @@
   .origin-explorer { padding-block: 68px; }
   .origin-explorer__heading { grid-template-columns: 1fr; gap: 18px; }
   .origin-explorer__heading h2 { font-size: clamp(43px, 13vw, 56px); }
-  .origin-explorer__heading > p { font-size: 13px; }
   .origin-explorer__workspace { gap: 12px; }
   .coffee-map { padding: 8px; border-radius: 14px; }
   .coffee-map__topline { min-height: 45px; }

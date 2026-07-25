@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { flushSync } from "react-dom";
 import { ArrowRight, Coffee, MapPin, Sprout } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
+import OriginFlag from "./OriginFlag";
 
 const local = (value, language) => typeof value === "object" && value !== null ? value[language] : value;
 
@@ -100,6 +101,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
           <div>
             <p className="eyebrow">{language === "tr" ? "Ülkeler ve kahveler atlası" : "Country and coffee atlas"}</p>
             <h2 id="origin-atlas-title">{language === "tr" ? "Bir ülke. Birden fazla kahve yönü." : "One country. More than one coffee direction."}</h2>
+            <LinkComponent className="origin-atlas__map-link text-link" style={{ marginTop: 20 }} to="/origins">{language === "tr" ? "Etkileşimli dünya haritasını aç" : "Open the interactive world map"}<ArrowRight aria-hidden="true" /></LinkComponent>
           </div>
           <div className="origin-atlas__intro">
             <span>01—0{profiles.length}</span>
@@ -121,7 +123,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
                 onTouchStart={() => warmProfile(profile).catch(() => {})}
                 onClick={() => selectProfile(profile)}
               >
-                <span className="origin-atlas__flag" aria-hidden="true">{profile.flag}</span>
+                <OriginFlag profile={profile} size="small" className="origin-atlas__flag" />
                 <span className="origin-atlas__control-index" aria-hidden="true">0{index + 1}</span>
                 <strong>{local(profile.country, language)}</strong>
                 <small>{profile.directions.length} {language === "tr" ? "kahve yönü" : "coffee directions"}</small>
@@ -134,12 +136,12 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
           <div ref={visual} className="origin-atlas__visual" data-optical>
             <img key={active.id} src={active.image} srcSet={active.srcSet} sizes="(max-width: 760px) calc(100vw - 34px), 46vw" alt={local(active.alt, language)} width="1200" height="800" loading="lazy" decoding="async" />
             <span className="material-lens" aria-hidden="true"><Sprout /></span>
-            <div className="origin-atlas__location"><MapPin aria-hidden="true" /><span><strong>{local(active.country, language)}</strong><small>{active.region}</small></span></div>
+            <div className="origin-atlas__location"><MapPin aria-hidden="true" /><span><strong>{local(active.country, language)}</strong><small>{active.iso} · {active.region}</small></span></div>
             <span className="origin-atlas__number" aria-hidden="true">0{activeIndex + 1}</span>
           </div>
 
           <div key={active.id} className="origin-atlas__readout" aria-live="polite">
-            <div className="origin-atlas__readout-top"><Coffee aria-hidden="true" /><span>{language === "tr" ? "Menşe kahve yönleri" : "Origin coffee directions"}</span><b aria-hidden="true">{active.flag}</b></div>
+            <div className="origin-atlas__readout-top"><Coffee aria-hidden="true" /><span>{language === "tr" ? "Menşe kahve yönleri" : "Origin coffee directions"}</span><OriginFlag profile={active} size="medium" className="origin-atlas__readout-flag" style={{ marginLeft: "auto" }} /></div>
             <p className="eyebrow eyebrow--gold">{local(active.process, language)}</p>
             <h3>{local(active.name, language)}</h3>
             <p>{local(active.profile, language)}</p>

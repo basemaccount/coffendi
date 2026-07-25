@@ -135,8 +135,14 @@ const mapPins = page.locator(".coffee-map__pin");
 const flagFilters = page.locator('.origin-flag-filter [role="group"] > button');
 assert(await mapPins.count() === 6, "origin map did not expose all six country pins");
 assert(await flagFilters.count() === 7, "origin filters did not expose all six flags plus the all-origins control");
+assert(await page.locator(".coffee-map__lenses button").count() === 3, "origin map did not expose its three information lenses");
+assert(await page.locator(".origin-explorer__country-index button").count() === 6, "origin explorer did not expose all six country passports");
+await page.locator(".coffee-map__lenses button").filter({ hasText: "Process" }).click();
+assert((await mapPins.first().locator("small").textContent()).includes("Washed"), "process lens did not replace the geographic map labels");
 await mapPins.filter({ hasText: "Kenya" }).click();
 assert((await page.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "map pin selection did not update the origin readout");
+await page.locator('.coffee-map__stepper button[aria-label="Next origin"]').click();
+assert((await page.locator(".origin-explorer__readout").textContent()).includes("Rwanda"), "origin stepper did not advance to the next country");
 await flagFilters.filter({ hasText: "Rwanda" }).click();
 assert(await mapPins.count() === 1, "flag filter did not narrow the map to one country");
 assert((await page.locator(".origin-explorer__readout").textContent()).includes("Rwanda"), "flag filter did not synchronize the active readout");
@@ -144,7 +150,7 @@ await page.locator(".origin-filter-panel__reset").click();
 await page.locator(".origin-zone-filter button").filter({ hasText: "Africa" }).click();
 assert(await mapPins.count() === 3, "Africa region filter did not expose the three African origins");
 await page.locator(".origin-filter-panel__reset").click();
-await page.locator(".origin-select select").selectOption("natural");
+await page.locator(".origin-select:not(.origin-sort) select").selectOption("natural");
 assert(await mapPins.count() === 1 && (await mapPins.first().textContent()).includes("Brazil"), "process filter did not isolate the natural profile");
 await page.locator(".origin-filter-panel__reset").click();
 await page.locator(".origin-search input").fill("Cerrado");
@@ -161,11 +167,24 @@ assert(await page.locator(".profile-grid--catalog .profile-card").count() === 1,
 assert((await page.locator(".profile-grid--catalog .profile-card").textContent()).includes("Colombia"), "coffee-library flag filter exposed the wrong profile");
 await page.locator(".origin-filter-panel__reset").click();
 assert(await page.locator(".profile-grid--catalog .profile-card").count() === 6, "coffee-library reset did not restore all profiles");
+await page.locator(".origin-sort select").selectOption("country");
+assert((await page.locator(".profile-grid--catalog .profile-card").first().textContent()).includes("Brazil"), "country sorting did not put Brazil first in the coffee library");
+
+await page.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
+assert(await page.locator(".origin-constellation__pin").count() === 6, "profile page did not expose six spatial origin links");
+assert(await page.locator(".origin-constellation__rail a").count() === 6, "profile page did not expose six conventional origin links");
+assert(await page.locator('.origin-constellation__pin[aria-current="page"]').count() === 1, "profile constellation did not identify the active country");
 
 await page.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" });
 const clearComparison = page.locator(".compare-toolbar__clear");
 if (await clearComparison.count()) await clearComparison.click();
 const comparisonButtons = page.locator(".compare-picker button");
+const comparisonMapPins = page.locator(".origin-constellation__pin");
+assert(await comparisonMapPins.count() === 6, "comparison desk did not expose six spatial country controls");
+await comparisonMapPins.filter({ hasText: "BR" }).click();
+assert(await comparisonButtons.nth(2).getAttribute("aria-pressed") === "true", "comparison map did not add Brazil");
+await comparisonMapPins.filter({ hasText: "BR" }).click();
+assert(await comparisonButtons.nth(2).getAttribute("aria-pressed") === "false", "comparison map did not remove Brazil");
 for (const index of [0, 2, 4]) await comparisonButtons.nth(index).click();
 await page.waitForTimeout(280);
 assert(await comparisonButtons.evaluateAll((buttons) => buttons.filter((button) => button.getAttribute("aria-pressed") === "true").length) === 3, "comparison did not retain three explicit selections");
@@ -241,7 +260,20 @@ const activeMapVisibility = await mobile.evaluate(() => {
 assert(activeMapVisibility, "mobile map did not bring the active country flag into view");
 const mobileFlagTargets = await mobile.locator('.origin-flag-filter [role="group"] > button').evaluateAll((buttons) => buttons.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
 assert(mobileFlagTargets.length === 7 && mobileFlagTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile flag filters have a touch target below 44px");
+const mobileLensTargets = await mobile.locator(".coffee-map__lenses button").evaluateAll((buttons) => buttons.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
+assert(mobileLensTargets.length === 3 && mobileLensTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile map lenses have a touch target below 44px");
+assert(await mobile.locator(".origin-explorer__country-index button").count() === 6, "mobile origin explorer did not expose its country passport controls");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile origins page has horizontal overflow");
+await mobile.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
+const mobileConstellationTargets = await mobile.locator(".origin-constellation__pin").evaluateAll((links) => links.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
+assert(mobileConstellationTargets.length === 6 && mobileConstellationTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile profile constellation has a target below 44px");
+const mobileConstellationVisibility = await mobile.evaluate(() => {
+  const viewport = document.querySelector(".origin-constellation__viewport").getBoundingClientRect();
+  const pin = document.querySelector('.origin-constellation__pin[aria-current="page"]').getBoundingClientRect();
+  return pin.left >= viewport.left && pin.right <= viewport.right;
+});
+assert(mobileConstellationVisibility, "mobile profile constellation did not center the active country");
+assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile profile constellation created page overflow");
 await mobile.goto(baseUrl, { waitUntil: "networkidle" });
 await mobile.evaluate(() => window.scrollTo(0, 1000));
 await mobile.waitForTimeout(180);
@@ -331,5 +363,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, origin map and flag filters, stable comparison selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
+  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, map lenses, origin steppers, sorting, flags, profile constellations, spatial comparison, stable selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
 }

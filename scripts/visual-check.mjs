@@ -69,6 +69,7 @@ for (const check of checks) {
   }
 
   if (check.name === "desktop-compare") {
+    if ((await page.locator(".origin-constellation__pin").count()) !== 6) failures.push("desktop-compare: geographic comparison controls were missing");
     const rows = page.locator(".compare-table__row");
     if ((await rows.count()) !== 7) failures.push("desktop-compare: expected header plus six comparison rows");
     const columns = await rows.first().locator(":scope > *").count();
@@ -94,9 +95,16 @@ for (const check of checks) {
     if ((await page.locator(".profile-card__process .origin-flag").count()) !== 6) failures.push("desktop-coffees: profile cards did not expose origin flags");
   }
 
+  if (check.name === "desktop-profile") {
+    if ((await page.locator(".origin-constellation__pin").count()) !== 6) failures.push("desktop-profile: constellation did not expose all six origins");
+    if ((await page.locator(".origin-constellation__rail a").count()) !== 6) failures.push("desktop-profile: conventional origin links were missing");
+  }
+
   if (check.name === "desktop-origins") {
     if ((await page.locator(".coffee-map__pin").count()) !== 6) failures.push("desktop-origins: interactive map did not expose six pins");
     if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 7) failures.push("desktop-origins: flag filters did not expose six countries plus all");
+    if ((await page.locator(".coffee-map__lenses button").count()) !== 3) failures.push("desktop-origins: information lenses were missing");
+    if ((await page.locator(".origin-explorer__country-index button").count()) !== 6) failures.push("desktop-origins: country passports were missing");
   }
 
   if (check.name === "mobile-home") {
@@ -121,6 +129,11 @@ for (const check of checks) {
   if (check.name === "mobile-origins" || check.name === "compact-origins") {
     if ((await page.locator(".coffee-map__pin").count()) !== 6) failures.push(`${check.name}: interactive map pins were missing`);
     if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 7) failures.push(`${check.name}: flag filters were missing`);
+    if ((await page.locator(".coffee-map__lenses button").count()) !== 3) failures.push(`${check.name}: map lenses were missing`);
+  }
+
+  if (check.name === "mobile-profile" && (await page.locator(".origin-constellation__pin").count()) !== 6) {
+    failures.push("mobile-profile: responsive origin constellation was missing");
   }
 
   console.log(`${check.name}: ${audit.clientWidth}x${check.height}, scrollWidth=${audit.scrollWidth}, title="${audit.title}"`);

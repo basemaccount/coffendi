@@ -9,7 +9,9 @@ const checks = [
   { name: "desktop-compare", path: "/compare", width: 1440, height: 1000, maxTransferKb: 350 },
   { name: "desktop-contact", path: "/contact", width: 1440, height: 1000, maxTransferKb: 350 },
   { name: "mobile-home", path: "/", width: 390, height: 844, deviceScaleFactor: 2, maxTransferKb: 750 },
+  { name: "mobile-profile", path: "/coffees/ethiopia-washed", width: 390, height: 844, deviceScaleFactor: 2, maxTransferKb: 650 },
   { name: "mobile-origins", path: "/origins", width: 390, height: 844, deviceScaleFactor: 2, maxTransferKb: 400 },
+  { name: "mobile-compare", path: "/compare", width: 390, height: 844, deviceScaleFactor: 2, maxTransferKb: 450 },
 ];
 
 const browser = await chromium.launch();

@@ -16,6 +16,8 @@ const REVEAL_SELECTOR = [
   ".decision-grid > article",
   ".origin-filter-panel",
   ".origin-explorer__workspace > *",
+  ".origin-explorer__country-index",
+  ".origin-constellation__board",
   ".compare-table",
   ".pillar-grid > article",
   ".approach-feature > *",
