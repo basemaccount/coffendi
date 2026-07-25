@@ -149,7 +149,11 @@ assert(await fallbackAtlasButtons.nth(1).getAttribute("aria-pressed") === "true"
 await page.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
 const mapPins = page.locator(".coffee-map__pin");
 const flagFilters = page.locator('.origin-flag-filter [role="group"] > button');
+await page.locator(".coffee-map__canvas").scrollIntoViewIfNeeded();
+await page.locator(".coffee-map__canvas .origin-map-artwork").evaluate((image) => image.decode());
 assert(await mapPins.count() === 6, "origin map did not expose all six country pins");
+assert(await page.locator('.coffee-map__canvas .origin-map-artwork[data-map-geometry="natural-earth-110m"]').evaluate((image) => image.naturalWidth === 1000), "origin map did not load the local Natural Earth geometry");
+assert(await page.locator(".coffee-map__canvas [data-origin-anchor]").count() === 6, "origin map did not expose a geographic anchor for every profile");
 assert(await mapPins.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 6, "origin map did not render real flags for all six country pins");
 assert(await flagFilters.count() === 7, "origin filters did not expose all six flags plus the all-origins control");
 assert(await page.locator(".coffee-map__lenses button").count() === 3, "origin map did not expose its three information lenses");
@@ -188,7 +192,11 @@ await page.locator(".origin-sort select").selectOption("country");
 assert((await page.locator(".profile-grid--catalog .profile-card").first().textContent()).includes("Brazil"), "country sorting did not put Brazil first in the coffee library");
 
 await page.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
+await page.locator(".origin-constellation__map").scrollIntoViewIfNeeded();
+await page.locator(".origin-constellation__map .origin-map-artwork").evaluate((image) => image.decode());
 assert(await page.locator(".origin-constellation__pin").count() === 6, "profile page did not expose six spatial origin links");
+assert(await page.locator('.origin-constellation__map .origin-map-artwork[data-map-geometry="natural-earth-110m"]').evaluate((image) => image.naturalWidth === 1000), "profile constellation did not load the local Natural Earth geometry");
+assert(await page.locator(".origin-constellation__map [data-origin-anchor]").count() === 6, "profile constellation did not retain six geographic anchors");
 assert(await page.locator('.origin-constellation__pin .origin-flag[data-flag-source="local-svg"] img').count() === 6, "profile constellation did not render six real country flags");
 assert(await page.locator(".origin-constellation__rail a").count() === 6, "profile page did not expose six conventional origin links");
 assert(await page.locator('.origin-constellation__pin[aria-current="page"]').count() === 1, "profile constellation did not identify the active country");

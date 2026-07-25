@@ -54,6 +54,7 @@ for (const check of checks) {
     flagCount: document.querySelectorAll(".origin-flag[data-country]").length,
     localFlagCount: document.querySelectorAll('.origin-flag[data-flag-source="local-svg"] img.origin-flag__image').length,
     fallbackFlagCount: document.querySelectorAll('.origin-flag[data-flag-source="emoji-fallback"]').length,
+    mapArtworkCount: document.querySelectorAll('.origin-map-artwork[data-map-geometry="natural-earth-110m"]').length,
     hasCart: Boolean(document.querySelector('[class*="cart"], [aria-label*="cart" i], [aria-label*="sepet" i]')),
     hasPrice: /(?:[$€£]\s?\d|\d(?:[.,]\d{2})?\s?(?:USD|EUR|TRY|TL)\b)/i.test(document.body.innerText),
   }));
@@ -62,6 +63,7 @@ for (const check of checks) {
   if (audit.brokenImages) failures.push(`${check.name}: ${audit.brokenImages} broken images`);
   if (audit.flagCount && audit.localFlagCount !== audit.flagCount) failures.push(`${check.name}: expected ${audit.flagCount} local SVG flags, found ${audit.localFlagCount}`);
   if (audit.fallbackFlagCount) failures.push(`${check.name}: ${audit.fallbackFlagCount} flags fell back to emoji`);
+  if ((check.path === "/origins" || check.path.startsWith("/coffees/")) && audit.mapArtworkCount !== 1) failures.push(`${check.name}: local Natural Earth map artwork was missing`);
   if (audit.h1Count !== 1) failures.push(`${check.name}: expected one h1, found ${audit.h1Count}`);
   if (!audit.canonical.endsWith(check.path === "/" ? "/" : check.path)) failures.push(`${check.name}: canonical did not match ${check.path}`);
   if (audit.hasCart) failures.push(`${check.name}: sales/cart UI was present`);

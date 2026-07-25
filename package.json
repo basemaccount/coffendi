@@ -9,6 +9,7 @@
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "dev:full": "vercel dev",
+    "build:origin-map": "node scripts/build-origin-map.mjs",
     "sync:flags": "node scripts/sync-origin-flags.mjs",
     "optimize:images": "node scripts/optimize-images.mjs",
     "import:makendi": "node scripts/import-makendi.mjs",

@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Crosshair, Layers3, Map, MapPin, Radar, Sprout } from "lucide-react";
 import OriginFilters, { useOriginProfileFilters } from "./OriginFilters";
 import OriginFlag from "./OriginFlag";
+import OriginMapAnchors, { originPinPosition } from "./OriginMapAnchors";
 
 const local = (value, language) => typeof value === "object" && value !== null ? value[language] : value;
 
@@ -54,7 +55,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens }) {
       const element = viewport.current;
       const active = profiles.find(({ id }) => id === activeId);
       if (!element || !active || element.scrollWidth <= element.clientWidth) return;
-      const desired = (element.scrollWidth * active.map.x / 100) - (element.clientWidth / 2);
+      const desired = (element.scrollWidth * originPinPosition(active).x / 100) - (element.clientWidth / 2);
       const left = Math.max(0, Math.min(element.scrollWidth - element.clientWidth, desired));
       const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
       element.scrollTo({ left, behavior: reduceMotion || !element.dataset.mapReady ? "auto" : "smooth" });
@@ -66,6 +67,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens }) {
   return (
     <div ref={viewport} className="coffee-map__viewport">
       <div className="coffee-map__canvas">
+        <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
         <svg className="coffee-map__art" viewBox="0 0 1000 520" aria-hidden="true" preserveAspectRatio="none">
           <defs>
             <linearGradient id="coffee-belt-fill" x1="0" x2="1">
@@ -78,30 +80,27 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens }) {
             </pattern>
           </defs>
           <rect width="1000" height="520" fill="url(#map-grid)" />
-          <rect className="coffee-map__belt" x="0" y="205" width="1000" height="185" rx="34" fill="url(#coffee-belt-fill)" />
-          <path className="coffee-map__land" d="M87 100c42-54 108-71 167-42 29 14 46 42 68 58 32 23 48 48 35 72-12 22-50 23-65 49-17 30-7 65-35 86-25 19-48 5-65-22-25-40-31-93-59-126-19-23-69-39-46-75Z" />
-          <path className="coffee-map__land" d="M258 303c38-18 91-5 122 27 26 27 16 61-2 88-22 33-42 72-75 75-28 2-36-45-48-73-15-36-35-98 3-117Z" />
-          <path className="coffee-map__land" d="M445 94c42-22 84-10 119-3 34 6 65-17 101-15 53 4 84 44 134 57 40 10 93 8 112 44 18 33-39 48-70 50-44 4-78-15-117-5-28 8-34 38-66 38-27 0-39-29-66-37-31-9-70 8-91-15-18-20 3-45-6-69-8-21-78-21-50-45Z" />
-          <path className="coffee-map__land" d="M519 238c38-27 91-20 123 11 35 34 28 89 7 133-18 39-43 94-84 91-37-3-37-61-55-98-21-43-31-108 9-137Z" />
-          <path className="coffee-map__land" d="M825 351c28-19 75-17 93 12 16 27-9 57-37 64-29 7-72 0-79-29-4-18 8-37 23-47Z" />
-          <path className="coffee-map__equator" d="M0 297H1000" />
+          <rect className="coffee-map__belt" x="0" y="190" width="1000" height="140" rx="28" fill="url(#coffee-belt-fill)" />
+          <path className="coffee-map__equator" d="M0 260H1000" />
+          <OriginMapAnchors profiles={profiles} />
           {profiles.length > 1 && <polyline className="coffee-map__thread" style={{ ...styles.thread, animation: reduceMotion ? "none" : styles.thread.animation }} points={constellationPoints} />}
         </svg>
 
-        {profiles.map((profile, index) => (
-          <button
+        {profiles.map((profile, index) => {
+          const pin = originPinPosition(profile);
+          return <button
             key={profile.id}
             className={`coffee-map__pin ${profile.id === activeId ? "is-active" : ""}`}
             type="button"
-            style={{ left: `${profile.map.x}%`, top: `${profile.map.y}%`, "--pin-index": index }}
+            style={{ left: `${pin.x}%`, top: `${pin.y}%`, "--pin-index": index }}
             onClick={() => onSelect(profile.id)}
             aria-pressed={profile.id === activeId}
             aria-label={`${language === "tr" ? "Haritada seç" : "Select on map"}: ${local(profile.country, language)}`}
           >
             <OriginFlag profile={profile} size="map" />
             <span className="coffee-map__pin-label"><strong>{local(profile.country, language)}</strong><small>{lensValue(profile, lens, language)}</small></span>
-          </button>
-        ))}
+          </button>;
+        })}
       </div>
     </div>
   );
@@ -122,7 +121,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       title: "Kahve kuşağında altı başlangıç noktası.",
       intro: "Haritadaki bayrağı veya aşağıdaki bayrak filtresini seçin. Filtreler, aynı menşe sistemini ülke, bölge ve işleme odağına göre daraltır.",
       mapLabel: "Temsili Coffendi kahve menşeleri haritası",
-      orientation: "Yönlendirme haritasıdır; canlı stok, lojistik kapsam veya tedarik garantisi değildir.",
+      orientation: "Yönlendirme haritasıdır; okunabilirlik için bayraklar coğrafi noktalardan ayrılabilir. Canlı stok, lojistik kapsam veya tedarik garantisi değildir.",
       directions: "Temsili kahve yönleri",
       profile: "Temsili profili aç",
       empty: "Bu filtrelerle eşleşen menşe bulunamadı.",
@@ -148,7 +147,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       title: "Six starting points across the coffee belt.",
       intro: "Choose a flag on the map or in the flag filter below. Filters narrow the same origin system by country, region and process focus.",
       mapLabel: "Map of representative Coffendi coffee origins",
-      orientation: "Orientation map only—not live stock, logistics coverage or a sourcing guarantee.",
+      orientation: "Orientation map only; flags may be offset from geographic dots for legibility. Not live stock, logistics coverage or a sourcing guarantee.",
       directions: "Representative coffee directions",
       profile: "Open representative profile",
       empty: "No origins match these filters.",

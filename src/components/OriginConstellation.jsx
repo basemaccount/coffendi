@@ -1,6 +1,7 @@
 import { useEffect, useRef } from "react";
 import { GitCompareArrows, Map, Orbit } from "lucide-react";
 import OriginFlag from "./OriginFlag";
+import OriginMapAnchors, { originPinPosition } from "./OriginMapAnchors";
 
 const local = (value, language) => typeof value === "object" && value !== null ? value[language] : value;
 
@@ -16,9 +17,8 @@ const styles = {
   gold: { color: "var(--gold-light)" },
   mapIcon: { width: 17, color: "var(--gold-light)" },
   viewport: { overflowX: "auto", borderBlock: "1px solid rgba(255,255,255,.12)", background: "#12372d" },
-  map: { position: "relative", minWidth: "min(700px,167vw)", aspectRatio: "1000/400", overflow: "hidden" },
+  map: { position: "relative", minWidth: "min(700px,167vw)", aspectRatio: "1000/520", overflow: "hidden" },
   art: { position: "absolute", inset: 0, width: "100%", height: "100%", color: "#dce8e1" },
-  land: { fill: "rgba(225,233,223,.1)", stroke: "rgba(225,233,223,.24)", strokeWidth: 2, vectorEffect: "non-scaling-stroke" },
   equator: { fill: "none", stroke: "rgba(239,201,121,.35)", strokeDasharray: "6 9", vectorEffect: "non-scaling-stroke" },
   thread: { fill: "none", stroke: "rgba(239,201,121,.34)", strokeWidth: 1.5, strokeDasharray: "5 9", vectorEffect: "non-scaling-stroke", animation: "origin-thread-flow 10s linear infinite" },
   pin: { position: "absolute", width: 52, height: 58, display: "grid", justifyItems: "center", gap: 1, padding: 5, border: 0, borderRadius: 10, textDecoration: "none", transform: "translate(-50%,-50%)", transition: "scale 240ms var(--ease),background-color 180ms ease,opacity 180ms ease" },
@@ -43,8 +43,8 @@ function MapArt({ profiles }) {
         </pattern>
       </defs>
       <rect width="1000" height="520" fill="url(#constellation-grid)" />
-      <path className="origin-constellation__land" style={styles.land} d="M87 100c42-54 108-71 167-42 62 30 112 90 70 147-20 27-63 27-73 69-8 34-19 56-48 38-34-21-40-93-70-137-19-28-69-39-46-75ZM258 303c38-18 91-5 122 27 43 45-29 161-77 163-44 1-81-172-45-190ZM445 94c42-22 84-10 119-3 80 15 121-34 206 17 48 29 126 30 141 69 12 31-48 52-93 49-85-7-119 43-170 27-46-14-66-40-115-35-61 7-109-94-88-124ZM519 238c38-27 91-20 123 11 58 56 0 226-77 224-69-2-91-189-46-235ZM825 351c28-19 75-17 93 12 31 51-70 89-108 51-18-18-3-50 15-63Z" />
-      <path className="origin-constellation__equator" style={styles.equator} d="M0 297H1000" />
+      <path className="origin-constellation__equator" style={styles.equator} d="M0 260H1000" />
+      <OriginMapAnchors profiles={profiles} />
       {profiles.length > 1 && <polyline className="origin-constellation__thread" style={{ ...styles.thread, animation: reduceMotion ? "none" : styles.thread.animation }} points={points} />}
     </svg>
   );
@@ -89,7 +89,7 @@ export default function OriginConstellation({
       const element = viewport.current;
       const focus = profiles.find(({ id }) => id === focusId);
       if (!element || !focus || element.scrollWidth <= element.clientWidth) return;
-      const desired = (element.scrollWidth * focus.map.x / 100) - (element.clientWidth / 2);
+      const desired = (element.scrollWidth * originPinPosition(focus).x / 100) - (element.clientWidth / 2);
       element.scrollTo({ left: Math.max(0, Math.min(element.scrollWidth - element.clientWidth, desired)), behavior: "auto" });
     });
     return () => window.cancelAnimationFrame(frame);
@@ -113,16 +113,18 @@ export default function OriginConstellation({
           </div>
           <div ref={viewport} className="origin-constellation__viewport" style={styles.viewport}>
             <div className="origin-constellation__map" style={styles.map}>
+              <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
               <MapArt profiles={profiles} />
               {profiles.map((profile, index) => {
               const isSelected = selected.has(profile.id);
               const unavailable = comparing && comparisonFull && !isSelected;
+              const pin = originPinPosition(profile);
               const shared = {
                 className: `origin-constellation__pin ${isSelected ? "is-active" : ""} ${unavailable ? "is-unavailable" : ""}`.trim(),
                 style: {
                   ...styles.pin,
-                  left: `${profile.map.x}%`,
-                  top: `${profile.map.y}%`,
+                  left: `${pin.x}%`,
+                  top: `${pin.y}%`,
                   zIndex: isSelected ? 3 : 2,
                   background: isSelected ? "var(--gold-light)" : "rgba(15,48,39,.7)",
                   color: isSelected ? "var(--green)" : "#9db5a9",
