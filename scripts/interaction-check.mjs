@@ -130,6 +130,38 @@ await fallbackAtlasButtons.nth(1).click();
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
 assert(await fallbackAtlasButtons.nth(1).getAttribute("aria-pressed") === "true", "atlas left a click pending after image preloading failed");
 
+await page.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
+const mapPins = page.locator(".coffee-map__pin");
+const flagFilters = page.locator('.origin-flag-filter [role="group"] > button');
+assert(await mapPins.count() === 6, "origin map did not expose all six country pins");
+assert(await flagFilters.count() === 7, "origin filters did not expose all six flags plus the all-origins control");
+await mapPins.filter({ hasText: "Kenya" }).click();
+assert((await page.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "map pin selection did not update the origin readout");
+await flagFilters.filter({ hasText: "Rwanda" }).click();
+assert(await mapPins.count() === 1, "flag filter did not narrow the map to one country");
+assert((await page.locator(".origin-explorer__readout").textContent()).includes("Rwanda"), "flag filter did not synchronize the active readout");
+await page.locator(".origin-filter-panel__reset").click();
+await page.locator(".origin-zone-filter button").filter({ hasText: "Africa" }).click();
+assert(await mapPins.count() === 3, "Africa region filter did not expose the three African origins");
+await page.locator(".origin-filter-panel__reset").click();
+await page.locator(".origin-select select").selectOption("natural");
+assert(await mapPins.count() === 1 && (await mapPins.first().textContent()).includes("Brazil"), "process filter did not isolate the natural profile");
+await page.locator(".origin-filter-panel__reset").click();
+await page.locator(".origin-search input").fill("Cerrado");
+assert(await mapPins.count() === 1 && (await mapPins.first().textContent()).includes("Brazil"), "text filter did not search regional profile information");
+await page.locator(".origin-search input").fill("no matching origin");
+assert(await page.locator(".origin-explorer__empty").count() === 1, "empty map filters did not expose a recovery state");
+await page.locator(".origin-explorer__empty button").click();
+assert(await mapPins.count() === 6, "empty-state reset did not restore all map pins");
+
+await page.goto(`${baseUrl}/coffees`, { waitUntil: "networkidle" });
+const libraryFlags = page.locator('.origin-flag-filter [role="group"] > button');
+await libraryFlags.filter({ hasText: "Colombia" }).click();
+assert(await page.locator(".profile-grid--catalog .profile-card").count() === 1, "coffee-library flag filter did not narrow the profile cards");
+assert((await page.locator(".profile-grid--catalog .profile-card").textContent()).includes("Colombia"), "coffee-library flag filter exposed the wrong profile");
+await page.locator(".origin-filter-panel__reset").click();
+assert(await page.locator(".profile-grid--catalog .profile-card").count() === 6, "coffee-library reset did not restore all profiles");
+
 await page.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" });
 const clearComparison = page.locator(".compare-toolbar__clear");
 if (await clearComparison.count()) await clearComparison.click();
@@ -196,6 +228,21 @@ assert(await mobile.locator(".connection-notice.is-online").count() === 1, "reco
 const mobileTargets = await mobile.evaluate(() => [document.querySelector(".menu-button"), ...document.querySelectorAll(".language-switcher button")].map((element) => ({ width: element.offsetWidth, height: element.offsetHeight })));
 assert(mobileTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile header has a touch target below 44px");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile home has horizontal overflow");
+await mobile.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
+await mobile.locator(".origin-explorer__workspace").scrollIntoViewIfNeeded();
+await mobile.waitForTimeout(120);
+const mobileMapTargets = await mobile.locator(".coffee-map__pin").evaluateAll((pins) => pins.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
+assert(mobileMapTargets.length === 6 && mobileMapTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile origin map has a country target below 44px");
+const activeMapVisibility = await mobile.evaluate(() => {
+  const viewport = document.querySelector(".coffee-map__viewport").getBoundingClientRect();
+  const pin = document.querySelector(".coffee-map__pin.is-active").getBoundingClientRect();
+  return pin.left >= viewport.left && pin.right <= viewport.right;
+});
+assert(activeMapVisibility, "mobile map did not bring the active country flag into view");
+const mobileFlagTargets = await mobile.locator('.origin-flag-filter [role="group"] > button').evaluateAll((buttons) => buttons.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
+assert(mobileFlagTargets.length === 7 && mobileFlagTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile flag filters have a touch target below 44px");
+assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile origins page has horizontal overflow");
+await mobile.goto(baseUrl, { waitUntil: "networkidle" });
 await mobile.evaluate(() => window.scrollTo(0, 1000));
 await mobile.waitForTimeout(180);
 const mobileChapterNavigator = mobile.locator(".chapter-navigator");
@@ -284,5 +331,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, stable comparison selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
+  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, origin map and flag filters, stable comparison selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
 }

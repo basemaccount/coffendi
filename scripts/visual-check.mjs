@@ -17,9 +17,11 @@ const checks = [
   ["mobile-home", "/", 390, 844],
   ["mobile-coffees", "/coffees", 390, 844],
   ["mobile-profile", "/coffees/brazil-classic", 390, 844],
+  ["mobile-origins", "/origins", 390, 844],
   ["mobile-compare", "/compare", 390, 844],
   ["mobile-contact", "/contact", 390, 844],
   ["compact-home", "/", 320, 700],
+  ["compact-origins", "/origins", 320, 700],
   ["landscape-home", "/", 844, 390],
 ].map(([name, path, width, height]) => ({ name, path, width, height }));
 
@@ -87,6 +89,16 @@ for (const check of checks) {
     if ((await page.locator("html").getAttribute("lang")) !== "tr") failures.push("desktop-home: document language did not change to Turkish");
   }
 
+  if (check.name === "desktop-coffees") {
+    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 7) failures.push("desktop-coffees: flag filters did not expose six countries plus all");
+    if ((await page.locator(".profile-card__process .origin-flag").count()) !== 6) failures.push("desktop-coffees: profile cards did not expose origin flags");
+  }
+
+  if (check.name === "desktop-origins") {
+    if ((await page.locator(".coffee-map__pin").count()) !== 6) failures.push("desktop-origins: interactive map did not expose six pins");
+    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 7) failures.push("desktop-origins: flag filters did not expose six countries plus all");
+  }
+
   if (check.name === "mobile-home") {
     const menu = page.getByRole("button", { name: "Open navigation" });
     await menu.click();
@@ -104,6 +116,11 @@ for (const check of checks) {
     if (!(await page.locator('a[href="mailto:info@makendi.com"]').first().isVisible())) failures.push("mobile-contact: direct email channel was missing");
     if (!(await page.locator('a[href="tel:+902163407028"]').first().isVisible())) failures.push("mobile-contact: direct phone channel was missing");
     if (!(await page.getByText("www.coffendi.com", { exact: true }).first().isVisible())) failures.push("mobile-contact: planned Coffendi domain was missing");
+  }
+
+  if (check.name === "mobile-origins" || check.name === "compact-origins") {
+    if ((await page.locator(".coffee-map__pin").count()) !== 6) failures.push(`${check.name}: interactive map pins were missing`);
+    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 7) failures.push(`${check.name}: flag filters were missing`);
   }
 
   console.log(`${check.name}: ${audit.clientWidth}x${check.height}, scrollWidth=${audit.scrollWidth}, title="${audit.title}"`);

@@ -428,16 +428,11 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   .motion-ready .pillar-grid article.is-revealed > svg { animation: mobile-pop 460ms calc(var(--reveal-delay, 0ms) + 90ms) var(--ease) both; }
 
   .motion-ready .profile-card.is-revealed .profile-card__content > *,
-  .motion-ready .origin-card.is-revealed > div > *,
   .motion-ready .contact-layout > *.is-revealed > * { animation: mobile-card-content 520ms var(--ease) both; }
-  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(2),
-  .motion-ready .origin-card.is-revealed > div > :nth-child(2) { animation-delay: 55ms; }
-  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(3),
-  .motion-ready .origin-card.is-revealed > div > :nth-child(3) { animation-delay: 100ms; }
-  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(4),
-  .motion-ready .origin-card.is-revealed > div > :nth-child(4) { animation-delay: 145ms; }
-  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(5),
-  .motion-ready .origin-card.is-revealed > div > :nth-child(5) { animation-delay: 190ms; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(2) { animation-delay: 55ms; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(3) { animation-delay: 100ms; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(4) { animation-delay: 145ms; }
+  .motion-ready .profile-card.is-revealed .profile-card__content > :nth-child(5) { animation-delay: 190ms; }
 
   .motion-ready .story-steps > li.is-revealed > *,
   .motion-ready .footer-grid > *.is-revealed > *,
@@ -484,7 +479,6 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   .button:active,
   .circle-link:active,
   .profile-card__image:active,
-  .origin-card a:active,
   .compare-picker button:active,
   .origin-atlas__controls button:active,
   .mobile-navigation nav a:active { scale: 0.97; filter: brightness(0.96); }
@@ -497,5 +491,5 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   .connection-notice { animation: none; }
   .inquiry-progress__meter > span { transition: none; }
   [data-reveal="true"] { opacity: 1 !important; translate: none !important; }
-  .back-to-top, .menu-button svg, .mobile-navigation nav a, .mobile-navigation__foot, .hero__copy > *, .hero__media, .hero__card, .page-hero__grid *, .compare-toolbar > *, .compare-picker button, .compare-table__row, .profile-card__content > *, .origin-card > div > *, .story-steps > li > *, .footer-grid > * > *, .footer-lead > * > *, .origin-atlas__controls button, .origin-atlas__readout > * { animation: none !important; }
+  .back-to-top, .menu-button svg, .mobile-navigation nav a, .mobile-navigation__foot, .hero__copy > *, .hero__media, .hero__card, .page-hero__grid *, .compare-toolbar > *, .compare-picker button, .compare-table__row, .profile-card__content > *, .story-steps > li > *, .footer-grid > * > *, .footer-lead > * > *, .origin-atlas__controls button, .origin-atlas__readout > * { animation: none !important; }
 }
