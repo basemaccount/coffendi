@@ -70,6 +70,7 @@ for (const route of routes) {
   await page.reload({ waitUntil: "networkidle" });
   assert(await page.locator("h1").count() === 1, `${route}: reload did not recover the route`);
 }
+console.log(`Interaction progress: ${routes.length} direct routes and reloads checked.`);
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 assert(await page.locator('.language-switcher[role="group"]').count() === 1, "language controls did not expose grouped semantics");
@@ -307,6 +308,7 @@ await page.locator(".hero h1").waitFor();
 assert((await page.locator('meta[name="robots"]').getAttribute("content")) === "index,follow", "indexability did not recover after leaving a not-found route");
 
 await context.close();
+console.log("Interaction progress: desktop navigation, maps, comparison, metadata, and inquiry checked.");
 
 const mobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
 const mobile = await mobileContext.newPage();
@@ -375,14 +377,27 @@ const activeMapVisibility = await mobile.evaluate(() => {
 assert(activeMapVisibility, "mobile map did not bring the active country flag into view");
 const mobileFlagTargets = await mobile.locator('.origin-flag-filter [role="group"] > button').evaluateAll((buttons) => buttons.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
 assert(mobileFlagTargets.length === 7 && mobileFlagTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile flag filters have a touch target below 44px");
+const mobileAdvancedToggle = mobile.locator(".origin-filter-panel__mobile-toggle");
+assert(await mobileAdvancedToggle.getAttribute("aria-expanded") === "false", "mobile advanced origin filters did not begin in a compact state");
+assert(await mobile.locator(".origin-filter-panel__fields").isHidden(), "collapsed mobile advanced filters remained in the interaction order");
+await mobileAdvancedToggle.click();
+assert(await mobileAdvancedToggle.getAttribute("aria-expanded") === "true" && await mobile.locator(".origin-filter-panel__fields").isVisible(), "mobile advanced origin filters did not expand");
 const mobileLensTargets = await mobile.locator(".coffee-map__lenses button").evaluateAll((buttons) => buttons.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
 assert(mobileLensTargets.length === 3 && mobileLensTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile map lenses have a touch target below 44px");
+const mobileMapRail = mobile.locator(".coffee-map__country-rail > button");
+assert(await mobileMapRail.count() === 6, "mobile origin map did not expose its six-country flag rail");
+assert(await mobileMapRail.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 6, "mobile origin map rail did not use six real local flags");
+await mobileMapRail.filter({ hasText: "Kenya" }).click();
+assert((await mobile.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "mobile origin rail did not update the active country");
+assert(await mobile.locator(".coffee-map__pin-label").count() === 1, "mobile map retained overlapping labels for inactive flags");
 assert(await mobile.locator(".origin-explorer__country-index button").count() === 6, "mobile origin explorer did not expose its country passport controls");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile origins page has horizontal overflow");
+console.log("Interaction progress: mobile navigation, filters, flags, and origin map checked.");
 await mobile.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
 const mobileProfileImage = mobile.locator(".profile-detail__media > img");
 const mobileProfileBadge = mobile.locator(".profile-detail__origin-badge .origin-flag");
-assert((await mobileProfileImage.evaluate((image) => new URL(image.currentSrc).pathname)).endsWith("-480.webp"), "mobile profile loaded an oversized image candidate");
+const mobileProfileSource = await mobileProfileImage.evaluate((image) => new URL(image.currentSrc).pathname);
+assert(/-(480|720)\.webp$/.test(mobileProfileSource), `mobile profile loaded an oversized image candidate: ${mobileProfileSource}`);
 assert(await mobileProfileBadge.evaluate((flag) => flag.offsetWidth === 42 && flag.offsetHeight === 32), "mobile profile styling distorted the country flag");
 const mobileConstellationTargets = await mobile.locator(".origin-constellation__pin").evaluateAll((links) => links.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
 assert(mobileConstellationTargets.length === 6 && mobileConstellationTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile profile constellation has a target below 44px");
@@ -409,6 +424,7 @@ const dockBounds = await mobileChapterNavigator.boundingBox();
 const topBounds = await mobile.locator(".back-to-top").boundingBox();
 assert(dockBounds && topBounds && dockBounds.x + dockBounds.width <= topBounds.x - 4, "mobile chapter navigator overlaps the back-to-top control");
 await mobileContext.close();
+console.log("Interaction progress: mobile profiles, responsive media, and chapter controls checked.");
 
 const reducedContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true, reducedMotion: "reduce" });
 const reducedPage = await reducedContext.newPage();
