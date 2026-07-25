@@ -203,10 +203,6 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 .chapter-navigator__track button:active { transform: scale(0.92); }
 .chapter-navigator__track button.is-active { border-color: var(--gold-light); background: var(--gold-light); color: var(--green); }
 
-.site-header {
-  transition: background-color 260ms ease, border-color 260ms ease, box-shadow 320ms var(--ease);
-}
-
 .site-header.is-scrolled {
   border-color: rgba(46, 65, 57, 0.24);
   background: rgba(255, 250, 241, 0.985);
@@ -222,8 +218,6 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 .motion-ready [data-reveal="true"].is-revealed {
   translate: none;
 }
-
-.origin-atlas__controls button.is-pending { background: rgba(239, 201, 121, .18); }
 
 .back-to-top {
   position: fixed;
@@ -272,10 +266,6 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 .mobile-navigation nav a:hover > svg { transform: translateX(3px); }
 .circle-link:hover svg { transform: translateX(2px); }
 
-.language-switcher button {
-  transition: background-color 180ms ease, color 180ms ease, transform 180ms var(--ease);
-}
-
 .language-switcher button:active { transform: scale(0.92); }
 .menu-button svg { animation: menu-icon-in 280ms var(--ease) both; }
 
@@ -289,16 +279,10 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 .mobile-navigation.is-open nav a:nth-child(5) { animation-delay: 180ms; }
 .mobile-navigation.is-open .mobile-navigation__foot { animation: mobile-nav-in 440ms 210ms var(--ease) both; }
 
-.form-grid label > span {
-  transition: color 180ms ease, transform 220ms var(--ease);
-}
-
 .form-grid label:focus-within > span {
   color: var(--gold-ink);
   transform: translateX(2px);
 }
-
-.profile-card__image { isolation: isolate; }
 
 .profile-card__image::after {
   position: absolute;
@@ -310,8 +294,6 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   transform: translateX(-130%);
   transition: transform 850ms var(--ease);
 }
-
-.profile-card__image > span { z-index: 2; }
 
 @media (hover: hover) and (pointer: fine) {
   .profile-card:hover .profile-card__image::after { transform: translateX(130%); }

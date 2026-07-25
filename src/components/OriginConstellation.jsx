@@ -150,7 +150,7 @@ export default function OriginConstellation({
             </div>
           </div>
 
-          <div className="origin-constellation__rail" style={styles.rail} aria-label={language === "tr" ? "Menşe ülkeleri" : "Origin countries"}>
+          <div className="origin-constellation__rail" style={styles.rail} role="group" aria-label={language === "tr" ? "Menşe ülkeleri" : "Origin countries"}>
             {profiles.map((profile) => {
               const isSelected = selected.has(profile.id);
               const unavailable = comparing && comparisonFull && !isSelected;

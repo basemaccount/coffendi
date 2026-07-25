@@ -110,13 +110,13 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
         </div>
 
         <div className="origin-atlas__workspace" aria-busy={Boolean(pendingId)}>
-          <div className="origin-atlas__controls" aria-label={language === "tr" ? "Bir menşe seçin" : "Choose an origin"}>
+          <div className="origin-atlas__controls" role="group" aria-label={language === "tr" ? "Bir menşe seçin" : "Choose an origin"}>
             {profiles.map((profile, index) => (
               <button
                 key={profile.id}
                 className={`${profile.id === active.id ? "is-active" : ""} ${profile.id === pendingId ? "is-pending" : ""}`.trim()}
                 type="button"
-                aria-pressed={profile.id === (pendingId || active.id)}
+                aria-pressed={profile.id === active.id}
                 aria-busy={profile.id === pendingId}
                 onPointerEnter={() => warmProfile(profile).catch(() => {})}
                 onFocus={() => warmProfile(profile).catch(() => {})}

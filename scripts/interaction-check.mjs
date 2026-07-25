@@ -29,6 +29,12 @@ for (const route of routes) {
   assert(response?.ok(), `${route}: direct load returned ${response?.status()}`);
   assert(await page.locator("h1").count() === 1, `${route}: direct load did not render one h1`);
   assert(await page.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), `${route}: horizontal overflow after direct load`);
+  const canonicalPath = await page.locator('link[rel="canonical"]').getAttribute("href");
+  const openGraphPath = await page.locator('meta[property="og:url"]').getAttribute("content");
+  assert(new URL(canonicalPath).pathname === route, `${route}: canonical metadata did not match the current route`);
+  assert(new URL(openGraphPath).pathname === route, `${route}: Open Graph URL did not match the current route`);
+  assert((await page.locator('meta[property="og:title"]').getAttribute("content")) === await page.title(), `${route}: Open Graph title did not follow the document title`);
+  assert((await page.locator('meta[name="twitter:description"]').getAttribute("content")) === await page.locator('meta[name="description"]').getAttribute("content"), `${route}: Twitter description diverged from the route description`);
   const blockedTargets = await page.evaluate(() => [...document.querySelectorAll("a[href], button:not([disabled]), input:not([type='hidden']), textarea, select, summary")].flatMap((element) => {
     const style = getComputedStyle(element);
     const bounds = element.getBoundingClientRect();
@@ -53,15 +59,20 @@ for (const route of routes) {
   const expectedFlag = profileFlags.find(([profileRoute]) => profileRoute === route)?.[1];
   if (expectedFlag) {
     const heroFlag = page.locator(".profile-detail__origin-badge .origin-flag");
+    const heroImage = page.locator(".profile-detail__media > img");
     assert(await heroFlag.getAttribute("data-flag-source") === "local-svg", `${route}: profile hero did not use local SVG flag artwork`);
     assert((await heroFlag.locator("img").getAttribute("src"))?.endsWith(`/images/flags/${expectedFlag}.svg`), `${route}: profile hero exposed the wrong country flag`);
     assert(await heroFlag.locator("img").evaluate((image) => image.complete && image.naturalWidth > 0), `${route}: profile hero country flag did not decode`);
+    assert((await heroImage.getAttribute("srcset"))?.includes("-480.webp 480w"), `${route}: profile hero did not expose responsive image candidates`);
+    assert(await heroFlag.evaluate((flag) => flag.offsetWidth === 42 && flag.offsetHeight === 32), `${route}: profile media sizing distorted the country flag`);
+    assert(await heroImage.evaluate((image) => image.offsetHeight < 650), `${route}: intrinsic image attributes overrode the responsive profile layout`);
   }
   await page.reload({ waitUntil: "networkidle" });
   assert(await page.locator("h1").count() === 1, `${route}: reload did not recover the route`);
 }
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
+assert(await page.locator('.language-switcher[role="group"]').count() === 1, "language controls did not expose grouped semantics");
 const keyboardLink = page.locator('.desktop-nav a[href="/coffees"]');
 await keyboardLink.focus();
 await page.keyboard.press("Enter");
@@ -127,6 +138,8 @@ await page.waitForURL((url) => url.pathname === "/");
 await page.waitForTimeout(750);
 assert(Math.abs(await page.evaluate(() => scrollY) - scrollBefore) <= 1, "Back did not restore the previous scroll position");
 
+await page.evaluate(() => window.scrollTo({ top: 1000, behavior: "instant" }));
+await page.waitForFunction(() => document.querySelector(".chapter-navigator")?.getAttribute("aria-hidden") === "false");
 const chapterNavigator = page.locator(".chapter-navigator");
 assert(await chapterNavigator.locator("button").count() > 1, "home did not expose multiple page chapters");
 assert(await chapterNavigator.evaluate((element) => element.classList.contains("is-visible") && element.getAttribute("aria-hidden") === "false"), "chapter navigator did not become available after scrolling");
@@ -150,6 +163,7 @@ assert(!progressMode.supported || progressMode.timeline !== "auto", "native scro
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.locator(".origin-atlas").scrollIntoViewIfNeeded();
 const atlasButtons = page.locator(".origin-atlas__controls button");
+assert(await page.locator('.origin-atlas__controls[role="group"]').count() === 1, "country atlas controls did not expose grouped semantics");
 assert(await page.locator(".origin-atlas__flag").count() === 6, "country atlas did not expose a flag for every origin");
 assert(await page.locator('.origin-atlas__flag[data-flag-source="local-svg"] img').count() === 6, "country atlas did not render six real local flag images");
 assert(await page.locator(".origin-atlas__directions li").count() === 3, "country atlas did not expose multiple coffee directions for the active origin");
@@ -229,6 +243,7 @@ assert(await page.locator('.origin-constellation__map .origin-map-artwork[data-m
 assert(await page.locator(".origin-constellation__map [data-origin-anchor]").count() === 6, "profile constellation did not retain six geographic anchors");
 assert(await page.locator('.origin-constellation__pin .origin-flag[data-flag-source="local-svg"] img').count() === 6, "profile constellation did not render six real country flags");
 assert(await page.locator(".origin-constellation__rail a").count() === 6, "profile page did not expose six conventional origin links");
+assert(await page.locator('.origin-constellation__rail[role="group"]').count() === 1, "profile origin rail did not expose grouped semantics");
 assert(await page.locator('.origin-constellation__pin[aria-current="page"]').count() === 1, "profile constellation did not identify the active country");
 
 await page.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" });
@@ -236,6 +251,7 @@ const clearComparison = page.locator(".compare-toolbar__clear");
 if (await clearComparison.count()) await clearComparison.click();
 const comparisonButtons = page.locator(".compare-picker button");
 const comparisonMapPins = page.locator(".origin-constellation__pin");
+assert(await page.locator('.compare-picker[role="group"]').count() === 1, "comparison choices did not expose grouped semantics");
 assert(await comparisonMapPins.count() === 6, "comparison desk did not expose six spatial country controls");
 await comparisonMapPins.filter({ hasText: "BR" }).click();
 assert(await comparisonButtons.nth(2).getAttribute("aria-pressed") === "true", "comparison map did not add Brazil");
@@ -271,7 +287,24 @@ await page.locator('.inquiry-form button[type="submit"]').click();
 await page.locator(".inquiry-fallback").waitFor();
 assert((await page.locator('.inquiry-fallback a[href^="mailto:"]').getAttribute("href")).includes("Coffendi"), "stored inquiry did not preserve a prepared email fallback");
 assert(await page.locator('.inquiry-fallback a[href="tel:+902163407028"]').count() === 1, "stored inquiry did not preserve the telephone fallback");
+await page.waitForFunction(() => document.querySelector(".inquiry-progress__meter")?.getAttribute("aria-valuenow") === "0");
+assert(!await page.locator(".inquiry-progress.is-ready").count(), "successful inquiry reset left the readiness meter complete");
 await page.unroute("**/api/inquiries");
+
+await page.goto(`${baseUrl}/approach`, { waitUntil: "networkidle" });
+const approachImage = page.locator(".approach-feature img");
+await approachImage.scrollIntoViewIfNeeded();
+await approachImage.evaluate((image) => image.decode());
+assert((await approachImage.getAttribute("srcset"))?.includes("green-coffee-roastery-480.webp 480w"), "approach image did not expose responsive candidates");
+assert((await approachImage.evaluate((image) => new URL(image.currentSrc).pathname)).endsWith("-720.webp"), "desktop approach layout did not select an appropriately sized image candidate");
+
+await page.goto(`${baseUrl}/this-route-does-not-exist`, { waitUntil: "networkidle" });
+assert((await page.locator('meta[name="robots"]').getAttribute("content")) === "noindex,follow", "not-found route remained indexable");
+assert(new URL(await page.locator('link[rel="canonical"]').getAttribute("href")).pathname === "/this-route-does-not-exist", "not-found canonical did not preserve the requested route");
+await page.locator('.not-found a[href="/"]').click();
+await page.waitForURL((url) => url.pathname === "/");
+await page.locator(".hero h1").waitFor();
+assert((await page.locator('meta[name="robots"]').getAttribute("content")) === "index,follow", "indexability did not recover after leaving a not-found route");
 
 await context.close();
 
@@ -282,6 +315,12 @@ await mobile.locator(".menu-button").click();
 await mobile.waitForTimeout(80);
 assert(await mobile.locator(".mobile-navigation.is-open").count() === 1, "mobile menu did not open");
 assert(await mobile.locator("#main-content").evaluate((element) => element.inert), "mobile menu did not make page content inert");
+await mobile.locator(".mobile-navigation__foot a").focus();
+await mobile.keyboard.press("Tab");
+assert(await mobile.locator(".brand").evaluate((element) => document.activeElement === element), "mobile menu allowed forward focus to escape its visible navigation surface");
+await mobile.locator(".brand").focus();
+await mobile.keyboard.press("Shift+Tab");
+assert(await mobile.locator(".mobile-navigation__foot a").evaluate((element) => document.activeElement === element), "mobile menu allowed reverse focus to escape its visible navigation surface");
 await mobile.keyboard.press("Escape");
 assert(!await mobile.locator("#main-content").evaluate((element) => element.inert), "mobile menu left page content inert");
 assert(await mobile.locator(".menu-button").evaluate((element) => document.activeElement === element), "mobile menu did not restore focus");
@@ -341,6 +380,10 @@ assert(mobileLensTargets.length === 3 && mobileLensTargets.every(({ width, heigh
 assert(await mobile.locator(".origin-explorer__country-index button").count() === 6, "mobile origin explorer did not expose its country passport controls");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile origins page has horizontal overflow");
 await mobile.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
+const mobileProfileImage = mobile.locator(".profile-detail__media > img");
+const mobileProfileBadge = mobile.locator(".profile-detail__origin-badge .origin-flag");
+assert((await mobileProfileImage.evaluate((image) => new URL(image.currentSrc).pathname)).endsWith("-480.webp"), "mobile profile loaded an oversized image candidate");
+assert(await mobileProfileBadge.evaluate((flag) => flag.offsetWidth === 42 && flag.offsetHeight === 32), "mobile profile styling distorted the country flag");
 const mobileConstellationTargets = await mobile.locator(".origin-constellation__pin").evaluateAll((links) => links.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
 assert(mobileConstellationTargets.length === 6 && mobileConstellationTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile profile constellation has a target below 44px");
 const mobileConstellationVisibility = await mobile.evaluate(() => {
@@ -350,6 +393,11 @@ const mobileConstellationVisibility = await mobile.evaluate(() => {
 });
 assert(mobileConstellationVisibility, "mobile profile constellation did not center the active country");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile profile constellation created page overflow");
+await mobile.goto(`${baseUrl}/approach`, { waitUntil: "networkidle" });
+const mobileApproachImage = mobile.locator(".approach-feature img");
+await mobileApproachImage.scrollIntoViewIfNeeded();
+await mobileApproachImage.evaluate((image) => image.decode());
+assert((await mobileApproachImage.evaluate((image) => new URL(image.currentSrc).pathname)).endsWith("-480.webp"), "mobile approach loaded an oversized image candidate");
 await mobile.goto(baseUrl, { waitUntil: "networkidle" });
 await mobile.evaluate(() => window.scrollTo(0, 1000));
 await mobile.waitForTimeout(180);

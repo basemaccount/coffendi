@@ -39,6 +39,8 @@ const CONTACT_EMAIL = "info@makendi.com";
 const CONTACT_PHONE = "+90 216 340 70 28";
 const CONTACT_PHONE_HREF = "+902163407028";
 const CONTACT_WEBSITE = "www.coffendi.com";
+const DEFAULT_SHARE_IMAGE = `${SITE_URL}/images/green-green-beans-sack.webp`;
+const DEFAULT_SHARE_IMAGE_ALT = "Green coffee beans in a jute sack";
 
 const messages = {
   en: {
@@ -273,12 +275,32 @@ function inquiryEmailHref(data, language) {
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
-function usePageMeta(title, description, path = "/") {
-  useEffect(() => {
+function usePageMeta(title, description, path = "/", language = "en", options = {}) {
+  const {
+    image = DEFAULT_SHARE_IMAGE,
+    imageAlt = DEFAULT_SHARE_IMAGE_ALT,
+    indexable = true,
+  } = options;
+
+  useLayoutEffect(() => {
+    const canonicalUrl = `${SITE_URL}${path}`;
+    const setMeta = (selector, content) => document.querySelector(selector)?.setAttribute("content", content);
+
     document.title = title;
-    document.querySelector('meta[name="description"]')?.setAttribute("content", description);
-    document.querySelector('link[rel="canonical"]')?.setAttribute("href", `${SITE_URL}${path}`);
-  }, [description, path, title]);
+    setMeta('meta[name="description"]', description);
+    setMeta('meta[name="robots"]', indexable ? "index,follow" : "noindex,follow");
+    setMeta('meta[property="og:title"]', title);
+    setMeta('meta[property="og:description"]', description);
+    setMeta('meta[property="og:url"]', canonicalUrl);
+    setMeta('meta[property="og:image"]', image);
+    setMeta('meta[property="og:image:alt"]', imageAlt);
+    setMeta('meta[property="og:locale"]', language === "tr" ? "tr_TR" : "en_US");
+    setMeta('meta[name="twitter:title"]', title);
+    setMeta('meta[name="twitter:description"]', description);
+    setMeta('meta[name="twitter:image"]', image);
+    setMeta('meta[name="twitter:image:alt"]', imageAlt);
+    document.querySelector('link[rel="canonical"]')?.setAttribute("href", canonicalUrl);
+  }, [description, image, imageAlt, indexable, language, path, title]);
 }
 
 function ScrollManager() {
@@ -376,21 +398,41 @@ function Header({ language, setLanguage, copy }) {
     return () => desktop.removeEventListener("change", closeAtDesktop);
   }, []);
   useEffect(() => {
-    const handleEscape = (event) => {
-      if (event.key === "Escape") setMenuOpen(false);
+    const handleMenuKeys = (event) => {
+      if (event.key === "Escape") {
+        setMenuOpen(false);
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const header = menuButton.current?.closest(".site-header");
+      const focusable = [header, navigation.current]
+        .filter(Boolean)
+        .flatMap((region) => Array.from(region.querySelectorAll('a[href], button:not([disabled]), [tabindex]:not([tabindex="-1"])')))
+        .filter((element) => element.getClientRects().length > 0 && !element.closest("[inert]"));
+      const first = focusable[0];
+      const last = focusable.at(-1);
+      if (!first || !last) return;
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     };
     const previousPaddingRight = document.body.style.paddingRight;
     const scrollbarWidth = Math.max(0, window.innerWidth - document.documentElement.clientWidth);
     if (menuOpen && scrollbarWidth > 0) document.body.style.paddingRight = `${scrollbarWidth}px`;
     document.body.classList.toggle("no-scroll", menuOpen);
     if (menuOpen) {
-      document.addEventListener("keydown", handleEscape);
+      document.addEventListener("keydown", handleMenuKeys);
       requestAnimationFrame(() => navigation.current?.querySelector("a")?.focus());
     }
     return () => {
       document.body.classList.remove("no-scroll");
       document.body.style.paddingRight = previousPaddingRight;
-      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("keydown", handleMenuKeys);
     };
   }, [menuOpen]);
 
@@ -420,7 +462,7 @@ function Header({ language, setLanguage, copy }) {
           {nav.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}
         </nav>
         <div className="header-actions">
-          <div className="language-switcher" aria-label={copy.language}>
+          <div className="language-switcher" role="group" aria-label={copy.language}>
             {['en', 'tr'].map((code) => (
               <button key={code} className={language === code ? "is-active" : ""} type="button" onClick={() => setLanguage(code)} aria-pressed={language === code}>{code.toUpperCase()}</button>
             ))}
@@ -470,6 +512,8 @@ function HomePage({ language, copy, selected, onToggle, comparisonFull }) {
   usePageMeta(
     language === "tr" ? "Coffendi — Menşeden kavurucuya yeşil kahve" : "Coffendi — Green coffee, from origin to roaster",
     language === "tr" ? "Yeşil kahve menşelerini, profilleri ve Coffendi talep yolunu keşfedin." : "Explore green coffee origins, representative profiles and the Coffendi inquiry pathway.",
+    "/",
+    language,
   );
   const featured = coffeeProfiles.slice(0, 3);
   return (
@@ -513,7 +557,7 @@ function HomePage({ language, copy, selected, onToggle, comparisonFull }) {
 }
 
 function CoffeesPage({ language, copy, selected, onToggle, comparisonFull }) {
-  usePageMeta(language === "tr" ? "Yeşil kahve profilleri — Coffendi" : "Green coffee profiles — Coffendi", language === "tr" ? "Temsili Coffendi yeşil kahve profillerini keşfedin ve karşılaştırın." : "Explore and compare representative Coffendi green coffee profiles.", "/coffees");
+  usePageMeta(language === "tr" ? "Yeşil kahve profilleri — Coffendi" : "Green coffee profiles — Coffendi", language === "tr" ? "Temsili Coffendi yeşil kahve profillerini keşfedin ve karşılaştırın." : "Explore and compare representative Coffendi green coffee profiles.", "/coffees", language);
   const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(coffeeProfiles, language);
   return (
     <>
@@ -539,32 +583,192 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull }) {
     profile ? `${localized(profile.name, language)} — Coffendi` : "Green coffee — Coffendi",
     profile ? localized(profile.profile, language) : "Explore Coffendi green coffee profiles.",
     profile ? `/coffees/${profile.id}` : "/coffees",
+    language,
+    profile ? {
+      image: `${SITE_URL}${profile.image}`,
+      imageAlt: localized(profile.alt, language),
+    } : undefined,
   );
   if (!profile) return <Navigate to="/coffees" replace />;
   const selectedProfile = selected.includes(profile.id);
   const unavailable = comparisonFull && !selectedProfile;
-  return <><section className="profile-detail"><div className="shell profile-detail__grid"><div className="profile-detail__media"><img src={profile.image} alt={localized(profile.alt, language)} width="960" height="720" fetchPriority="high" decoding="async" style={{ viewTransitionName: `coffee-${profile.id}` }} /><span className="profile-detail__origin-badge"><OriginFlag profile={profile} size="medium" />{localized(profile.country, language)}</span></div><div className="profile-detail__copy"><Link className="breadcrumbs" to="/coffees">{copy.backCoffees}<ChevronRight aria-hidden="true" /></Link><p className="eyebrow profile-detail__region"><OriginFlag profile={profile} size="tiny" />{profile.region}</p><h1>{localized(profile.name, language)}</h1><p className="profile-detail__lede">{localized(profile.profile, language)}</p><dl className="detail-facts"><div><dt>{language === "tr" ? "Menşe" : "Origin"}</dt><dd className="detail-facts__origin"><OriginFlag profile={profile} size="small" />{localized(profile.country, language)}</dd></div><div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "İşleme" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div><div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div><div><dt>{language === "tr" ? "Hasat bağlamı" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div></dl><div className="detail-actions"><button className={`button button--compare ${selectedProfile ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selectedProfile} disabled={unavailable} title={unavailable ? copy.comparisonFullHint : undefined}>{selectedProfile ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selectedProfile ? copy.removeCompare : unavailable ? copy.comparisonFull : copy.addCompare}</button><Link className="button button--dark" to="/contact">{copy.requestInfo}<ArrowRight aria-hidden="true" /></Link></div><p className="source-note">{copy.sourceNote}</p></div></div></section><OriginConstellation profiles={coffeeProfiles} language={language} LinkComponent={Link} activeId={profile.id} /><section className="section shell"><SectionHeading eyebrow={language === "tr" ? "Karar çerçevesi" : "Decision framework"} title={language === "tr" ? "Bir sonraki görüşmede neyi teyit etmelisiniz?" : "What should the next conversation confirm?"} /><div className="decision-grid"><article><Coffee aria-hidden="true" /><h3>{language === "tr" ? "Fincan" : "Cup"}</h3><p>{language === "tr" ? "Numuneyi hedef kavurma ve demleme yaklaşımıyla değerlendirin." : "Evaluate a sample against the intended roast and brewing approach."}</p></article><article><ClipboardCheck aria-hidden="true" /><h3>{language === "tr" ? "Belge" : "Documentation"}</h3><p>{language === "tr" ? "Menşe, süreç ve gereken belgeleri sözleşmeden önce teyit edin." : "Confirm origin, process and required documents before any agreement."}</p></article><article><Ship aria-hidden="true" /><h3>{language === "tr" ? "Lojistik" : "Logistics"}</h3><p>{language === "tr" ? "Hacim, teslim noktası ve zamanlamayı gerçek taleple eşleştirin." : "Align volume, destination and timing with the actual brief."}</p></article></div></section></>;
+  return (
+    <>
+      <section className="profile-detail">
+        <div className="shell profile-detail__grid">
+          <div className="profile-detail__media">
+            <img
+              src={profile.image}
+              srcSet={profile.srcSet}
+              sizes="(max-width: 760px) calc(100vw - 34px), (max-width: 1100px) min(820px, 95vw), 580px"
+              alt={localized(profile.alt, language)}
+              width="1200"
+              height="800"
+              fetchPriority="high"
+              decoding="async"
+              style={{ viewTransitionName: `coffee-${profile.id}` }}
+            />
+            <span className="profile-detail__origin-badge"><OriginFlag profile={profile} size="medium" />{localized(profile.country, language)}</span>
+          </div>
+          <div className="profile-detail__copy">
+            <Link className="breadcrumbs" to="/coffees">{copy.backCoffees}<ChevronRight aria-hidden="true" /></Link>
+            <p className="eyebrow profile-detail__region"><OriginFlag profile={profile} size="tiny" />{profile.region}</p>
+            <h1>{localized(profile.name, language)}</h1>
+            <p className="profile-detail__lede">{localized(profile.profile, language)}</p>
+            <dl className="detail-facts">
+              <div><dt>{language === "tr" ? "Menşe" : "Origin"}</dt><dd className="detail-facts__origin"><OriginFlag profile={profile} size="small" />{localized(profile.country, language)}</dd></div>
+              <div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{profile.region}</dd></div>
+              <div><dt>{language === "tr" ? "İşleme" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div>
+              <div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div>
+              <div><dt>{language === "tr" ? "Hasat bağlamı" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div>
+            </dl>
+            <div className="detail-actions">
+              <button className={`button button--compare ${selectedProfile ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selectedProfile} disabled={unavailable} title={unavailable ? copy.comparisonFullHint : undefined}>{selectedProfile ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selectedProfile ? copy.removeCompare : unavailable ? copy.comparisonFull : copy.addCompare}</button>
+              <Link className="button button--dark" to="/contact">{copy.requestInfo}<ArrowRight aria-hidden="true" /></Link>
+            </div>
+            <p className="source-note">{copy.sourceNote}</p>
+          </div>
+        </div>
+      </section>
+      <OriginConstellation profiles={coffeeProfiles} language={language} LinkComponent={Link} activeId={profile.id} />
+      <section className="section shell">
+        <SectionHeading eyebrow={language === "tr" ? "Karar çerçevesi" : "Decision framework"} title={language === "tr" ? "Bir sonraki görüşmede neyi teyit etmelisiniz?" : "What should the next conversation confirm?"} />
+        <div className="decision-grid">
+          <article><Coffee aria-hidden="true" /><h3>{language === "tr" ? "Fincan" : "Cup"}</h3><p>{language === "tr" ? "Numuneyi hedef kavurma ve demleme yaklaşımıyla değerlendirin." : "Evaluate a sample against the intended roast and brewing approach."}</p></article>
+          <article><ClipboardCheck aria-hidden="true" /><h3>{language === "tr" ? "Belge" : "Documentation"}</h3><p>{language === "tr" ? "Menşe, süreç ve gereken belgeleri sözleşmeden önce teyit edin." : "Confirm origin, process and required documents before any agreement."}</p></article>
+          <article><Ship aria-hidden="true" /><h3>{language === "tr" ? "Lojistik" : "Logistics"}</h3><p>{language === "tr" ? "Hacim, teslim noktası ve zamanlamayı gerçek taleple eşleştirin." : "Align volume, destination and timing with the actual brief."}</p></article>
+        </div>
+      </section>
+    </>
+  );
 }
 
 function OriginsPage({ language }) {
-  usePageMeta(language === "tr" ? "Yeşil kahve menşeleri — Coffendi" : "Green coffee origins — Coffendi", language === "tr" ? "Coffendi'nin yeşil kahve menşe yaklaşımını keşfedin." : "Explore Coffendi’s green coffee origin framework.", "/origins");
+  usePageMeta(language === "tr" ? "Yeşil kahve menşeleri — Coffendi" : "Green coffee origins — Coffendi", language === "tr" ? "Coffendi'nin yeşil kahve menşe yaklaşımını keşfedin." : "Explore Coffendi’s green coffee origin framework.", "/origins", language);
   return <><PageHero eyebrow={language === "tr" ? "Menşe bağlamı" : "Origin context"} title={language === "tr" ? "Her menşe, tek bir tat tanımından daha fazlasıdır." : "Every origin is more than one flavour description."} copy={language === "tr" ? "Bölge, çeşit, işleme, hasat, üretici yapısı ve lojistik birlikte değerlendirilmelidir." : "Region, variety, process, harvest, producer structure and logistics should be considered together."} marker={language === "tr" ? "Küresel" : "Global"} /><OriginExplorer profiles={coffeeProfiles} language={language} LinkComponent={Link} /></>;
 }
 
 function ComparePage({ language, copy, selected, onToggle, onClear }) {
-  usePageMeta(language === "tr" ? "Yeşil kahve karşılaştırması — Coffendi" : "Green coffee comparison — Coffendi", language === "tr" ? "Temsili yeşil kahve profillerini yan yana karşılaştırın." : "Compare representative green coffee profiles side by side.", "/compare");
+  usePageMeta(language === "tr" ? "Yeşil kahve karşılaştırması — Coffendi" : "Green coffee comparison — Coffendi", language === "tr" ? "Temsili yeşil kahve profillerini yan yana karşılaştırın." : "Compare representative green coffee profiles side by side.", "/compare", language);
   const profiles = coffeeProfiles.filter(({ id }) => selected.includes(id));
   const comparisonFull = selected.length >= 3;
   const selectionStatus = comparisonFull
     ? language === "tr" ? "Üç profil seçildi. Başka bir profil eklemek için önce birini kaldırın." : "Three profiles selected. Remove one before adding another."
     : language === "tr" ? `${3 - selected.length} profil daha seçebilirsiniz.` : `You can select ${3 - selected.length} more ${3 - selected.length === 1 ? "profile" : "profiles"}.`;
-  return <><PageHero eyebrow={language === "tr" ? "Karşılaştırma masası" : "Comparison desk"} title={language === "tr" ? "Farkları tek bakışta görün." : "See the differences in one view."} copy={language === "tr" ? "En fazla üç profili seçin; menşe, süreç, fincan yönü ve kullanım amacını karşılaştırın." : "Choose up to three profiles and compare origin, process, cup direction and intended use."} marker={`${selected.length}/3`} /><OriginConstellation profiles={coffeeProfiles} language={language} selectedIds={selected} onToggle={onToggle} comparisonFull={comparisonFull} mode="compare" /><section className="section shell compare-workbench"><div className="compare-toolbar"><div><p className="eyebrow">{language === "tr" ? "Karşılaştırmanızı oluşturun" : "Build your comparison"}</p><h2>{language === "tr" ? "En anlamlı üç profili seçin." : "Choose the three profiles that matter most."}</h2></div><div id="comparison-selection-status" className={`compare-toolbar__status ${comparisonFull ? "is-full" : ""}`} role="status" aria-live="polite" aria-atomic="true"><strong>{selected.length}<span> / 3</span></strong><p>{selectionStatus}</p></div>{selected.length > 0 && <button className="compare-toolbar__clear" type="button" onClick={onClear}><X aria-hidden="true" />{language === "tr" ? "Seçimi temizle" : "Clear selection"}</button>}</div><div className="compare-picker" aria-label={language === "tr" ? "Karşılaştırma profilleri" : "Comparison profiles"}>{coffeeProfiles.map((profile, index) => { const isSelected = selected.includes(profile.id); const unavailable = comparisonFull && !isSelected; return <button key={profile.id} type="button" className={`${isSelected ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} onClick={() => onToggle(profile.id)} aria-pressed={isSelected} aria-describedby="comparison-selection-status" disabled={unavailable}><span className="compare-picker__index" aria-hidden="true">0{index + 1}</span><span className="compare-picker__country"><OriginFlag profile={profile} size="small" />{localized(profile.country, language)}</span><strong>{localized(profile.name, language)}</strong>{isSelected && <Check aria-hidden="true" />}</button>; })}</div>{profiles.length ? <div className="compare-table" style={{ "--comparison-columns": profiles.length }} role="table" aria-label={language === "tr" ? "Yeşil kahve profil karşılaştırması" : "Green coffee profile comparison"}><div className="compare-table__row compare-table__row--head" role="row"><span role="columnheader">{language === "tr" ? "Kriter" : "Attribute"}</span>{profiles.map((profile) => <strong className="compare-table__origin" key={profile.id} role="columnheader"><OriginFlag profile={profile} size="small" />{localized(profile.country, language)}</strong>)}</div>{[[language === "tr" ? "Profil" : "Profile", "name"], [language === "tr" ? "Bölge" : "Region", "region"], [language === "tr" ? "İşleme" : "Process", "process"], [language === "tr" ? "Fincan yönü" : "Cup direction", "profile"], [language === "tr" ? "Program yönü" : "Program direction", "use"], [language === "tr" ? "Hasat bağlamı" : "Harvest context", "harvest"]].map(([label, key]) => <div className="compare-table__row" role="row" key={key}><span role="rowheader">{label}</span>{profiles.map((profile) => <p role="cell" data-label={localized(profile.country, language)} key={profile.id}>{localized(profile[key], language)}</p>)}</div>)}</div> : <div className="empty-state"><GitCompareArrows aria-hidden="true" /><h2>{copy.comparisonEmpty}</h2></div>}<p className="catalog-note catalog-note--plain">{copy.sourceNote}</p></section></>;
+  const comparisonRows = [
+    [language === "tr" ? "Profil" : "Profile", "name"],
+    [language === "tr" ? "Bölge" : "Region", "region"],
+    [language === "tr" ? "İşleme" : "Process", "process"],
+    [language === "tr" ? "Fincan yönü" : "Cup direction", "profile"],
+    [language === "tr" ? "Program yönü" : "Program direction", "use"],
+    [language === "tr" ? "Hasat bağlamı" : "Harvest context", "harvest"],
+  ];
+
+  return (
+    <>
+      <PageHero
+        eyebrow={language === "tr" ? "Karşılaştırma masası" : "Comparison desk"}
+        title={language === "tr" ? "Farkları tek bakışta görün." : "See the differences in one view."}
+        copy={language === "tr" ? "En fazla üç profili seçin; menşe, süreç, fincan yönü ve kullanım amacını karşılaştırın." : "Choose up to three profiles and compare origin, process, cup direction and intended use."}
+        marker={`${selected.length}/3`}
+      />
+      <OriginConstellation profiles={coffeeProfiles} language={language} selectedIds={selected} onToggle={onToggle} comparisonFull={comparisonFull} mode="compare" />
+      <section className="section shell compare-workbench">
+        <div className="compare-toolbar">
+          <div>
+            <p className="eyebrow">{language === "tr" ? "Karşılaştırmanızı oluşturun" : "Build your comparison"}</p>
+            <h2>{language === "tr" ? "En anlamlı üç profili seçin." : "Choose the three profiles that matter most."}</h2>
+          </div>
+          <div id="comparison-selection-status" className={`compare-toolbar__status ${comparisonFull ? "is-full" : ""}`} role="status" aria-live="polite" aria-atomic="true">
+            <strong>{selected.length}<span> / 3</span></strong>
+            <p>{selectionStatus}</p>
+          </div>
+          {selected.length > 0 && <button className="compare-toolbar__clear" type="button" onClick={onClear}><X aria-hidden="true" />{language === "tr" ? "Seçimi temizle" : "Clear selection"}</button>}
+        </div>
+        <div className="compare-picker" role="group" aria-label={language === "tr" ? "Karşılaştırma profilleri" : "Comparison profiles"}>
+          {coffeeProfiles.map((profile, index) => {
+            const isSelected = selected.includes(profile.id);
+            const unavailable = comparisonFull && !isSelected;
+            return (
+              <button key={profile.id} type="button" className={`${isSelected ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} onClick={() => onToggle(profile.id)} aria-pressed={isSelected} aria-describedby="comparison-selection-status" disabled={unavailable}>
+                <span className="compare-picker__index" aria-hidden="true">0{index + 1}</span>
+                <span className="compare-picker__country"><OriginFlag profile={profile} size="small" />{localized(profile.country, language)}</span>
+                <strong>{localized(profile.name, language)}</strong>
+                {isSelected && <Check aria-hidden="true" />}
+              </button>
+            );
+          })}
+        </div>
+        {profiles.length ? (
+          <div className="compare-table" style={{ "--comparison-columns": profiles.length }} role="table" aria-label={language === "tr" ? "Yeşil kahve profil karşılaştırması" : "Green coffee profile comparison"}>
+            <div className="compare-table__row compare-table__row--head" role="row">
+              <span role="columnheader">{language === "tr" ? "Kriter" : "Attribute"}</span>
+              {profiles.map((profile) => <strong className="compare-table__origin" key={profile.id} role="columnheader"><OriginFlag profile={profile} size="small" />{localized(profile.country, language)}</strong>)}
+            </div>
+            {comparisonRows.map(([label, key]) => (
+              <div className="compare-table__row" role="row" key={key}>
+                <span role="rowheader">{label}</span>
+                {profiles.map((profile) => <p role="cell" data-label={localized(profile.country, language)} key={profile.id}>{localized(profile[key], language)}</p>)}
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="empty-state"><GitCompareArrows aria-hidden="true" /><h2>{copy.comparisonEmpty}</h2></div>
+        )}
+        <p className="catalog-note catalog-note--plain">{copy.sourceNote}</p>
+      </section>
+    </>
+  );
 }
 
 function ApproachPage({ language }) {
-  usePageMeta(language === "tr" ? "Yaklaşımımız — Coffendi" : "Our approach — Coffendi", language === "tr" ? "Coffendi'nin bilgi, teyit ve sorumlu yeşil kahve görüşmesi yaklaşımı." : "Coffendi’s framework for information, confirmation and responsible green coffee conversations.", "/approach");
+  usePageMeta(language === "tr" ? "Yaklaşımımız — Coffendi" : "Our approach — Coffendi", language === "tr" ? "Coffendi'nin bilgi, teyit ve sorumlu yeşil kahve görüşmesi yaklaşımı." : "Coffendi’s framework for information, confirmation and responsible green coffee conversations.", "/approach", language);
   const pillars = language === "tr" ? [["Bağlam", "Menşe ve profil bilgisi, güncel ürün iddiasından ayrı tutulur."], ["Teyit", "Numune, kalite, miktar, belgeler ve teslimat koşulları doğrudan doğrulanır."], ["İzlenebilirlik", "Yalnızca destekleyici kayıtları olan bilgiler yayımlanır."], ["İlerleme", "Sürdürülebilirlik iddiaları ölçülebilir kapsam ve kanıt gerektirir."]] : [["Context", "Origin and profile information stays separate from current-product claims."], ["Confirmation", "Samples, quality, quantity, documents and delivery terms are verified directly."], ["Traceability", "Only information supported by the appropriate records should be published."], ["Progress", "Sustainability claims require measurable scope and evidence."]];
-  return <><section className="approach-hero"><div className="shell"><p className="eyebrow eyebrow--gold">{language === "tr" ? "Sorumlu bilgi" : "Responsible information"}</p><h1>{language === "tr" ? "Güven, neyin bilindiğini ve neyin teyit edilmesi gerektiğini açıkça söylemekle başlar." : "Trust starts by stating what is known—and what still needs confirmation."}</h1><p>{language === "tr" ? "Coffendi, menşe keşfi ile ticari teyit arasındaki sınırı görünür tutar." : "Coffendi keeps the boundary between origin discovery and commercial confirmation visible."}</p></div></section><section className="section shell"><div className="pillar-grid">{pillars.map(([title, text], index) => <article key={title}><span>0{index + 1}</span>{[Globe2, ClipboardCheck, HandHeart, Leaf].map((Icon, iconIndex) => iconIndex === index && <Icon key={title} aria-hidden="true" />)}<h2>{title}</h2><p>{text}</p></article>)}</div></section><section className="section section--cream"><div className="shell approach-feature"><img src="/images/coffee-roastery.jpg" alt={language === "tr" ? "Kavurma ekipmanı ve kalite çalışma alanı" : "Roasting equipment and a quality workspace"} loading="lazy" decoding="async" width="960" height="720" /><div><p className="eyebrow">{language === "tr" ? "Her görüşmede" : "In every conversation"}</p><h2>{language === "tr" ? "Fincandan evraka kadar aynı netlik." : "The same clarity from cup to documentation."}</h2><ul><li><Check aria-hidden="true" />{language === "tr" ? "Numune ve duyusal hedef" : "Sample and sensory target"}</li><li><Check aria-hidden="true" />{language === "tr" ? "Menşe ve süreç kaydı" : "Origin and process record"}</li><li><Check aria-hidden="true" />{language === "tr" ? "Hacim ve zamanlama" : "Volume and timing"}</li><li><Check aria-hidden="true" />{language === "tr" ? "Gerekli belge ve teslim bağlamı" : "Required documentation and delivery context"}</li></ul></div></div></section></>;
+  const pillarIcons = [Globe2, ClipboardCheck, HandHeart, Leaf];
+
+  return (
+    <>
+      <section className="approach-hero">
+        <div className="shell">
+          <p className="eyebrow eyebrow--gold">{language === "tr" ? "Sorumlu bilgi" : "Responsible information"}</p>
+          <h1>{language === "tr" ? "Güven, neyin bilindiğini ve neyin teyit edilmesi gerektiğini açıkça söylemekle başlar." : "Trust starts by stating what is known—and what still needs confirmation."}</h1>
+          <p>{language === "tr" ? "Coffendi, menşe keşfi ile ticari teyit arasındaki sınırı görünür tutar." : "Coffendi keeps the boundary between origin discovery and commercial confirmation visible."}</p>
+        </div>
+      </section>
+      <section className="section shell">
+        <div className="pillar-grid">
+          {pillars.map(([title, text], index) => {
+            const Icon = pillarIcons[index];
+            return <article key={title}><span>0{index + 1}</span><Icon aria-hidden="true" /><h2>{title}</h2><p>{text}</p></article>;
+          })}
+        </div>
+      </section>
+      <section className="section section--cream">
+        <div className="shell approach-feature">
+          <img
+            src="/images/green-coffee-roastery.webp"
+            srcSet="/images/green-coffee-roastery-480.webp 480w, /images/green-coffee-roastery-720.webp 720w, /images/green-coffee-roastery-960.webp 960w, /images/green-coffee-roastery.webp 1200w"
+            sizes="(max-width: 760px) calc(100vw - 34px), 50vw"
+            alt={language === "tr" ? "Bir hazırlık tezgâhının üzerinde üç kişinin tuttuğu kahve içecekleri" : "Three people holding coffee drinks above a preparation counter"}
+            loading="lazy"
+            decoding="async"
+            width="1200"
+            height="800"
+          />
+          <div>
+            <p className="eyebrow">{language === "tr" ? "Her görüşmede" : "In every conversation"}</p>
+            <h2>{language === "tr" ? "Fincandan evraka kadar aynı netlik." : "The same clarity from cup to documentation."}</h2>
+            <ul>
+              <li><Check aria-hidden="true" />{language === "tr" ? "Numune ve duyusal hedef" : "Sample and sensory target"}</li>
+              <li><Check aria-hidden="true" />{language === "tr" ? "Menşe ve süreç kaydı" : "Origin and process record"}</li>
+              <li><Check aria-hidden="true" />{language === "tr" ? "Hacim ve zamanlama" : "Volume and timing"}</li>
+              <li><Check aria-hidden="true" />{language === "tr" ? "Gerekli belge ve teslim bağlamı" : "Required documentation and delivery context"}</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+    </>
+  );
 }
 
 function InquiryForm({ language, copy }) {
@@ -584,7 +788,31 @@ function InquiryForm({ language, copy }) {
       setState({ status: "error", message: copy.form.error, emailHref });
     }
   };
-  return <form ref={formRef} className="inquiry-form" onSubmit={handleSubmit} aria-busy={state.status === "submitting"}><InquiryProgress formRef={formRef} language={language} /><div className="form-grid"><label><span>{copy.form.name}</span><input name="name" autoComplete="name" minLength="2" maxLength="80" required /></label><label><span>{copy.form.company}</span><input name="company" autoComplete="organization" minLength="2" maxLength="120" required /></label><label><span>{copy.form.email}</span><input name="email" type="email" autoComplete="email" maxLength="160" required /></label><label><span>{copy.form.country}</span><input name="country" autoComplete="country-name" maxLength="100" /></label><label className="form-grid__wide"><span>{copy.form.volume}</span><input name="volume" maxLength="80" placeholder={language === "tr" ? "Örn. numune, 20 çuval, yıllık program" : "For example: sample, 20 bags, annual program"} /></label><label className="form-grid__wide"><span>{copy.form.message}</span><textarea name="message" rows="6" minLength="10" maxLength="2500" required /></label><label className="consent-field form-grid__wide"><input name="consent" type="checkbox" required /><span>{copy.form.consent} <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></span></label><label className="bot-field" aria-hidden="true">Website<input name="website" tabIndex="-1" autoComplete="off" /></label></div><div className="form-submit"><button className="button button--gold" type="submit" disabled={state.status === "submitting"}>{state.status === "submitting" ? copy.form.submitting : copy.form.submit}<Send aria-hidden="true" /></button>{state.message && <p className={`form-status is-${state.status}`} role="status">{state.message}</p>}</div>{state.emailHref && <div className="inquiry-fallback" role="group" aria-label={language === "tr" ? "Doğrudan takip seçenekleri" : "Direct follow-up options"}><a className="button button--dark" href={state.emailHref}><Mail aria-hidden="true" />{language === "tr" ? "Hazırlanan e-postayı gönder" : "Send prepared email"}</a><a className="button button--outline" href={`tel:${CONTACT_PHONE_HREF}`}><PhoneCall aria-hidden="true" />{language === "tr" ? "Telefonla ara" : "Call Coffendi"}</a></div>}</form>;
+  return (
+    <form ref={formRef} className="inquiry-form" onSubmit={handleSubmit} aria-busy={state.status === "submitting"}>
+      <InquiryProgress formRef={formRef} language={language} />
+      <div className="form-grid">
+        <label><span>{copy.form.name}</span><input name="name" autoComplete="name" minLength="2" maxLength="80" required /></label>
+        <label><span>{copy.form.company}</span><input name="company" autoComplete="organization" minLength="2" maxLength="120" required /></label>
+        <label><span>{copy.form.email}</span><input name="email" type="email" autoComplete="email" maxLength="160" required /></label>
+        <label><span>{copy.form.country}</span><input name="country" autoComplete="country-name" maxLength="100" /></label>
+        <label className="form-grid__wide"><span>{copy.form.volume}</span><input name="volume" maxLength="80" placeholder={language === "tr" ? "Örn. numune, 20 çuval, yıllık program" : "For example: sample, 20 bags, annual program"} /></label>
+        <label className="form-grid__wide"><span>{copy.form.message}</span><textarea name="message" rows="6" minLength="10" maxLength="2500" required /></label>
+        <label className="consent-field form-grid__wide"><input name="consent" type="checkbox" required /><span>{copy.form.consent} <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></span></label>
+        <label className="bot-field" aria-hidden="true">Website<input name="website" tabIndex="-1" autoComplete="off" /></label>
+      </div>
+      <div className="form-submit">
+        <button className="button button--gold" type="submit" disabled={state.status === "submitting"}>{state.status === "submitting" ? copy.form.submitting : copy.form.submit}<Send aria-hidden="true" /></button>
+        {state.message && <p className={`form-status is-${state.status}`} role={state.status === "error" ? "alert" : "status"} aria-live={state.status === "error" ? "assertive" : "polite"} aria-atomic="true">{state.message}</p>}
+      </div>
+      {state.emailHref && (
+        <div className="inquiry-fallback" role="group" aria-label={language === "tr" ? "Doğrudan takip seçenekleri" : "Direct follow-up options"}>
+          <a className="button button--dark" href={state.emailHref}><Mail aria-hidden="true" />{language === "tr" ? "Hazırlanan e-postayı gönder" : "Send prepared email"}</a>
+          <a className="button button--outline" href={`tel:${CONTACT_PHONE_HREF}`}><PhoneCall aria-hidden="true" />{language === "tr" ? "Telefonla ara" : "Call Coffendi"}</a>
+        </div>
+      )}
+    </form>
+  );
 }
 
 function ContactChannels({ language }) {
@@ -592,12 +820,12 @@ function ContactChannels({ language }) {
 }
 
 function ContactPage({ language, copy }) {
-  usePageMeta(language === "tr" ? "İletişim — Coffendi" : "Contact — Coffendi", language === "tr" ? "Yeşil kahve talebinizi Coffendi ile paylaşın." : "Share your green coffee inquiry with Coffendi.", "/contact");
+  usePageMeta(language === "tr" ? "İletişim — Coffendi" : "Contact — Coffendi", language === "tr" ? "Yeşil kahve talebinizi Coffendi ile paylaşın." : "Share your green coffee inquiry with Coffendi.", "/contact", language);
   return <><PageHero eyebrow={language === "tr" ? "İletişim ve talepler" : "Contact and inquiries"} title={language === "tr" ? "Doğru görüşme, net bir özetle başlar." : "The right conversation starts with a clear brief."} copy={language === "tr" ? "Genel sorular için iletişim bilgilerini kullanın; kahve talepleri için formu doldurun." : "Use the contact details for general questions, or complete the form for a coffee inquiry."} marker={language === "tr" ? "İnsan desteği" : "Human follow-up"} /><section className="section shell contact-layout"><aside><div className="contact-card"><p className="eyebrow eyebrow--gold">{language === "tr" ? "Doğrudan iletişim" : "Direct contact"}</p><h2>{language === "tr" ? "Size uygun kanalı seçin." : "Choose the channel that works for you."}</h2><ContactChannels language={language} /></div><div className="contact-note"><Warehouse aria-hidden="true" /><p>{language === "tr" ? "Form talepleri kaydeder. Otomatik e-posta bildirimi yapılandırılana kadar hazırlanan e-posta bağlantısı doğrudan takip sağlar." : "The form records inquiries. Until automatic email notification is configured, the prepared-email link provides a direct follow-up route."}</p></div></aside><div className="form-panel"><p className="eyebrow">{copy.form.eyebrow}</p><h2>{copy.form.title}</h2><p>{copy.form.copy}</p><InquiryForm language={language} copy={copy} /></div></section></>;
 }
 
 function PrivacyPage({ language }) {
-  usePageMeta(language === "tr" ? "Gizlilik — Coffendi" : "Privacy — Coffendi", language === "tr" ? "Coffendi gizlilik bilgileri." : "Coffendi privacy information.", "/privacy");
+  usePageMeta(language === "tr" ? "Gizlilik — Coffendi" : "Privacy — Coffendi", language === "tr" ? "Coffendi gizlilik bilgileri." : "Coffendi privacy information.", "/privacy", language);
   return <section className="section shell policy"><p className="eyebrow">{language === "tr" ? "Gizlilik" : "Privacy"}</p><h1>{language === "tr" ? "Talep bilgileri yalnızca yanıt vermek için kullanılır." : "Inquiry details are used only to respond."}</h1><p>{language === "tr" ? "Formda paylaştığınız ad, şirket, e-posta ve kahve talebi bilgileri, talebinizi değerlendirmek ve sizinle iletişim kurmak amacıyla işlenir. Ödeme bilgisi toplanmaz." : "The name, company, email and coffee-brief information submitted through the form is processed to evaluate your inquiry and contact you. No payment information is collected."}</p><p>{language === "tr" ? "Saklama süresi, veri sorumlusu ve diğer yasal ayrıntılar işletme sahibi tarafından onaylandıktan sonra bu sayfada güncellenecektir." : "Retention periods, controller details and other required legal information will be updated here after confirmation by the business owner."}</p><a className="text-link" href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}<ArrowRight aria-hidden="true" /></a></section>;
 }
 
@@ -610,6 +838,14 @@ function Footer({ language, copy }) {
 }
 
 function NotFound({ language }) {
+  const { pathname } = useLocation();
+  usePageMeta(
+    language === "tr" ? "Sayfa bulunamadı — Coffendi" : "Page not found — Coffendi",
+    language === "tr" ? "İstenen Coffendi sayfası bulunamadı." : "The requested Coffendi page could not be found.",
+    pathname,
+    language,
+    { indexable: false },
+  );
   return <section className="section shell not-found"><span>404</span><h1>{language === "tr" ? "Bu sayfa bulunamadı." : "This page could not be found."}</h1><Link className="button button--dark" to="/">{language === "tr" ? "Ana sayfaya dön" : "Return home"}</Link></section>;
 }
 
