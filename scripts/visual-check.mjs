@@ -8,6 +8,7 @@ const checks = [
   ["desktop-home", "/", 1440, 1000],
   ["desktop-coffees", "/coffees", 1440, 1000],
   ["desktop-profile", "/coffees/ethiopia-washed", 1440, 1000],
+  ["desktop-kenya", "/coffees/kenya-vivid", 1440, 1000],
   ["desktop-origins", "/origins", 1440, 1000],
   ["desktop-compare", "/compare", 1440, 1000],
   ["desktop-approach", "/approach", 1440, 1000],
@@ -17,6 +18,7 @@ const checks = [
   ["mobile-home", "/", 390, 844],
   ["mobile-coffees", "/coffees", 390, 844],
   ["mobile-profile", "/coffees/brazil-classic", 390, 844],
+  ["mobile-kenya", "/coffees/kenya-vivid", 390, 844],
   ["mobile-origins", "/origins", 390, 844],
   ["mobile-compare", "/compare", 390, 844],
   ["mobile-contact", "/contact", 390, 844],
@@ -49,12 +51,17 @@ for (const check of checks) {
     h1Count: document.querySelectorAll("h1").length,
     canonical: document.querySelector('link[rel="canonical"]')?.href || "",
     brokenImages: [...document.images].filter((image) => image.complete && image.naturalWidth === 0).length,
+    flagCount: document.querySelectorAll(".origin-flag[data-country]").length,
+    localFlagCount: document.querySelectorAll('.origin-flag[data-flag-source="local-svg"] img.origin-flag__image').length,
+    fallbackFlagCount: document.querySelectorAll('.origin-flag[data-flag-source="emoji-fallback"]').length,
     hasCart: Boolean(document.querySelector('[class*="cart"], [aria-label*="cart" i], [aria-label*="sepet" i]')),
     hasPrice: /(?:[$€£]\s?\d|\d(?:[.,]\d{2})?\s?(?:USD|EUR|TRY|TL)\b)/i.test(document.body.innerText),
   }));
 
   if (audit.scrollWidth > audit.clientWidth + 1) failures.push(`${check.name}: horizontal overflow ${audit.scrollWidth}px > ${audit.clientWidth}px`);
   if (audit.brokenImages) failures.push(`${check.name}: ${audit.brokenImages} broken images`);
+  if (audit.flagCount && audit.localFlagCount !== audit.flagCount) failures.push(`${check.name}: expected ${audit.flagCount} local SVG flags, found ${audit.localFlagCount}`);
+  if (audit.fallbackFlagCount) failures.push(`${check.name}: ${audit.fallbackFlagCount} flags fell back to emoji`);
   if (audit.h1Count !== 1) failures.push(`${check.name}: expected one h1, found ${audit.h1Count}`);
   if (!audit.canonical.endsWith(check.path === "/" ? "/" : check.path)) failures.push(`${check.name}: canonical did not match ${check.path}`);
   if (audit.hasCart) failures.push(`${check.name}: sales/cart UI was present`);
@@ -95,7 +102,7 @@ for (const check of checks) {
     if ((await page.locator(".profile-card__process .origin-flag").count()) !== 6) failures.push("desktop-coffees: profile cards did not expose origin flags");
   }
 
-  if (check.name === "desktop-profile") {
+  if (check.name === "desktop-profile" || check.name === "desktop-kenya") {
     if ((await page.locator(".origin-constellation__pin").count()) !== 6) failures.push("desktop-profile: constellation did not expose all six origins");
     if ((await page.locator(".origin-constellation__rail a").count()) !== 6) failures.push("desktop-profile: conventional origin links were missing");
   }
@@ -132,7 +139,7 @@ for (const check of checks) {
     if ((await page.locator(".coffee-map__lenses button").count()) !== 3) failures.push(`${check.name}: map lenses were missing`);
   }
 
-  if (check.name === "mobile-profile" && (await page.locator(".origin-constellation__pin").count()) !== 6) {
+  if ((check.name === "mobile-profile" || check.name === "mobile-kenya") && (await page.locator(".origin-constellation__pin").count()) !== 6) {
     failures.push("mobile-profile: responsive origin constellation was missing");
   }
 

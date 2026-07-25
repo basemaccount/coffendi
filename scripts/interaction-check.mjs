@@ -1,7 +1,15 @@
 import { chromium } from "@playwright/test";
 
 const baseUrl = process.env.COFFENDI_BASE_URL || "http://127.0.0.1:4173";
-const routes = ["/", "/coffees", "/origins", "/compare", "/approach", "/contact", "/privacy", "/coffees/ethiopia-washed"];
+const profileFlags = [
+  ["/coffees/ethiopia-washed", "et"],
+  ["/coffees/colombia-balanced", "co"],
+  ["/coffees/brazil-classic", "br"],
+  ["/coffees/guatemala-structured", "gt"],
+  ["/coffees/kenya-vivid", "ke"],
+  ["/coffees/rwanda-sweet", "rw"],
+];
+const routes = ["/", "/coffees", "/origins", "/compare", "/approach", "/contact", "/privacy", ...profileFlags.map(([route]) => route)];
 const rapidTargets = ["/coffees", "/origins", "/compare", "/approach"];
 const failures = [];
 const browser = await chromium.launch();
@@ -21,6 +29,13 @@ for (const route of routes) {
   assert(response?.ok(), `${route}: direct load returned ${response?.status()}`);
   assert(await page.locator("h1").count() === 1, `${route}: direct load did not render one h1`);
   assert(await page.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), `${route}: horizontal overflow after direct load`);
+  const expectedFlag = profileFlags.find(([profileRoute]) => profileRoute === route)?.[1];
+  if (expectedFlag) {
+    const heroFlag = page.locator(".profile-detail__origin-badge .origin-flag");
+    assert(await heroFlag.getAttribute("data-flag-source") === "local-svg", `${route}: profile hero did not use local SVG flag artwork`);
+    assert((await heroFlag.locator("img").getAttribute("src"))?.endsWith(`/images/flags/${expectedFlag}.svg`), `${route}: profile hero exposed the wrong country flag`);
+    assert(await heroFlag.locator("img").evaluate((image) => image.complete && image.naturalWidth > 0), `${route}: profile hero country flag did not decode`);
+  }
   await page.reload({ waitUntil: "networkidle" });
   assert(await page.locator("h1").count() === 1, `${route}: reload did not recover the route`);
 }
@@ -106,6 +121,7 @@ await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.locator(".origin-atlas").scrollIntoViewIfNeeded();
 const atlasButtons = page.locator(".origin-atlas__controls button");
 assert(await page.locator(".origin-atlas__flag").count() === 6, "country atlas did not expose a flag for every origin");
+assert(await page.locator('.origin-atlas__flag[data-flag-source="local-svg"] img').count() === 6, "country atlas did not render six real local flag images");
 assert(await page.locator(".origin-atlas__directions li").count() === 3, "country atlas did not expose multiple coffee directions for the active origin");
 await atlasButtons.evaluateAll((buttons) => buttons.slice(1).forEach((button) => button.click()));
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
@@ -134,6 +150,7 @@ await page.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
 const mapPins = page.locator(".coffee-map__pin");
 const flagFilters = page.locator('.origin-flag-filter [role="group"] > button');
 assert(await mapPins.count() === 6, "origin map did not expose all six country pins");
+assert(await mapPins.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 6, "origin map did not render real flags for all six country pins");
 assert(await flagFilters.count() === 7, "origin filters did not expose all six flags plus the all-origins control");
 assert(await page.locator(".coffee-map__lenses button").count() === 3, "origin map did not expose its three information lenses");
 assert(await page.locator(".origin-explorer__country-index button").count() === 6, "origin explorer did not expose all six country passports");
@@ -172,6 +189,7 @@ assert((await page.locator(".profile-grid--catalog .profile-card").first().textC
 
 await page.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
 assert(await page.locator(".origin-constellation__pin").count() === 6, "profile page did not expose six spatial origin links");
+assert(await page.locator('.origin-constellation__pin .origin-flag[data-flag-source="local-svg"] img').count() === 6, "profile constellation did not render six real country flags");
 assert(await page.locator(".origin-constellation__rail a").count() === 6, "profile page did not expose six conventional origin links");
 assert(await page.locator('.origin-constellation__pin[aria-current="page"]').count() === 1, "profile constellation did not identify the active country");
 
@@ -363,5 +381,5 @@ if (failures.length) {
   failures.forEach((failure) => console.error(`- ${failure}`));
   process.exitCode = 1;
 } else {
-  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, map lenses, origin steppers, sorting, flags, profile constellations, spatial comparison, stable selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
+  console.log(`Interaction checks passed: ${routes.length} direct loads/reloads, six verified local SVG profile flags, keyboard, modified and current-route clicks, rapid navigation, deep history restoration, deferred rendering, map lenses, origin steppers, sorting, flags, profile constellations, spatial comparison, stable selection, responsive chapters, inquiry readiness, BFCache/offline/storage recovery, reduced motion, atlas preload/interruption safety, mobile touch targets, and transition failure recovery.`);
 }

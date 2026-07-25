@@ -144,7 +144,7 @@ export default function OriginFilters({
       <div className="origin-flag-filter">
         <span id={`${idPrefix}-flag-label`}>{copy.flag}</span>
         <div role="group" aria-labelledby={`${idPrefix}-flag-label`}>
-          <button type="button" className={filters.country === "all" ? "is-active" : ""} onClick={() => onChange("country", "all")} aria-pressed={filters.country === "all"}><span className="origin-flag origin-flag--small" aria-hidden="true"><Globe2 /></span><strong>{copy.all}</strong></button>
+          <button type="button" className={filters.country === "all" ? "is-active" : ""} onClick={() => onChange("country", "all")} aria-pressed={filters.country === "all"}><span className="origin-flag origin-flag--small" aria-hidden="true"><Globe2 style={{ width: "46%", height: "46%", color: "var(--green)" }} /></span><strong>{copy.all}</strong></button>
           {profiles.map((profile) => (
             <button key={profile.id} type="button" className={filters.country === profile.id ? "is-active" : ""} onClick={() => onChange("country", filters.country === profile.id ? "all" : profile.id)} aria-pressed={filters.country === profile.id}>
               <OriginFlag profile={profile} size="small" />
