@@ -98,12 +98,12 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
       <div className="shell">
         <div className="origin-atlas__header">
           <div>
-            <p className="eyebrow">{language === "tr" ? "Etkileşimli menşe atlası" : "Interactive origin atlas"}</p>
-            <h2 id="origin-atlas-title">{language === "tr" ? "Ülke bir başlangıçtır, sonuç değil." : "A country is the beginning, not the conclusion."}</h2>
+            <p className="eyebrow">{language === "tr" ? "Ülkeler ve kahveler atlası" : "Country and coffee atlas"}</p>
+            <h2 id="origin-atlas-title">{language === "tr" ? "Bir ülke. Birden fazla kahve yönü." : "One country. More than one coffee direction."}</h2>
           </div>
           <div className="origin-atlas__intro">
             <span>01—0{profiles.length}</span>
-            <p>{language === "tr" ? "Tam profili açmadan önce bölgeyi, işlemi, fincan yönünü ve program amacını ilişkilendirmek için bir menşeye dokunun." : "Touch an origin to connect region, process, cup direction and program intent before opening the full profile."}</p>
+            <p>{language === "tr" ? "Bayrağı ve ülkeyi seçin; o menşe içindeki temsili kahve yönlerini, işlemleri ve fincan karakterlerini birlikte inceleyin." : "Choose a flag and country to explore several representative coffee directions, processes and cup characters within that origin."}</p>
           </div>
         </div>
 
@@ -121,9 +121,10 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
                 onTouchStart={() => warmProfile(profile).catch(() => {})}
                 onClick={() => selectProfile(profile)}
               >
-                <span>0{index + 1}</span>
+                <span className="origin-atlas__flag" aria-hidden="true">{profile.flag}</span>
+                <span className="origin-atlas__control-index" aria-hidden="true">0{index + 1}</span>
                 <strong>{local(profile.country, language)}</strong>
-                <small>{local(profile.process, language)}</small>
+                <small>{profile.directions.length} {language === "tr" ? "kahve yönü" : "coffee directions"}</small>
                 <i className="origin-atlas__control-status" aria-hidden="true" />
               </button>
             ))}
@@ -138,10 +139,21 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
           </div>
 
           <div key={active.id} className="origin-atlas__readout" aria-live="polite">
-            <div className="origin-atlas__readout-top"><Coffee aria-hidden="true" /><span>{language === "tr" ? "Menşe alan notu" : "Origin field note"}</span></div>
+            <div className="origin-atlas__readout-top"><Coffee aria-hidden="true" /><span>{language === "tr" ? "Menşe kahve yönleri" : "Origin coffee directions"}</span><b aria-hidden="true">{active.flag}</b></div>
             <p className="eyebrow eyebrow--gold">{local(active.process, language)}</p>
             <h3>{local(active.name, language)}</h3>
             <p>{local(active.profile, language)}</p>
+            <div className="origin-atlas__directions">
+              <div><strong>{language === "tr" ? "Temsili kahveler" : "Representative coffees"}</strong><small>{language === "tr" ? "Canlı stok değildir" : "Not live inventory"}</small></div>
+              <ul>
+                {active.directions.map((direction, index) => (
+                  <li key={direction.name}>
+                    <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
+                    <div><strong>{direction.name}</strong><small>{local(direction.process, language)} · {local(direction.cup, language)}</small></div>
+                  </li>
+                ))}
+              </ul>
+            </div>
             <dl>
               <div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{active.region}</dd></div>
               <div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{local(active.use, language)}</dd></div>

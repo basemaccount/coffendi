@@ -105,9 +105,12 @@ assert(!progressMode.supported || progressMode.timeline !== "auto", "native scro
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 await page.locator(".origin-atlas").scrollIntoViewIfNeeded();
 const atlasButtons = page.locator(".origin-atlas__controls button");
+assert(await page.locator(".origin-atlas__flag").count() === 6, "country atlas did not expose a flag for every origin");
+assert(await page.locator(".origin-atlas__directions li").count() === 3, "country atlas did not expose multiple coffee directions for the active origin");
 await atlasButtons.evaluateAll((buttons) => buttons.slice(1).forEach((button) => button.click()));
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
 assert(await atlasButtons.last().getAttribute("aria-pressed") === "true", "rapid atlas selection did not settle on the last requested origin");
+assert(await page.locator(".origin-atlas__directions li").count() === 3, "selected atlas origin did not retain its three representative coffee directions");
 await page.locator(".origin-atlas__visual").evaluate((element) => Object.defineProperty(element, "startViewTransition", { configurable: true, value: () => { throw new Error("forced scoped transition failure"); } }));
 await atlasButtons.first().click();
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
@@ -144,6 +147,9 @@ assert(await comparisonButtons.evaluateAll((buttons) => buttons.every((button) =
 assert(await page.locator('.compare-table [role="cell"]').first().getAttribute("data-label") !== "Profile", "responsive comparison cells did not retain their profile identity");
 
 await page.goto(`${baseUrl}/contact`, { waitUntil: "networkidle" });
+assert(await page.locator('.contact-channels a[href="mailto:info@makendi.com"]').count() === 1, "confirmed contact email was not published");
+assert(await page.locator('.contact-channels a[href="tel:+902163407028"]').count() === 1, "confirmed contact telephone was not callable");
+assert((await page.locator(".contact-channels").textContent()).includes("www.coffendi.com"), "confirmed Coffendi website was not published");
 const inquiryProgress = page.locator(".inquiry-progress__meter");
 assert(await inquiryProgress.getAttribute("aria-valuemax") === "5", "inquiry readiness did not identify the five required fields");
 await page.locator('[name="name"]').fill("Test Person");
@@ -153,6 +159,12 @@ await page.locator('[name="message"]').fill("A complete test coffee brief.");
 await page.locator('[name="consent"]').check();
 await page.waitForFunction(() => document.querySelector(".inquiry-progress__meter")?.getAttribute("aria-valuenow") === "5");
 assert(await page.locator(".inquiry-progress.is-ready").count() === 1, "completed inquiry did not expose its ready state");
+await page.route("**/api/inquiries", (route) => route.fulfill({ status: 201, contentType: "application/json", body: JSON.stringify({ ok: true, reference: "CFI-TEST" }) }));
+await page.locator('.inquiry-form button[type="submit"]').click();
+await page.locator(".inquiry-fallback").waitFor();
+assert((await page.locator('.inquiry-fallback a[href^="mailto:"]').getAttribute("href")).includes("Coffendi"), "stored inquiry did not preserve a prepared email fallback");
+assert(await page.locator('.inquiry-fallback a[href="tel:+902163407028"]').count() === 1, "stored inquiry did not preserve the telephone fallback");
+await page.unroute("**/api/inquiries");
 
 await context.close();
 

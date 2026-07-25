@@ -3,18 +3,29 @@
 .route-loader {
   position: fixed;
   z-index: 1300;
-  inset: 0 0 auto;
-  height: 3px;
+  inset: 0;
   overflow: hidden;
-  background: rgba(239, 201, 121, 0.12);
+  background: transparent;
   opacity: 0;
   pointer-events: none;
   transition: opacity 100ms ease 120ms;
 }
 
+.route-loader::before {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0 18%, rgba(239,201,121,.06) 35%, rgba(23,61,49,.12) 50%, rgba(239,201,121,.06) 65%, transparent 82% 100%);
+  content: "";
+  opacity: 0;
+  transform: translate3d(-100%,0,0);
+  will-change: transform, opacity;
+}
+
 .route-loader span {
+  position: absolute;
+  inset: 0 0 auto;
   width: 42%;
-  height: 100%;
+  height: 3px;
   display: block;
   background: linear-gradient(90deg, transparent, var(--gold-light) 34%, var(--gold) 72%, transparent);
   box-shadow: 0 0 16px rgba(198, 139, 44, 0.38);
@@ -22,6 +33,7 @@
 }
 
 html.route-changing .route-loader { opacity: 1; }
+html.route-changing .route-loader::before { animation: route-boundary-pass 620ms var(--ease) both; }
 html.route-changing .route-loader span { animation: route-loader-sweep 720ms var(--ease) infinite; }
 
 .scroll-progress {
@@ -211,14 +223,12 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 }
 
 .motion-ready [data-reveal="true"] {
-  opacity: 0;
   translate: 0 22px;
-  transition: opacity 620ms ease, translate 720ms var(--ease);
+  transition: translate 720ms var(--ease);
   transition-delay: var(--reveal-delay, 0ms);
 }
 
 .motion-ready [data-reveal="true"].is-revealed {
-  opacity: 1;
   translate: none;
 }
 
@@ -328,6 +338,13 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 
 @keyframes route-loader-sweep {
   to { transform: translateX(340%); }
+}
+
+@keyframes route-boundary-pass {
+  0% { opacity: 0; transform: translate3d(-100%,0,0); }
+  28% { opacity: 1; }
+  72% { opacity: .82; }
+  100% { opacity: 0; transform: translate3d(100%,0,0); }
 }
 
 @keyframes page-scroll-progress {

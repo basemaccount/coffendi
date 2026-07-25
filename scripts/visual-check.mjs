@@ -76,6 +76,11 @@ for (const check of checks) {
   }
 
   if (check.name === "desktop-home") {
+    const atlas = page.locator(".origin-atlas");
+    if ((await atlas.locator(".origin-atlas__controls button").count()) !== 6) failures.push("desktop-home: atlas did not expose all six countries");
+    if ((await atlas.locator(".origin-atlas__flag").count()) !== 6) failures.push("desktop-home: atlas flags were missing");
+    if ((await atlas.locator(".origin-atlas__directions li").count()) !== 3) failures.push("desktop-home: active origin did not expose three representative coffees");
+    if (!(await atlas.getByText("Sidamo · Guji · Yirgacheffe", { exact: true }).first().isVisible())) failures.push("desktop-home: Ethiopia region did not use the owner-approved Sidamo spelling");
     const englishHeading = await page.locator("h1").textContent();
     await page.getByRole("button", { name: "TR" }).click();
     if ((await page.locator("h1").textContent()) === englishHeading) failures.push("desktop-home: Turkish language control did not localise the page");
@@ -96,6 +101,9 @@ for (const check of checks) {
   if (check.name === "mobile-contact") {
     if ((await page.locator(".inquiry-form input[required], .inquiry-form textarea[required]").count()) < 5) failures.push("mobile-contact: required inquiry fields were missing");
     if (!(await page.locator('.inquiry-form input[name="consent"]').getAttribute("required") !== null)) failures.push("mobile-contact: privacy consent was not required");
+    if (!(await page.locator('a[href="mailto:info@makendi.com"]').first().isVisible())) failures.push("mobile-contact: direct email channel was missing");
+    if (!(await page.locator('a[href="tel:+902163407028"]').first().isVisible())) failures.push("mobile-contact: direct phone channel was missing");
+    if (!(await page.getByText("www.coffendi.com", { exact: true }).first().isVisible())) failures.push("mobile-contact: planned Coffendi domain was missing");
   }
 
   console.log(`${check.name}: ${audit.clientWidth}x${check.height}, scrollWidth=${audit.scrollWidth}, title="${audit.title}"`);

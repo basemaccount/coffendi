@@ -15,6 +15,7 @@ import {
   Menu,
   Mountain,
   PackageCheck,
+  PhoneCall,
   Send,
   Ship,
   Sprout,
@@ -30,7 +31,10 @@ import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
-const CONTACT_EMAIL = "coffee@coffendi.com";
+const CONTACT_EMAIL = "info@makendi.com";
+const CONTACT_PHONE = "+90 216 340 70 28";
+const CONTACT_PHONE_HREF = "+902163407028";
+const CONTACT_WEBSITE = "www.coffendi.com";
 
 const messages = {
   en: {
@@ -63,7 +67,7 @@ const messages = {
       consent: "I agree that Coffendi may use these details to respond to this inquiry.",
       submit: "Send inquiry",
       submitting: "Sending inquiry",
-      success: "Thank you. Your inquiry has been recorded.",
+      success: "Thank you. Your inquiry has been recorded. You can also send the prepared email for immediate direct follow-up.",
       error: "The inquiry could not be sent. Please try again or email us directly.",
     },
   },
@@ -97,7 +101,7 @@ const messages = {
       consent: "Coffendi'nin bu talebe yanıt vermek için bilgilerimi kullanmasını kabul ediyorum.",
       submit: "Talebi gönder",
       submitting: "Talep gönderiliyor",
-      success: "Teşekkürler. Talebiniz kaydedildi.",
+      success: "Teşekkürler. Talebiniz kaydedildi. Doğrudan takip için hazırlanan e-postayı da gönderebilirsiniz.",
       error: "Talep gönderilemedi. Lütfen tekrar deneyin veya bize doğrudan e-posta gönderin.",
     },
   },
@@ -106,9 +110,10 @@ const messages = {
 const coffeeProfiles = [
   {
     id: "ethiopia-washed",
+    flag: "🇪🇹",
     country: { en: "Ethiopia", tr: "Etiyopya" },
     name: { en: "Highland washed profile", tr: "Yüksek rakım yıkanmış profil" },
-    region: "Sidama · Guji · Yirgacheffe",
+    region: "Sidamo · Guji · Yirgacheffe",
     process: { en: "Washed", tr: "Yıkanmış" },
     profile: { en: "Floral, citrus and tea-like clarity", tr: "Çiçeksi, narenciye ve çay benzeri berraklık" },
     use: { en: "Filter-led menus and bright components", tr: "Filtre odaklı menüler ve canlı bileşenler" },
@@ -116,9 +121,15 @@ const coffeeProfiles = [
     image: "/images/green-drying-beds.webp",
     srcSet: "/images/green-drying-beds-480.webp 480w, /images/green-drying-beds-720.webp 720w, /images/green-drying-beds-960.webp 960w, /images/green-drying-beds.webp 1200w",
     alt: { en: "Coffee drying on raised beds", tr: "Yükseltilmiş yataklarda kuruyan kahve" },
+    directions: [
+      { name: "Yirgacheffe Grade 1", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · floral · cocoa", tr: "Narenciye · çiçeksi · kakao" } },
+      { name: "Guji Grade 1", process: { en: "Natural", tr: "Natural" }, cup: { en: "Floral · ripe fruit", tr: "Çiçeksi · olgun meyve" } },
+      { name: "Sidamo Grade 2", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · tea · cocoa", tr: "Narenciye · çay · kakao" } },
+    ],
   },
   {
     id: "colombia-balanced",
+    flag: "🇨🇴",
     country: { en: "Colombia", tr: "Kolombiya" },
     name: { en: "Balanced regional profile", tr: "Dengeli bölgesel profil" },
     region: "Huila · Tolima · Nariño",
@@ -129,9 +140,15 @@ const coffeeProfiles = [
     image: "/images/green-coffee-farmer.webp",
     srcSet: "/images/green-coffee-farmer-480.webp 480w, /images/green-coffee-farmer-720.webp 720w, /images/green-coffee-farmer-960.webp 960w, /images/green-coffee-farmer.webp 1200w",
     alt: { en: "Coffee producer among coffee plants", tr: "Kahve bitkileri arasında bir üretici" },
+    directions: [
+      { name: "Bochica Blend", process: { en: "Fully washed", tr: "Tam yıkanmış" }, cup: { en: "Citrus · floral · cocoa", tr: "Narenciye · çiçeksi · kakao" } },
+      { name: "Sugarcane Decaf", process: { en: "Decaffeinated · washed", tr: "Kafeinsiz · yıkanmış" }, cup: { en: "Cocoa · caramel · roasted nuts", tr: "Kakao · karamel · kavrulmuş kuruyemiş" } },
+      { name: "Huila Regional", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Red fruit · rounded acidity", tr: "Kırmızı meyve · yuvarlak asidite" } },
+    ],
   },
   {
     id: "brazil-classic",
+    flag: "🇧🇷",
     country: { en: "Brazil", tr: "Brezilya" },
     name: { en: "Classic natural profile", tr: "Klasik natural profil" },
     region: "Cerrado · Mantiqueira",
@@ -142,9 +159,15 @@ const coffeeProfiles = [
     image: "/images/green-green-beans-sack.webp",
     srcSet: "/images/green-green-beans-sack-480.webp 480w, /images/green-green-beans-sack-720.webp 720w, /images/green-green-beans-sack-960.webp 960w, /images/green-green-beans-sack.webp 1200w",
     alt: { en: "Unroasted green coffee beans in a sack", tr: "Çuval içinde kavrulmamış yeşil kahve çekirdekleri" },
+    directions: [
+      { name: "Santos NY2", process: { en: "Natural", tr: "Natural" }, cup: { en: "Red fruit · chocolate", tr: "Kırmızı meyve · çikolata" } },
+      { name: "Cerrado Regional", process: { en: "Natural", tr: "Natural" }, cup: { en: "Chocolate · nuts · ripe fruit", tr: "Çikolata · kuruyemiş · olgun meyve" } },
+      { name: "Pulped Natural", process: { en: "Pulped natural", tr: "Pulped natural" }, cup: { en: "Caramel · rounded sweetness", tr: "Karamel · yuvarlak tatlılık" } },
+    ],
   },
   {
     id: "guatemala-structured",
+    flag: "🇬🇹",
     country: { en: "Guatemala", tr: "Guatemala" },
     name: { en: "Structured highland profile", tr: "Yapılı yüksek rakım profili" },
     region: "Huehuetenango · Antigua",
@@ -155,9 +178,15 @@ const coffeeProfiles = [
     image: "/images/green-farmer-guatemala.webp",
     srcSet: "/images/green-farmer-guatemala-480.webp 480w, /images/green-farmer-guatemala-720.webp 720w, /images/green-farmer-guatemala-960.webp 960w, /images/green-farmer-guatemala.webp 1200w",
     alt: { en: "Coffee producer examining coffee cherries", tr: "Kahve kirazlarını inceleyen üretici" },
+    directions: [
+      { name: "Huehuetenango Micro-lot", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · floral · cocoa", tr: "Narenciye · çiçeksi · kakao" } },
+      { name: "SHB Huehuetenango", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Cocoa · structured sweetness", tr: "Kakao · yapılı tatlılık" } },
+      { name: "SHB Antigua", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · cocoa · clean finish", tr: "Narenciye · kakao · temiz bitiş" } },
+    ],
   },
   {
     id: "kenya-vivid",
+    flag: "🇰🇪",
     country: { en: "Kenya", tr: "Kenya" },
     name: { en: "Vivid washed profile", tr: "Canlı yıkanmış profil" },
     region: "Kirinyaga · Nyeri",
@@ -168,9 +197,15 @@ const coffeeProfiles = [
     image: "/images/green-cherry-harvest.webp",
     srcSet: "/images/green-cherry-harvest-480.webp 480w, /images/green-cherry-harvest-720.webp 720w, /images/green-cherry-harvest-960.webp 960w, /images/green-cherry-harvest.webp 1200w",
     alt: { en: "Fresh red coffee cherries during harvest", tr: "Hasat sırasında taze kırmızı kahve kirazları" },
+    directions: [
+      { name: "Kenya AA", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Dark berries · grapefruit", tr: "Koyu meyveler · greyfurt" } },
+      { name: "Kenya AB", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · floral · black tea", tr: "Narenciye · çiçeksi · siyah çay" } },
+      { name: "Peaberry", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Berry · vivid acidity", tr: "Orman meyvesi · canlı asidite" } },
+    ],
   },
   {
     id: "rwanda-sweet",
+    flag: "🇷🇼",
     country: { en: "Rwanda", tr: "Ruanda" },
     name: { en: "Sweet, composed profile", tr: "Tatlı ve dengeli profil" },
     region: "Karongi · Gakenke",
@@ -181,11 +216,27 @@ const coffeeProfiles = [
     image: "/images/green-green-cherries.webp",
     srcSet: "/images/green-green-cherries-480.webp 480w, /images/green-green-cherries-720.webp 720w, /images/green-green-cherries-960.webp 960w, /images/green-green-cherries.webp 1200w",
     alt: { en: "Green coffee cherries growing on a branch", tr: "Dal üzerinde büyüyen yeşil kahve kirazları" },
+    directions: [
+      { name: "Fully Washed Bourbon", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · floral · cocoa", tr: "Narenciye · çiçeksi · kakao" } },
+      { name: "Karongi Regional", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Stone fruit · tea", tr: "Sert çekirdekli meyve · çay" } },
+      { name: "Honey-process direction", process: { en: "Honey", tr: "Honey" }, cup: { en: "Brown sugar · composed sweetness", tr: "Esmer şeker · dengeli tatlılık" } },
+    ],
   },
 ];
 
 function localized(value, language) {
   return typeof value === "object" && value !== null ? value[language] : value;
+}
+
+function inquiryEmailHref(data, language) {
+  const subject = language === "tr" ? "Coffendi yeşil kahve talebi" : "Coffendi green coffee inquiry";
+  const labels = language === "tr"
+    ? { name: "Ad soyad", company: "Şirket", email: "E-posta", country: "Ülke / pazar", volume: "Tahmini hacim", message: "Talep özeti" }
+    : { name: "Name", company: "Company", email: "Email", country: "Country / market", volume: "Indicative volume", message: "Coffee brief" };
+  const body = ["name", "company", "email", "country", "volume", "message"]
+    .map((field) => `${labels[field]}: ${String(data.get(field) || "—").trim() || "—"}`)
+    .join("\n\n");
+  return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
 }
 
 function usePageMeta(title, description, path = "/") {
@@ -455,27 +506,32 @@ function ApproachPage({ language }) {
 }
 
 function InquiryForm({ language, copy }) {
-  const [state, setState] = useState({ status: "idle", message: "" });
+  const [state, setState] = useState({ status: "idle", message: "", emailHref: "" });
   const formRef = useRef(null);
   const handleSubmit = async (event) => {
     event.preventDefault();
     const form = event.currentTarget;
     const data = new FormData(form);
-    setState({ status: "submitting", message: "" });
+    const emailHref = inquiryEmailHref(data, language);
+    setState({ status: "submitting", message: "", emailHref: "" });
     try {
       await submitRequest("/api/inquiries", { name: data.get("name"), company: data.get("company"), email: data.get("email"), country: data.get("country"), volume: data.get("volume"), message: data.get("message"), audience: "roaster", consent: data.get("consent") === "on", source: `coffendi-green-${language}`, website: data.get("website") || "" });
       form.reset();
-      setState({ status: "success", message: copy.form.success });
+      setState({ status: "success", message: copy.form.success, emailHref });
     } catch {
-      setState({ status: "error", message: copy.form.error });
+      setState({ status: "error", message: copy.form.error, emailHref });
     }
   };
-  return <form ref={formRef} className="inquiry-form" onSubmit={handleSubmit} aria-busy={state.status === "submitting"}><InquiryProgress formRef={formRef} language={language} /><div className="form-grid"><label><span>{copy.form.name}</span><input name="name" autoComplete="name" minLength="2" maxLength="80" required /></label><label><span>{copy.form.company}</span><input name="company" autoComplete="organization" minLength="2" maxLength="120" required /></label><label><span>{copy.form.email}</span><input name="email" type="email" autoComplete="email" maxLength="160" required /></label><label><span>{copy.form.country}</span><input name="country" autoComplete="country-name" maxLength="100" /></label><label className="form-grid__wide"><span>{copy.form.volume}</span><input name="volume" maxLength="80" placeholder={language === "tr" ? "Örn. numune, 20 çuval, yıllık program" : "For example: sample, 20 bags, annual program"} /></label><label className="form-grid__wide"><span>{copy.form.message}</span><textarea name="message" rows="6" minLength="10" maxLength="2500" required /></label><label className="consent-field form-grid__wide"><input name="consent" type="checkbox" required /><span>{copy.form.consent} <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></span></label><label className="bot-field" aria-hidden="true">Website<input name="website" tabIndex="-1" autoComplete="off" /></label></div><div className="form-submit"><button className="button button--gold" type="submit" disabled={state.status === "submitting"}>{state.status === "submitting" ? copy.form.submitting : copy.form.submit}<Send aria-hidden="true" /></button>{state.message && <p className={`form-status is-${state.status}`} role="status">{state.message}</p>}</div></form>;
+  return <form ref={formRef} className="inquiry-form" onSubmit={handleSubmit} aria-busy={state.status === "submitting"}><InquiryProgress formRef={formRef} language={language} /><div className="form-grid"><label><span>{copy.form.name}</span><input name="name" autoComplete="name" minLength="2" maxLength="80" required /></label><label><span>{copy.form.company}</span><input name="company" autoComplete="organization" minLength="2" maxLength="120" required /></label><label><span>{copy.form.email}</span><input name="email" type="email" autoComplete="email" maxLength="160" required /></label><label><span>{copy.form.country}</span><input name="country" autoComplete="country-name" maxLength="100" /></label><label className="form-grid__wide"><span>{copy.form.volume}</span><input name="volume" maxLength="80" placeholder={language === "tr" ? "Örn. numune, 20 çuval, yıllık program" : "For example: sample, 20 bags, annual program"} /></label><label className="form-grid__wide"><span>{copy.form.message}</span><textarea name="message" rows="6" minLength="10" maxLength="2500" required /></label><label className="consent-field form-grid__wide"><input name="consent" type="checkbox" required /><span>{copy.form.consent} <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></span></label><label className="bot-field" aria-hidden="true">Website<input name="website" tabIndex="-1" autoComplete="off" /></label></div><div className="form-submit"><button className="button button--gold" type="submit" disabled={state.status === "submitting"}>{state.status === "submitting" ? copy.form.submitting : copy.form.submit}<Send aria-hidden="true" /></button>{state.message && <p className={`form-status is-${state.status}`} role="status">{state.message}</p>}</div>{state.emailHref && <div className="inquiry-fallback" role="group" aria-label={language === "tr" ? "Doğrudan takip seçenekleri" : "Direct follow-up options"}><a className="button button--dark" href={state.emailHref}><Mail aria-hidden="true" />{language === "tr" ? "Hazırlanan e-postayı gönder" : "Send prepared email"}</a><a className="button button--outline" href={`tel:${CONTACT_PHONE_HREF}`}><PhoneCall aria-hidden="true" />{language === "tr" ? "Telefonla ara" : "Call Coffendi"}</a></div>}</form>;
+}
+
+function ContactChannels({ language }) {
+  return <div className="contact-channels"><a className="contact-channel" href={`mailto:${CONTACT_EMAIL}`}><Mail aria-hidden="true" /><span><small>{language === "tr" ? "E-posta" : "Email"}</small><strong>{CONTACT_EMAIL}</strong></span></a><a className="contact-channel" href={`tel:${CONTACT_PHONE_HREF}`}><PhoneCall aria-hidden="true" /><span><small>{language === "tr" ? "Telefon" : "Telephone"}</small><strong>{CONTACT_PHONE}</strong></span></a><div className="contact-channel"><Globe2 aria-hidden="true" /><span><small>{language === "tr" ? "Web sitesi" : "Website"}</small><strong>{CONTACT_WEBSITE}</strong><em>{language === "tr" ? "Özel alan adı daha sonra bağlanacak" : "Custom domain will be connected later"}</em></span></div></div>;
 }
 
 function ContactPage({ language, copy }) {
   usePageMeta(language === "tr" ? "İletişim — Coffendi" : "Contact — Coffendi", language === "tr" ? "Yeşil kahve talebinizi Coffendi ile paylaşın." : "Share your green coffee inquiry with Coffendi.", "/contact");
-  return <><PageHero eyebrow={language === "tr" ? "İletişim ve talepler" : "Contact and inquiries"} title={language === "tr" ? "Doğru görüşme, net bir özetle başlar." : "The right conversation starts with a clear brief."} copy={language === "tr" ? "Genel sorular için iletişim bilgilerini kullanın; kahve talepleri için formu doldurun." : "Use the contact details for general questions, or complete the form for a coffee inquiry."} marker={language === "tr" ? "İnsan desteği" : "Human follow-up"} /><section className="section shell contact-layout"><aside><div className="contact-card"><Mail aria-hidden="true" /><p className="eyebrow eyebrow--gold">Email</p><h2>{language === "tr" ? "Doğrudan iletişim" : "Direct contact"}</h2><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></div><div className="contact-note"><Warehouse aria-hidden="true" /><p>{language === "tr" ? "Ofis, telefon ve operasyon bilgileri doğrulandıktan sonra burada yayımlanacaktır." : "Office, phone and operating details will be published here after owner confirmation."}</p></div></aside><div className="form-panel"><p className="eyebrow">{copy.form.eyebrow}</p><h2>{copy.form.title}</h2><p>{copy.form.copy}</p><InquiryForm language={language} copy={copy} /></div></section></>;
+  return <><PageHero eyebrow={language === "tr" ? "İletişim ve talepler" : "Contact and inquiries"} title={language === "tr" ? "Doğru görüşme, net bir özetle başlar." : "The right conversation starts with a clear brief."} copy={language === "tr" ? "Genel sorular için iletişim bilgilerini kullanın; kahve talepleri için formu doldurun." : "Use the contact details for general questions, or complete the form for a coffee inquiry."} marker={language === "tr" ? "İnsan desteği" : "Human follow-up"} /><section className="section shell contact-layout"><aside><div className="contact-card"><p className="eyebrow eyebrow--gold">{language === "tr" ? "Doğrudan iletişim" : "Direct contact"}</p><h2>{language === "tr" ? "Size uygun kanalı seçin." : "Choose the channel that works for you."}</h2><ContactChannels language={language} /></div><div className="contact-note"><Warehouse aria-hidden="true" /><p>{language === "tr" ? "Form talepleri kaydeder. Otomatik e-posta bildirimi yapılandırılana kadar hazırlanan e-posta bağlantısı doğrudan takip sağlar." : "The form records inquiries. Until automatic email notification is configured, the prepared-email link provides a direct follow-up route."}</p></div></aside><div className="form-panel"><p className="eyebrow">{copy.form.eyebrow}</p><h2>{copy.form.title}</h2><p>{copy.form.copy}</p><InquiryForm language={language} copy={copy} /></div></section></>;
 }
 
 function PrivacyPage({ language }) {
@@ -488,7 +544,7 @@ function PageHero({ eyebrow, title, copy, marker }) {
 }
 
 function Footer({ language, copy }) {
-  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmesi" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeden başlayın. İhtiyaçla netleştirin." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" alt="" width="256" height="243" loading="lazy" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>{language === "tr" ? "Coffendi" : "Coffendi"}</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><span>{language === "tr" ? "Telefon ve ofis bilgileri teyit bekliyor" : "Phone and office details awaiting confirmation"}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesi · Çevrimiçi satış yoktur" : "Informational website · No online sales"}</span></div></footer>;
+  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmesi" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeden başlayın. İhtiyaçla netleştirin." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" alt="" width="256" height="243" loading="lazy" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>Coffendi</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><a href={`tel:${CONTACT_PHONE_HREF}`}>{CONTACT_PHONE}</a><span>{CONTACT_WEBSITE}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesi · Çevrimiçi satış yoktur" : "Informational website · No online sales"}</span></div></footer>;
 }
 
 function NotFound({ language }) {
