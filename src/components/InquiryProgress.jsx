@@ -51,13 +51,13 @@ export default function InquiryProgress({ formRef, language }) {
   return (
     <div ref={progressRef} className={`inquiry-progress ${ready ? "is-ready" : ""}`}>
       <div className="inquiry-progress__heading">
-        <span>{language === "tr" ? "Talep özeti hazırlığı" : "Brief readiness"}</span>
+        <span>{language === "tr" ? "Talep formu ilerlemesi" : "Brief readiness"}</span>
         <strong>{progress.completed} / {progress.total}</strong>
       </div>
       <div
         className="inquiry-progress__meter"
         role="progressbar"
-        aria-label={language === "tr" ? "Zorunlu alan tamamlama durumu" : "Required field completion"}
+        aria-label={language === "tr" ? "Zorunlu alanların tamamlanma durumu" : "Required field completion"}
         aria-describedby={statusId}
         aria-valuemin="0"
         aria-valuemax={progress.total}

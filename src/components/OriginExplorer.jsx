@@ -52,7 +52,7 @@ const styles = {
 
 function lensValue(profile, lens, language) {
   if (lens === "process") return local(profile.process, language);
-  if (lens === "profile") return `${profile.directions.length} ${language === "tr" ? "kahve yönü" : "coffee directions"}`;
+  if (lens === "profile") return `${profile.directions.length} ${language === "tr" ? "kahve seçeneği" : "coffee directions"}`;
   const zones = language === "tr"
     ? { africa: "Afrika", "latin-america": "Latin Amerika", asia: "Asya", pacific: "Pasifik", "middle-east": "Orta Doğu" }
     : { africa: "Africa", "latin-america": "Latin America", asia: "Asia", pacific: "Pacific", "middle-east": "Middle East" };
@@ -68,7 +68,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
   const active = profiles.find(({ id }) => id === activeId) || profiles[0];
   const overview = compact && viewMode === "overview";
   const viewCopy = language === "tr"
-    ? { label: "Harita ölçeği", overview: "Dünya", focus: "Odak", overviewHint: "Kahve kuşağının tamamı", focusHint: "Bayrak ayrıntısı" }
+    ? { label: "Harita görünümü", overview: "Dünya", focus: "Odak", overviewHint: "Kahve kuşağının tamamı", focusHint: "Seçili ülke" }
     : { label: "Map scale", overview: "World", focus: "Focus", overviewHint: "Full coffee-belt context", focusHint: "Detailed flag view" };
 
   useEffect(() => {
@@ -104,7 +104,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           ref={countryRail}
           className="coffee-map__country-rail"
           role="group"
-          aria-label={language === "tr" ? "Haritada gösterilecek menşeyi seçin" : "Choose an origin to focus on the map"}
+          aria-label={language === "tr" ? "Haritada odaklanılacak menşeyi seçin" : "Choose an origin to focus on the map"}
           style={{ display: "flex", gap: 7, margin: "0 -1px 8px", padding: "1px 1px 6px", overflowX: "auto", overscrollBehaviorInline: "contain", scrollSnapType: "x proximity", scrollbarWidth: "none" }}
         >
           {profiles.map((profile, index) => {
@@ -152,7 +152,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           </div>
         </div>
       )}
-      <div ref={viewport} className="coffee-map__viewport" style={compact ? { scrollbarWidth: "none", overscrollBehaviorInline: "contain", touchAction: "pan-x" } : undefined} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilir menşe haritası" : "Horizontally scrollable origin map"}>
+      <div ref={viewport} className="coffee-map__viewport" style={compact ? { scrollbarWidth: "none", overscrollBehaviorInline: "contain", touchAction: "pan-x" } : undefined} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilen menşe haritası" : "Horizontally scrollable origin map"}>
         <div
           className={`coffee-map__canvas ${overview ? "is-overview" : "is-focus"}`}
           data-map-view={overview ? "overview" : "focus"}
@@ -214,16 +214,16 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
   const copy = language === "tr"
     ? {
       eyebrow: "Etkileşimli menşe haritası",
-      title: `Kahve kuşağında ${originCount} doğrulanabilir menşe.`,
-      intro: `Ülke dizinini, mobil bayrak şeridini veya adım kontrollerini kullanın. Filtreler; ${originCount} ülkeyi bölge, işleme, fincan yönü ve ${sourceSheetCount} kaynak föyü üzerinden daraltır.`,
+      title: `Kahve kuşağında ${originCount} belgelenmiş menşe.`,
+      intro: `Ülke dizinini, mobil bayrak şeridini veya ileri–geri kontrollerini kullanın. ${originCount} ülkeyi bölgeye, işleme yöntemine, fincan profiline ve ${sourceSheetCount} kaynak sayfaya göre filtreleyebilirsiniz.`,
       mapLabel: "Temsili Coffendi kahve menşeleri haritası",
-      orientation: "Yönlendirme haritasıdır; okunabilirlik için bayraklar coğrafi noktalardan ayrılabilir. Canlı stok, lojistik kapsam veya tedarik garantisi değildir.",
-      directions: "Temsili kahve yönleri",
+      orientation: "Bu harita yönlendirme amaçlıdır. Okunabilirlik için bayraklar coğrafi konumlarından bir miktar kaydırılabilir; canlı stok, lojistik kapsam veya tedarik garantisi göstermez.",
+      directions: "Temsili kahve seçenekleri",
       profile: "Temsili profili aç",
       empty: "Bu filtrelerle eşleşen menşe bulunamadı.",
-      emptyCopy: "Başka bir bayrak, bölge veya işleme odağı deneyin.",
-      mobileCue: "Dünya görünümü bağlamı, Odak görünümü ayrıntıyı gösterir; yukarıdan bir bayrak seçin ve Odak haritasını yatay kaydırın.",
-      lenses: "Harita görünümü",
+      emptyCopy: "Farklı bir ülke, bölge veya işleme yöntemi seçin.",
+      mobileCue: "Dünya görünümü genel bağlamı, Odak görünümü seçili ülkenin ayrıntısını gösterir. Haritayı yatay kaydırabilirsiniz.",
+      lenses: "Harita katmanı",
       geography: "Coğrafya",
       processLens: "İşleme",
       profileLens: "Profil",
@@ -231,15 +231,15 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       next: "Sonraki menşe",
       previousShort: "Önceki",
       nextShort: "Sonraki",
-      passport: "Menşe pasaportu",
-      regionNodes: "Bölge odağı",
-      signals: "Fincan sinyalleri",
+      passport: "Menşe özeti",
+      regionNodes: "Bölge sayısı",
+      signals: "Fincan notaları",
       countries: "ülke",
       regions: "bölgesel küme",
-      directionsCount: "kahve yönü",
-      countryIndex: "Filtrelenmiş menşe pasaportları",
-      continueTitle: "Kahve kuşağında devam edin",
-      continueCue: "Kaydırın ve pasaportu görünür alana getirmek için dokunun.",
+      directionsCount: "kahve seçeneği",
+      countryIndex: "Filtrelenmiş menşe listesi",
+      continueTitle: "Diğer menşeleri keşfedin",
+      continueCue: "Listeyi kaydırın; ayrıntısını görmek istediğiniz ülkeye dokunun.",
       inquiry: "Bu menşeyi sorun",
     }
     : {

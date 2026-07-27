@@ -1560,14 +1560,11 @@ body.no-scroll .origin-pdf-launcher {
   .origin-local-nav .shell > div {
     width: 100%;
     overflow-x: auto;
-    padding-right: 17px;
-    scroll-snap-type: x proximity;
     scrollbar-width: none;
   }
 
   .origin-local-nav a {
     flex: 0 0 auto;
-    scroll-snap-align: start;
   }
 
   .origin-documents {
@@ -1680,8 +1677,9 @@ body.no-scroll .origin-pdf-launcher {
 
   .origin-page-reader__details .button {
     min-width: 0;
-    padding-inline: 8px;
-    font-size: 8px;
+    min-height: 50px;
+    padding-inline: 9px;
+    font-size: 9px;
   }
 
   .origin-page-reader__thumbnail-heading {
@@ -1804,12 +1802,20 @@ body.no-scroll .origin-pdf-launcher {
   }
 
   .origin-document-dialog__toolbar {
-    padding: 6px 8px;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    padding: 6px 8px 8px;
   }
 
   .origin-document-dialog__toolbar button,
   .origin-document-dialog__toolbar a {
+    min-width: 44px;
     padding-inline: 9px;
+  }
+
+  .origin-document-dialog__zoom {
+    grid-column: 1 / -1;
+    justify-content: flex-start;
   }
 
   .origin-document-dialog__stepper button span,

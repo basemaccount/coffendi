@@ -100,12 +100,12 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
         <div className="origin-atlas__header">
           <div>
             <p className="eyebrow">{language === "tr" ? "Ülkeler ve kahveler atlası" : "Country and coffee atlas"}</p>
-            <h2 id="origin-atlas-title">{language === "tr" ? "Bir ülke. Birden fazla kahve yönü." : "One country. More than one coffee direction."}</h2>
+            <h2 id="origin-atlas-title">{language === "tr" ? "Her menşe, farklı kahve seçenekleri sunar." : "One country. More than one coffee direction."}</h2>
             <LinkComponent className="origin-atlas__map-link text-link" style={{ marginTop: 20 }} to="/origins">{language === "tr" ? "Etkileşimli dünya haritasını aç" : "Open the interactive world map"}<ArrowRight aria-hidden="true" /></LinkComponent>
           </div>
           <div className="origin-atlas__intro">
             <span>01—0{profiles.length}</span>
-            <p>{language === "tr" ? "Bayrağı ve ülkeyi seçin; o menşe içindeki temsili kahve yönlerini, işlemleri ve fincan karakterlerini birlikte inceleyin." : "Choose a flag and country to explore several representative coffee directions, processes and cup characters within that origin."}</p>
+            <p>{language === "tr" ? "Bir ülke seçerek o menşeye ait temsili kahveleri, işleme yöntemlerini ve fincan karakterlerini birlikte inceleyin." : "Choose a flag and country to explore several representative coffee directions, processes and cup characters within that origin."}</p>
           </div>
         </div>
 
@@ -141,12 +141,12 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
           </div>
 
           <div key={active.id} className="origin-atlas__readout" aria-live="polite">
-            <div className="origin-atlas__readout-top"><Coffee aria-hidden="true" /><span>{language === "tr" ? "Menşe kahve yönleri" : "Origin coffee directions"}</span><OriginFlag profile={active} size="medium" className="origin-atlas__readout-flag" style={{ marginLeft: "auto" }} /></div>
+            <div className="origin-atlas__readout-top"><Coffee aria-hidden="true" /><span>{language === "tr" ? "Menşeye ait kahve seçenekleri" : "Origin coffee directions"}</span><OriginFlag profile={active} size="medium" className="origin-atlas__readout-flag" style={{ marginLeft: "auto" }} /></div>
             <p className="eyebrow eyebrow--gold">{local(active.process, language)}</p>
             <h3>{local(active.name, language)}</h3>
             <p>{local(active.profile, language)}</p>
             <div className="origin-atlas__directions">
-              <div><strong>{language === "tr" ? "Temsili kahveler" : "Representative coffees"}</strong><small>{language === "tr" ? "Canlı stok değildir" : "Not live inventory"}</small></div>
+              <div><strong>{language === "tr" ? "Temsili kahveler" : "Representative coffees"}</strong><small>{language === "tr" ? "Stok bilgisi değildir" : "Not live inventory"}</small></div>
               <ul>
                 {active.directions.slice(0, 3).map((direction, index) => (
                   <li key={direction.name}>
@@ -158,7 +158,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
             </div>
             <dl>
               <div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{active.region}</dd></div>
-              <div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{local(active.use, language)}</dd></div>
+              <div><dt>{language === "tr" ? "Önerilen kullanım" : "Program direction"}</dt><dd>{local(active.use, language)}</dd></div>
             </dl>
             <LinkComponent className="button button--gold" to={`/origins/${active.slug}`}>{language === "tr" ? "Menşe profilini aç" : "Open origin profile"}<ArrowRight aria-hidden="true" /></LinkComponent>
           </div>

@@ -17,7 +17,12 @@ const REVEAL_SELECTOR = [
   ".origin-filter-panel",
   ".origin-explorer__workspace > *",
   ".origin-explorer__country-index",
+  ".origin-constellation__header > *",
   ".origin-constellation__board",
+  ".origin-documents__header > *",
+  ".origin-page-reader",
+  ".origin-documents__filters",
+  ".origin-sheet-card",
   ".compare-table",
   ".pillar-grid > article",
   ".approach-feature > *",
@@ -37,6 +42,7 @@ export default function ExperienceLayer({ language }) {
   const [activeChapterId, setActiveChapterId] = useState("");
   const [routeAnnouncement, setRouteAnnouncement] = useState("");
   const [connectionNotice, setConnectionNotice] = useState(null);
+  const [floatingControlsSuppressed, setFloatingControlsSuppressed] = useState(false);
   const frame = useRef(0);
 
   useEffect(() => {
@@ -112,6 +118,48 @@ export default function ExperienceLayer({ language }) {
     };
   }, []);
 
+  useEffect(() => {
+    const main = document.querySelector("#main-content");
+    if (!main || !("IntersectionObserver" in window)) return undefined;
+    const selector = ".coffee-map, .origin-page-reader, .compare-workbench, .inquiry-form";
+    const visibility = new Map();
+    const updateSuppression = () => {
+      const next = [...visibility.values()].some(Boolean);
+      setFloatingControlsSuppressed((current) => current === next ? current : next);
+    };
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => visibility.set(entry.target, entry.isIntersecting));
+      updateSuppression();
+    }, {
+      rootMargin: "-70px 0px -72px 0px",
+      threshold: 0.08,
+    });
+    const register = (element) => {
+      if (visibility.has(element)) return;
+      visibility.set(element, false);
+      observer.observe(element);
+    };
+    const registerTree = (node) => {
+      if (!(node instanceof Element)) return;
+      if (node.matches(selector)) register(node);
+      node.querySelectorAll(selector).forEach(register);
+    };
+    main.querySelectorAll(selector).forEach(register);
+    const mutationObserver = "MutationObserver" in window
+      ? new MutationObserver((records) => records.forEach((record) => (
+        record.addedNodes.forEach(registerTree)
+      )))
+      : null;
+    mutationObserver?.observe(main, { childList: true, subtree: true });
+
+    return () => {
+      mutationObserver?.disconnect();
+      observer.disconnect();
+      visibility.clear();
+      setFloatingControlsSuppressed(false);
+    };
+  }, [pathname]);
+
   useLayoutEffect(() => {
     const main = document.querySelector("#main-content");
     if (!main) return undefined;
@@ -173,40 +221,53 @@ export default function ExperienceLayer({ language }) {
 
   useLayoutEffect(() => {
     const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    const targets = Array.from(document.querySelectorAll(REVEAL_SELECTOR));
+    const main = document.querySelector("#main-content");
+    const targets = new Set();
     const reveal = (element) => element.classList.add("is-revealed");
     const revealAll = () => targets.forEach(reveal);
     const revealPassedViewport = () => targets.forEach((element) => {
       if (element.getBoundingClientRect().top < window.innerHeight) reveal(element);
     });
 
-    targets.forEach((element, index) => {
+    const observer = !reduceMotion && "IntersectionObserver" in window
+      ? new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          const aboveViewport = entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0);
+          if (!entry.isIntersecting && !aboveViewport) return;
+          reveal(entry.target);
+          observer.unobserve(entry.target);
+        });
+      }, { rootMargin: "0px 0px -7% 0px", threshold: 0.12 })
+      : null;
+    const register = (element) => {
+      if (targets.has(element)) return;
+      const index = targets.size;
+      targets.add(element);
       element.dataset.reveal = "true";
       element.style.setProperty("--reveal-delay", `${(index % 4) * 65}ms`);
-    });
-
-    if (reduceMotion || !("IntersectionObserver" in window)) {
-      revealAll();
-      return undefined;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        const aboveViewport = entry.boundingClientRect.bottom <= (entry.rootBounds?.top ?? 0);
-        if (!entry.isIntersecting && !aboveViewport) return;
-        reveal(entry.target);
-        observer.unobserve(entry.target);
-      });
-    }, { rootMargin: "0px 0px -7% 0px", threshold: 0.12 });
-
-    targets.forEach((element) => observer.observe(element));
+      if (observer) observer.observe(element);
+      else reveal(element);
+    };
+    const registerTree = (node) => {
+      if (!(node instanceof Element)) return;
+      if (node.matches(REVEAL_SELECTOR)) register(node);
+      node.querySelectorAll(REVEAL_SELECTOR).forEach(register);
+    };
+    document.querySelectorAll(REVEAL_SELECTOR).forEach(register);
+    const mutationObserver = main && "MutationObserver" in window
+      ? new MutationObserver((records) => records.forEach((record) => (
+        record.addedNodes.forEach(registerTree)
+      )))
+      : null;
+    if (main) mutationObserver?.observe(main, { childList: true, subtree: true });
     const revealFailsafe = window.setTimeout(revealPassedViewport, 1400);
     window.addEventListener("app:pageshow", revealPassedViewport);
 
     return () => {
       window.clearTimeout(revealFailsafe);
       window.removeEventListener("app:pageshow", revealPassedViewport);
-      observer.disconnect();
+      mutationObserver?.disconnect();
+      observer?.disconnect();
     };
   }, [pathname]);
 
@@ -266,8 +327,8 @@ export default function ExperienceLayer({ language }) {
   };
 
   const activeIndex = Math.max(0, chapters.findIndex(({ id }) => id === activeChapterId));
-  const chapterNavigatorVisible = showChapterNavigator && !footerInView && chapters.length > 1;
-  const backToTopVisible = showBackToTop && !footerInView;
+  const chapterNavigatorVisible = showChapterNavigator && !footerInView && !floatingControlsSuppressed && chapters.length > 1;
+  const backToTopVisible = showBackToTop && !footerInView && !floatingControlsSuppressed;
 
   return (
     <>

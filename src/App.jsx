@@ -33,6 +33,7 @@ import OriginFlag from "./components/OriginFlag";
 import { Link, NavLink } from "./components/TransitionLink";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
+import { localizeCatalogWebsiteProfile } from "./lib/turkishCoffee";
 import { originCatalogIndexUrl, originCatalogMeta } from "./originCatalog";
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
@@ -81,7 +82,7 @@ const messages = {
   },
   tr: {
     language: "Dil",
-    nav: { home: "Ana sayfa", coffees: "Kahveler", origins: "Menşeler", compare: "Karşılaştır", impact: "Yaklaşımımız", contact: "İletişim" },
+    nav: { home: "Ana sayfa", coffees: "Kahve profilleri", origins: "Menşeler", compare: "Karşılaştır", impact: "Yaklaşımımız", contact: "İletişim" },
     inquiry: "Talep oluştur",
     menuOpen: "Menüyü aç",
     menuClose: "Menüyü kapat",
@@ -99,7 +100,7 @@ const messages = {
     form: {
       eyebrow: "İhtiyacınızı anlatın",
       title: "Net bir kahve özetiyle başlayın.",
-      copy: "Tercih ettiğiniz menşeyi, işleme yöntemini, fincan yönünü ve yaklaşık hacmi paylaşın. Coffendi ekibi sonraki adımları sizinle teyit edecektir.",
+      copy: "Tercih ettiğiniz menşeyi, işleme yöntemini, fincan profilini ve yaklaşık hacmi paylaşın. Coffendi ekibi uygun seçenekleri ve sonraki adımları sizinle teyit edecektir.",
       name: "Ad soyad",
       company: "Şirket",
       email: "İş e-postası",
@@ -109,7 +110,7 @@ const messages = {
       consent: "Coffendi'nin bu talebe yanıt vermek için bilgilerimi kullanmasını kabul ediyorum.",
       submit: "Talebi gönder",
       submitting: "Talep gönderiliyor",
-      success: "Teşekkürler. Talebiniz kaydedildi. Doğrudan takip için hazırlanan e-postayı da gönderebilirsiniz.",
+      success: "Teşekkürler. Talebiniz kaydedildi. Dilerseniz e-posta taslağını açarak talebinizi doğrudan da iletebilirsiniz.",
       error: "Talep gönderilemedi. Lütfen tekrar deneyin veya bize doğrudan e-posta gönderin.",
     },
   },
@@ -125,18 +126,18 @@ const baseCoffeeProfiles = [
     map: { x: 59.9, y: 46.4 },
     pin: { x: 64, y: 40 },
     country: { en: "Ethiopia", tr: "Etiyopya" },
-    name: { en: "Highland washed profile", tr: "Yüksek rakım yıkanmış profil" },
+    name: { en: "Highland washed profile", tr: "Yüksek rakımlı yıkanmış profil" },
     region: "Sidamo · Guji · Yirgacheffe",
     process: { en: "Washed", tr: "Yıkanmış" },
     profile: { en: "Floral, citrus and tea-like clarity", tr: "Çiçeksi, narenciye ve çay benzeri berraklık" },
-    use: { en: "Filter-led menus and bright components", tr: "Filtre odaklı menüler ve canlı bileşenler" },
+    use: { en: "Filter-led menus and bright components", tr: "Filtre menüleri ve canlı harman bileşenleri" },
     harvest: { en: "Typical main crop: October–January", tr: "Tipik ana hasat: Ekim–Ocak" },
     image: "/images/green-drying-beds.webp",
     srcSet: "/images/green-drying-beds-480.webp 480w, /images/green-drying-beds-720.webp 720w, /images/green-drying-beds-960.webp 960w, /images/green-drying-beds.webp 1200w",
     alt: { en: "Coffee drying on raised beds", tr: "Yükseltilmiş yataklarda kuruyan kahve" },
     directions: [
       { name: "Yirgacheffe Grade 1", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · floral · cocoa", tr: "Narenciye · çiçeksi · kakao" } },
-      { name: "Guji Grade 1", process: { en: "Natural", tr: "Natural" }, cup: { en: "Floral · ripe fruit", tr: "Çiçeksi · olgun meyve" } },
+      { name: "Guji Grade 1", process: { en: "Natural", tr: "Doğal işlenmiş" }, cup: { en: "Floral · ripe fruit", tr: "Çiçeksi · olgun meyve" } },
       { name: "Sidamo Grade 2", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · tea · cocoa", tr: "Narenciye · çay · kakao" } },
     ],
   },
@@ -151,8 +152,8 @@ const baseCoffeeProfiles = [
     country: { en: "Colombia", tr: "Kolombiya" },
     name: { en: "Balanced regional profile", tr: "Dengeli bölgesel profil" },
     region: "Huila · Tolima · Nariño",
-    process: { en: "Washed and selected processes", tr: "Yıkanmış ve seçili işlemler" },
-    profile: { en: "Red fruit, caramel and rounded acidity", tr: "Kırmızı meyve, karamel ve yuvarlak asidite" },
+    process: { en: "Washed and selected processes", tr: "Yıkanmış ve farklı işleme yöntemleri" },
+    profile: { en: "Red fruit, caramel and rounded acidity", tr: "Kırmızı meyve, karamel ve dengeli asidite" },
     use: { en: "Flexible espresso and filter programs", tr: "Esnek espresso ve filtre programları" },
     harvest: { en: "Regional harvest windows vary", tr: "Bölgesel hasat dönemleri değişkenlik gösterir" },
     image: "/images/green-coffee-farmer.webp",
@@ -173,19 +174,19 @@ const baseCoffeeProfiles = [
     map: { x: 38.3, y: 61.2 },
     pin: { x: 39, y: 64 },
     country: { en: "Brazil", tr: "Brezilya" },
-    name: { en: "Classic natural profile", tr: "Klasik natural profil" },
+    name: { en: "Classic natural profile", tr: "Klasik doğal işlenmiş profil" },
     region: "Cerrado · Mantiqueira",
-    process: { en: "Natural", tr: "Natural" },
+    process: { en: "Natural", tr: "Doğal işlenmiş" },
     profile: { en: "Chocolate, nuts and ripe-fruit sweetness", tr: "Çikolata, kuruyemiş ve olgun meyve tatlılığı" },
-    use: { en: "Espresso foundations and approachable blends", tr: "Espresso temelleri ve erişilebilir harmanlar" },
+    use: { en: "Espresso foundations and approachable blends", tr: "Espresso bazları ve dengeli harmanlar" },
     harvest: { en: "Typical main crop: May–September", tr: "Tipik ana hasat: Mayıs–Eylül" },
     image: "/images/green-green-beans-sack.webp",
     srcSet: "/images/green-green-beans-sack-480.webp 480w, /images/green-green-beans-sack-720.webp 720w, /images/green-green-beans-sack-960.webp 960w, /images/green-green-beans-sack.webp 1200w",
     alt: { en: "Unroasted green coffee beans in a sack", tr: "Çuval içinde kavrulmamış yeşil kahve çekirdekleri" },
     directions: [
-      { name: "Santos NY2", process: { en: "Natural", tr: "Natural" }, cup: { en: "Red fruit · chocolate", tr: "Kırmızı meyve · çikolata" } },
-      { name: "Cerrado Regional", process: { en: "Natural", tr: "Natural" }, cup: { en: "Chocolate · nuts · ripe fruit", tr: "Çikolata · kuruyemiş · olgun meyve" } },
-      { name: "Pulped Natural", process: { en: "Pulped natural", tr: "Pulped natural" }, cup: { en: "Caramel · rounded sweetness", tr: "Karamel · yuvarlak tatlılık" } },
+      { name: "Santos NY2", process: { en: "Natural", tr: "Doğal işlenmiş" }, cup: { en: "Red fruit · chocolate", tr: "Kırmızı meyve · çikolata" } },
+      { name: "Cerrado Regional", process: { en: "Natural", tr: "Doğal işlenmiş" }, cup: { en: "Chocolate · nuts · ripe fruit", tr: "Çikolata · kuruyemiş · olgun meyve" } },
+      { name: "Pulped Natural", process: { en: "Pulped natural", tr: "Yarı yıkanmış (pulped natural)" }, cup: { en: "Caramel · rounded sweetness", tr: "Karamel · dengeli tatlılık" } },
     ],
   },
   {
@@ -197,11 +198,11 @@ const baseCoffeeProfiles = [
     map: { x: 26.7, y: 41.2 },
     pin: { x: 26, y: 40 },
     country: { en: "Guatemala", tr: "Guatemala" },
-    name: { en: "Structured highland profile", tr: "Yapılı yüksek rakım profili" },
+    name: { en: "Structured highland profile", tr: "Belirgin yapılı yüksek rakım profili" },
     region: "Huehuetenango · Antigua",
     process: { en: "Washed", tr: "Yıkanmış" },
-    profile: { en: "Cocoa, citrus and structured sweetness", tr: "Kakao, narenciye ve yapılı tatlılık" },
-    use: { en: "Single-origin releases and blend structure", tr: "Tek menşe sunumlar ve harman yapısı" },
+    profile: { en: "Cocoa, citrus and structured sweetness", tr: "Kakao, narenciye ve katmanlı tatlılık" },
+    use: { en: "Single-origin releases and blend structure", tr: "Tek menşe sunumları ve harman yapısı" },
     harvest: { en: "Typical main crop: November–March", tr: "Tipik ana hasat: Kasım–Mart" },
     image: "/images/green-farmer-guatemala.webp",
     srcSet: "/images/green-farmer-guatemala-480.webp 480w, /images/green-farmer-guatemala-720.webp 720w, /images/green-farmer-guatemala-960.webp 960w, /images/green-farmer-guatemala.webp 1200w",
@@ -221,10 +222,10 @@ const baseCoffeeProfiles = [
     map: { x: 59.6, y: 50.2 },
     pin: { x: 65, y: 53 },
     country: { en: "Kenya", tr: "Kenya" },
-    name: { en: "Vivid washed profile", tr: "Canlı yıkanmış profil" },
+    name: { en: "Vivid washed profile", tr: "Canlı karakterli yıkanmış profil" },
     region: "Kirinyaga · Nyeri",
     process: { en: "Washed", tr: "Yıkanmış" },
-    profile: { en: "Dark berries, grapefruit and black tea", tr: "Koyu meyveler, greyfurt ve siyah çay" },
+    profile: { en: "Dark berries, grapefruit and black tea", tr: "Koyu renkli orman meyveleri, greyfurt ve siyah çay" },
     use: { en: "Distinctive seasonal filter selections", tr: "Ayırt edici sezonluk filtre seçkileri" },
     harvest: { en: "Typical main crop: October–December", tr: "Tipik ana hasat: Ekim–Aralık" },
     image: "/images/green-cherry-harvest.webp",
@@ -247,9 +248,9 @@ const baseCoffeeProfiles = [
     country: { en: "Rwanda", tr: "Ruanda" },
     name: { en: "Sweet, composed profile", tr: "Tatlı ve dengeli profil" },
     region: "Karongi · Gakenke",
-    process: { en: "Washed and honey", tr: "Yıkanmış ve honey" },
+    process: { en: "Washed and honey", tr: "Yıkanmış ve bal yöntemi" },
     profile: { en: "Stone fruit, tea and brown-sugar sweetness", tr: "Sert çekirdekli meyve, çay ve esmer şeker tatlılığı" },
-    use: { en: "Elegant filter and lighter espresso programs", tr: "Zarif filtre ve açık kavrum espresso programları" },
+    use: { en: "Elegant filter and lighter espresso programs", tr: "Zarif filtre kahveler ve açık kavrum espresso programları" },
     harvest: { en: "Typical main crop: March–July", tr: "Tipik ana hasat: Mart–Temmuz" },
     image: "/images/green-green-cherries.webp",
     srcSet: "/images/green-green-cherries-480.webp 480w, /images/green-green-cherries-720.webp 720w, /images/green-green-cherries-960.webp 960w, /images/green-green-cherries.webp 1200w",
@@ -257,7 +258,7 @@ const baseCoffeeProfiles = [
     directions: [
       { name: "Fully Washed Bourbon", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Citrus · floral · cocoa", tr: "Narenciye · çiçeksi · kakao" } },
       { name: "Karongi Regional", process: { en: "Washed", tr: "Yıkanmış" }, cup: { en: "Stone fruit · tea", tr: "Sert çekirdekli meyve · çay" } },
-      { name: "Honey-process direction", process: { en: "Honey", tr: "Honey" }, cup: { en: "Brown sugar · composed sweetness", tr: "Esmer şeker · dengeli tatlılık" } },
+      { name: "Honey-process direction", process: { en: "Honey", tr: "Bal yöntemi" }, cup: { en: "Brown sugar · composed sweetness", tr: "Esmer şeker · dengeli tatlılık" } },
     ],
   },
 ];
@@ -278,7 +279,7 @@ function mergeCatalogCountry(profile, catalog) {
     };
   }
 
-  const catalogProfile = catalog.websiteProfile;
+  const catalogProfile = localizeCatalogWebsiteProfile(catalog);
   return {
     ...profile,
     slug: catalogProfile.slug,
@@ -299,7 +300,7 @@ function mergeCatalogCountry(profile, catalog) {
 
 function createCatalogProfile(catalog) {
   return {
-    ...catalog.websiteProfile,
+    ...localizeCatalogWebsiteProfile(catalog),
     featured: false,
   };
 }
@@ -512,7 +513,7 @@ function Header({ language, setLanguage, copy }) {
           <img src="/coffendi-logo-160.webp" srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w" sizes="54px" alt="" width="160" height="152" decoding="async" />
           <span><strong>Coffendi</strong><small>Green coffee · clearly connected</small></span>
         </Link>
-        <nav className="desktop-nav" aria-label={language === "tr" ? "Ana navigasyon" : "Primary navigation"}>
+        <nav className="desktop-nav" aria-label={language === "tr" ? "Ana menü" : "Primary navigation"}>
           {nav.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}
         </nav>
         <div className="header-actions">
@@ -526,7 +527,7 @@ function Header({ language, setLanguage, copy }) {
         </div>
       </header>
       <div ref={navigation} id="mobile-navigation" className={`mobile-navigation ${menuOpen ? "is-open" : ""}`} aria-hidden={!menuOpen} inert={!menuOpen ? true : undefined} onClick={(event) => { if (event.target === event.currentTarget) setMenuOpen(false); }}>
-        <nav aria-label={language === "tr" ? "Mobil navigasyon" : "Mobile navigation"}>
+        <nav aria-label={language === "tr" ? "Mobil menü" : "Mobile navigation"}>
           {nav.map(([label, to], index) => <NavLink key={to} to={to}><span>0{index + 1}</span>{label}<ArrowRight aria-hidden="true" /></NavLink>)}
           <NavLink to="/contact"><span>05</span>{copy.nav.contact}<ArrowRight aria-hidden="true" /></NavLink>
         </nav>
@@ -576,7 +577,7 @@ function ProfileCard({ profile, language, selected, onToggle, copy, comparisonFu
         <p className="eyebrow profile-card__origin"><OriginFlag profile={profile} size="tiny" />{localized(profile.country, language)}</p>
         <h3><Link to={`/origins/${profile.slug}`}>{localized(profile.name, language)}</Link></h3>
         <p>{localized(profile.profile, language)}</p>
-        <dl><div><dt>{language === "tr" ? "Bölge" : "Region"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "Kullanım yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div></dl>
+        <dl><div><dt>{language === "tr" ? "Bölge" : "Region"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "Önerilen kullanım" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div></dl>
         <div className="profile-card__actions">
           <button className={`button button--compare ${selected ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selected} disabled={unavailable} title={unavailable ? copy.comparisonFullHint : undefined}>{selected ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selected ? copy.removeCompare : unavailable ? copy.comparisonFull : copy.addCompare}</button>
           <Link className="circle-link" to={`/origins/${profile.slug}`} aria-label={`${copy.learnMore}: ${localized(profile.name, language)}`}><ArrowRight aria-hidden="true" /></Link>
@@ -589,7 +590,7 @@ function ProfileCard({ profile, language, selected, onToggle, copy, comparisonFu
 function HomePage({ language, copy, selected, onToggle, comparisonFull, profiles }) {
   usePageMeta(
     language === "tr" ? "Coffendi — Menşeden kavurucuya yeşil kahve" : "Coffendi — Green coffee, from origin to roaster",
-    language === "tr" ? "Yeşil kahve menşelerini, profilleri ve Coffendi talep yolunu keşfedin." : "Explore green coffee origins, representative profiles and the Coffendi inquiry pathway.",
+    language === "tr" ? "Yeşil kahve menşelerini, temsili profilleri ve Coffendi talep sürecini keşfedin." : "Explore green coffee origins, representative profiles and the Coffendi inquiry pathway.",
     "/",
     language,
   );
@@ -601,10 +602,10 @@ function HomePage({ language, copy, selected, onToggle, comparisonFull, profiles
         <div className="shell hero__grid">
           <div className="hero__copy">
             <p className="eyebrow eyebrow--gold">{language === "tr" ? "Menşeden kavurucuya" : "From origin to roaster"}</p>
-            <h1>{language === "tr" ? "Daha net bağlantılarla başlayan yeşil kahve." : "Green coffee begins with clearer connections."}</h1>
-            <p>{language === "tr" ? "Menşeleri keşfedin, temsili profilleri karşılaştırın ve doğru kahve görüşmesini başlatmak için ihtiyacınızı paylaşın." : "Explore origins, compare representative profiles and share the brief that starts the right coffee conversation."}</p>
-            <div className="hero__actions"><Link className="button button--gold" to="/coffees">{language === "tr" ? "Kahveleri keşfet" : "Explore coffees"}<ArrowRight aria-hidden="true" /></Link><Link className="button button--glass" to="/contact">{copy.inquiry}</Link></div>
-            <div className="hero__proof"><span><Globe2 aria-hidden="true" />{language === "tr" ? "Menşe odaklı" : "Origin-led"}</span><span><GitCompareArrows aria-hidden="true" />{language === "tr" ? "Net karşılaştırma" : "Clear comparison"}</span><span><ClipboardCheck aria-hidden="true" />{language === "tr" ? "Teyitli sonraki adımlar" : "Confirmed next steps"}</span></div>
+            <h1>{language === "tr" ? "Yeşil kahvede doğru bağlantı menşede başlar." : "Green coffee begins with clearer connections."}</h1>
+            <p>{language === "tr" ? "Menşeleri keşfedin, temsili profilleri karşılaştırın ve ihtiyacınıza uygun kahveyi konuşmak için talebinizi paylaşın." : "Explore origins, compare representative profiles and share the brief that starts the right coffee conversation."}</p>
+            <div className="hero__actions"><Link className="button button--gold" to="/coffees">{language === "tr" ? "Kahve profillerini keşfet" : "Explore coffees"}<ArrowRight aria-hidden="true" /></Link><Link className="button button--glass" to="/contact">{copy.inquiry}</Link></div>
+            <div className="hero__proof"><span><Globe2 aria-hidden="true" />{language === "tr" ? "Menşe odaklı" : "Origin-led"}</span><span><GitCompareArrows aria-hidden="true" />{language === "tr" ? "Açık karşılaştırma" : "Clear comparison"}</span><span><ClipboardCheck aria-hidden="true" />{language === "tr" ? "Teyit edilen ayrıntılar" : "Confirmed next steps"}</span></div>
           </div>
           <div className="hero__media" data-optical>
             <img src="/images/instant-bulk-beans-1280.webp" srcSet="/images/instant-bulk-beans-640.webp 640w, /images/instant-bulk-beans-960.webp 960w, /images/instant-bulk-beans-1280.webp 1280w" sizes="(max-width: 800px) calc(100vw - 34px), 48vw" alt={language === "tr" ? "Çuvalda yeşil kahve çekirdekleri" : "Green coffee beans in a jute sack"} width="1280" height="960" fetchPriority="high" decoding="async" />
@@ -614,23 +615,23 @@ function HomePage({ language, copy, selected, onToggle, comparisonFull, profiles
         </div>
       </section>
 
-      <section className="service-strip"><div className="shell"><div><MapPin aria-hidden="true" /><span>{language === "tr" ? "Menşe bağlamı" : "Origin context"}</span></div><div><Coffee aria-hidden="true" /><span>{language === "tr" ? "Fincan yönü" : "Cup direction"}</span></div><div><PackageCheck aria-hidden="true" /><span>{language === "tr" ? "Belge teyidi" : "Document confirmation"}</span></div><div><Ship aria-hidden="true" /><span>{language === "tr" ? "Talebe göre lojistik" : "Logistics by inquiry"}</span></div></div></section>
+      <section className="service-strip"><div className="shell"><div><MapPin aria-hidden="true" /><span>{language === "tr" ? "Menşe bilgisi" : "Origin context"}</span></div><div><Coffee aria-hidden="true" /><span>{language === "tr" ? "Fincan profili" : "Cup direction"}</span></div><div><PackageCheck aria-hidden="true" /><span>{language === "tr" ? "Belge kontrolü" : "Document confirmation"}</span></div><div><Ship aria-hidden="true" /><span>{language === "tr" ? "İhtiyaca göre lojistik" : "Logistics by inquiry"}</span></div></div></section>
 
       <OriginAtlas profiles={atlasProfiles} language={language} LinkComponent={Link} />
 
       <section className="section shell">
-        <SectionHeading eyebrow={language === "tr" ? "Başlangıç profilleri" : "Starting profiles"} title={language === "tr" ? "Önce fincan yönünü bulun." : "Find the cup direction first."} copy={language === "tr" ? "Bunlar canlı stok veya fiyat teklifi değil, ilk görüşmeyi netleştiren temsili menşe profilleridir." : "These are representative origin profiles—not live stock or offers—designed to make the first conversation more precise."} action={<Link className="text-link" to="/coffees">{language === "tr" ? "Tüm profiller" : "All profiles"}<ArrowRight aria-hidden="true" /></Link>} />
+        <SectionHeading eyebrow={language === "tr" ? "Öne çıkan profiller" : "Starting profiles"} title={language === "tr" ? "Önce aradığınız fincan profilini belirleyin." : "Find the cup direction first."} copy={language === "tr" ? "Bu içerikler canlı stok veya fiyat teklifi değildir; ilk görüşmeyi netleştirmek için hazırlanan temsili menşe profilleridir." : "These are representative origin profiles—not live stock or offers—designed to make the first conversation more precise."} action={<Link className="text-link" to="/coffees">{language === "tr" ? "Tüm profilleri gör" : "All profiles"}<ArrowRight aria-hidden="true" /></Link>} />
         <div className="profile-grid">{featured.map((profile) => <ProfileCard key={profile.id} profile={profile} language={language} selected={selected.includes(profile.id)} onToggle={onToggle} copy={copy} comparisonFull={comparisonFull} />)}</div>
       </section>
 
       <section className="section section--green">
         <div className="shell story-grid">
-          <div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Daha iyi bir talep yolu" : "A better inquiry pathway"}</p><h2>{language === "tr" ? "Kahveyi yalnızca bir isim olarak değil, bir karar dizisi olarak görün." : "See coffee as a sequence of decisions, not only a name."}</h2><p>{language === "tr" ? "Menşe, işleme, fincan hedefi, hacim, zamanlama ve belgeler aynı görüşmede ele alınmalıdır." : "Origin, process, cup goal, volume, timing and documentation belong in the same conversation."}</p><Link className="button button--light" to="/approach">{language === "tr" ? "Yaklaşımı incele" : "Explore the approach"}<ArrowRight aria-hidden="true" /></Link></div>
-          <ol className="story-steps"><li><span>01</span><div><strong>{language === "tr" ? "Profil" : "Profile"}</strong><p>{language === "tr" ? "Fincan ve kullanım yönünü tanımlayın." : "Define the cup and program direction."}</p></div></li><li><span>02</span><div><strong>{language === "tr" ? "Uygunluk" : "Fit"}</strong><p>{language === "tr" ? "Hacim, takvim ve pazar bağlamını paylaşın." : "Share volume, timing and market context."}</p></div></li><li><span>03</span><div><strong>{language === "tr" ? "Teyit" : "Confirm"}</strong><p>{language === "tr" ? "Numune, belge ve koşulları doğrudan doğrulayın." : "Verify samples, documents and terms directly."}</p></div></li></ol>
+          <div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Daha açık bir talep süreci" : "A better inquiry pathway"}</p><h2>{language === "tr" ? "Kahveyi yalnızca bir ad değil, birbirini tamamlayan kararlar bütünü olarak ele alın." : "See coffee as a sequence of decisions, not only a name."}</h2><p>{language === "tr" ? "Menşe, işleme yöntemi, fincan hedefi, hacim, zamanlama ve belgeler aynı görüşmede değerlendirilmelidir." : "Origin, process, cup goal, volume, timing and documentation belong in the same conversation."}</p><Link className="button button--light" to="/approach">{language === "tr" ? "Yaklaşımımızı incele" : "Explore the approach"}<ArrowRight aria-hidden="true" /></Link></div>
+          <ol className="story-steps"><li><span>01</span><div><strong>{language === "tr" ? "Profil" : "Profile"}</strong><p>{language === "tr" ? "Fincan profilini ve kullanım alanını tanımlayın." : "Define the cup and program direction."}</p></div></li><li><span>02</span><div><strong>{language === "tr" ? "Uygunluk" : "Fit"}</strong><p>{language === "tr" ? "Hacim, takvim ve hedef pazar bilgisini paylaşın." : "Share volume, timing and market context."}</p></div></li><li><span>03</span><div><strong>{language === "tr" ? "Teyit" : "Confirm"}</strong><p>{language === "tr" ? "Numuneyi, belgeleri ve ticari koşulları doğrudan doğrulayın." : "Verify samples, documents and terms directly."}</p></div></li></ol>
         </div>
       </section>
 
-      <section className="section comparison-teaser"><div className="shell"><div><GitCompareArrows aria-hidden="true" /><p className="eyebrow">{language === "tr" ? "Karşılaştırma masası" : "Comparison desk"}</p><h2>{language === "tr" ? "Profilleri yan yana görün." : "Put the profiles side by side."}</h2><p>{language === "tr" ? "Menşe, süreç, fincan yönü ve kullanım amacını tek bir görünümde karşılaştırın." : "Compare origin, process, cup direction and intended use in one focused view."}</p></div><Link className="button button--dark" to="/compare">{copy.compareAction}<ArrowRight aria-hidden="true" /></Link></div></section>
+      <section className="section comparison-teaser"><div className="shell"><div><GitCompareArrows aria-hidden="true" /><p className="eyebrow">{language === "tr" ? "Profil karşılaştırması" : "Comparison desk"}</p><h2>{language === "tr" ? "Profilleri yan yana değerlendirin." : "Put the profiles side by side."}</h2><p>{language === "tr" ? "Menşe, işleme yöntemi, fincan profili ve önerilen kullanım alanlarını tek görünümde karşılaştırın." : "Compare origin, process, cup direction and intended use in one focused view."}</p></div><Link className="button button--dark" to="/compare">{copy.compareAction}<ArrowRight aria-hidden="true" /></Link></div></section>
     </>
   );
 }
@@ -640,7 +641,7 @@ function CoffeesPage({ language, copy, selected, onToggle, comparisonFull, profi
   const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(profiles, language);
   return (
     <>
-      <PageHero eyebrow={language === "tr" ? "Yeşil kahve kütüphanesi" : "Green coffee library"} title={language === "tr" ? "Kahve seçimi net bir yönle başlar." : "Coffee selection starts with a clear direction."} copy={language === "tr" ? "Temsili profilleri keşfedin. Güncel ürün, kalite, miktar ve lojistik ayrıntıları her talepte ayrıca teyit edilir." : "Explore representative profiles. Current product, quality, quantity and logistics details are confirmed separately for every inquiry."} marker={String(profiles.length).padStart(2, "0")} />
+      <PageHero eyebrow={language === "tr" ? "Yeşil kahve kütüphanesi" : "Green coffee library"} title={language === "tr" ? "Doğru kahve seçimi, açık bir profille başlar." : "Coffee selection starts with a clear direction."} copy={language === "tr" ? "Temsili profilleri keşfedin. Güncel ürün, kalite, miktar ve lojistik ayrıntıları her talep için ayrıca teyit edilir." : "Explore representative profiles. Current product, quality, quantity and logistics details are confirmed separately for every inquiry."} marker={String(profiles.length).padStart(2, "0")} />
       <section className="section shell coffee-library" aria-labelledby="coffee-library-title">
         <h2 id="coffee-library-title" className="visually-hidden">{language === "tr" ? "Filtrelenebilir yeşil kahve profilleri" : "Filterable green coffee profiles"}</h2>
         <div className="catalog-note"><Bean aria-hidden="true" /><p>{copy.sourceNote}</p></div>
@@ -648,7 +649,7 @@ function CoffeesPage({ language, copy, selected, onToggle, comparisonFull, profi
         {filteredProfiles.length ? (
           <div className="profile-grid profile-grid--catalog" aria-live="polite">{filteredProfiles.map((profile) => <ProfileCard key={profile.id} profile={profile} language={language} selected={selected.includes(profile.id)} onToggle={onToggle} copy={copy} comparisonFull={comparisonFull} />)}</div>
         ) : (
-          <div className="empty-state filter-empty"><Sprout aria-hidden="true" /><h2>{language === "tr" ? "Bu filtrelerle eşleşen profil yok." : "No profiles match these filters."}</h2><p>{language === "tr" ? "Başka bir bayrak, bölge veya işleme odağı deneyin." : "Try another flag, region or process focus."}</p><button className="button button--dark" type="button" onClick={resetFilters}>{language === "tr" ? "Tüm profilleri göster" : "Show all profiles"}</button></div>
+          <div className="empty-state filter-empty"><Sprout aria-hidden="true" /><h2>{language === "tr" ? "Bu filtrelerle eşleşen bir profil bulunamadı." : "No profiles match these filters."}</h2><p>{language === "tr" ? "Farklı bir ülke, bölge veya işleme yöntemi seçin." : "Try another flag, region or process focus."}</p><button className="button button--dark" type="button" onClick={resetFilters}>{language === "tr" ? "Tüm profilleri göster" : "Show all profiles"}</button></div>
         )}
       </section>
     </>
@@ -712,13 +713,13 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profil
             <dl className="detail-facts">
               <div><dt>{language === "tr" ? "Menşe" : "Origin"}</dt><dd className="detail-facts__origin"><OriginFlag profile={profile} size="small" />{localized(profile.country, language)}</dd></div>
               <div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{profile.region}</dd></div>
-              <div><dt>{language === "tr" ? "İşleme" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div>
-              <div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div>
-              <div><dt>{language === "tr" ? "Hasat bağlamı" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div>
+              <div><dt>{language === "tr" ? "İşleme yöntemi" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div>
+              <div><dt>{language === "tr" ? "Önerilen kullanım" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div>
+              <div><dt>{language === "tr" ? "Hasat bilgisi" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div>
               <div><dt>{language === "tr" ? "Katalog" : "Catalogue"}</dt><dd>{profile.sheetCount > 0 ? `${profile.sheetCount} ${language === "tr" ? "teknik föy" : profile.sheetCount === 1 ? "reference sheet" : "reference sheets"}` : language === "tr" ? "Talep üzerine teyit edilir" : "Confirmed on request"}</dd></div>
             </dl>
             <div className="detail-actions">
-              {profile.sheetCount > 0 && <a className="button button--gold" href="#catalog"><Bean aria-hidden="true" />{language === "tr" ? "Föyleri incele" : "Browse sheets"}</a>}
+              {profile.sheetCount > 0 && <a className="button button--gold" href="#catalog"><Bean aria-hidden="true" />{language === "tr" ? "Teknik föyleri incele" : "Browse sheets"}</a>}
               <button className={`button button--compare ${selectedProfile ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selectedProfile} disabled={unavailable} title={unavailable ? copy.comparisonFullHint : undefined}>{selectedProfile ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selectedProfile ? copy.removeCompare : unavailable ? copy.comparisonFull : copy.addCompare}</button>
               <Link className="button button--dark" to="/contact">{copy.requestInfo}<ArrowRight aria-hidden="true" /></Link>
             </div>
@@ -733,7 +734,7 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profil
             <a href="#overview">{language === "tr" ? "Genel bakış" : "Overview"}</a>
             <a href="#catalog">{language === "tr" ? "Teknik föyler" : "Reference sheets"}</a>
             <a href="#origin-network">{language === "tr" ? "Menşe haritası" : "Origin map"}</a>
-            <Link to="/contact">{language === "tr" ? "Talep oluştur" : "Start an inquiry"}</Link>
+            <Link to="/contact">{language === "tr" ? "Talep" : "Inquiry"}</Link>
           </div>
         </div>
       </nav>
@@ -760,7 +761,7 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profil
 function OriginsPage({ language, profiles }) {
   usePageMeta(
     language === "tr" ? `${originCatalogMeta.countryCount} yeşil kahve menşesi — Coffendi` : `${originCatalogMeta.countryCount} green coffee origins — Coffendi`,
-    language === "tr" ? `Coffendi'nin ${originCatalogMeta.countryCount} ülkelik menşe atlasını ve ${originCatalogMeta.sheetCount} kaynak föyünü keşfedin.` : `Explore Coffendi’s ${originCatalogMeta.countryCount}-country origin atlas and ${originCatalogMeta.sheetCount} source-backed reference sheets.`,
+    language === "tr" ? `Coffendi'nin ${originCatalogMeta.countryCount} ülkelik menşe atlasını ve ${originCatalogMeta.sheetCount} kaynak sayfasını keşfedin.` : `Explore Coffendi’s ${originCatalogMeta.countryCount}-country origin atlas and ${originCatalogMeta.sheetCount} source-backed reference sheets.`,
     "/origins",
     language,
   );
@@ -768,8 +769,8 @@ function OriginsPage({ language, profiles }) {
     <>
       <PageHero
         eyebrow={language === "tr" ? "Küresel menşe atlası" : "Global origin atlas"}
-        title={language === "tr" ? `${originCatalogMeta.countryCount} ülke. ${originCatalogMeta.sheetCount} kaynak föyü. Tek bir açık atlas.` : `${originCatalogMeta.countryCount} countries. ${originCatalogMeta.sheetCount} source sheets. One clear atlas.`}
-        copy={language === "tr" ? "Ülkeye, bölgeye, işleme yöntemine veya fincan yönüne göre keşfedin; ardından yalnızca seçtiğiniz ülkeye ait föyleri inceleyin ve indirin." : "Explore by country, region, process, or cup direction, then review and download only the sheets related to the selected origin."}
+        title={language === "tr" ? `${originCatalogMeta.countryCount} ülke, ${originCatalogMeta.sheetCount} kaynak sayfa, tek bir atlas.` : `${originCatalogMeta.countryCount} countries. ${originCatalogMeta.sheetCount} source sheets. One clear atlas.`}
+        copy={language === "tr" ? "Ülke, bölge, işleme yöntemi veya fincan profiline göre keşfedin; ardından yalnızca seçtiğiniz menşeye ait teknik föyleri inceleyin ve indirin." : "Explore by country, region, process, or cup direction, then review and download only the sheets related to the selected origin."}
         marker={String(profiles.length).padStart(2, "0")}
       />
       <OriginExplorer profiles={profiles} language={language} LinkComponent={Link} />
@@ -787,18 +788,18 @@ function ComparePage({ language, copy, selected, onToggle, onClear, profiles: al
   const comparisonRows = [
     [language === "tr" ? "Profil" : "Profile", "name"],
     [language === "tr" ? "Bölge" : "Region", "region"],
-    [language === "tr" ? "İşleme" : "Process", "process"],
-    [language === "tr" ? "Fincan yönü" : "Cup direction", "profile"],
-    [language === "tr" ? "Program yönü" : "Program direction", "use"],
-    [language === "tr" ? "Hasat bağlamı" : "Harvest context", "harvest"],
+    [language === "tr" ? "İşleme yöntemi" : "Process", "process"],
+    [language === "tr" ? "Fincan profili" : "Cup direction", "profile"],
+    [language === "tr" ? "Önerilen kullanım" : "Program direction", "use"],
+    [language === "tr" ? "Hasat bilgisi" : "Harvest context", "harvest"],
   ];
 
   return (
     <>
       <PageHero
-        eyebrow={language === "tr" ? "Karşılaştırma masası" : "Comparison desk"}
+        eyebrow={language === "tr" ? "Profil karşılaştırması" : "Comparison desk"}
         title={language === "tr" ? "Farkları tek bakışta görün." : "See the differences in one view."}
-        copy={language === "tr" ? "En fazla üç profili seçin; menşe, süreç, fincan yönü ve kullanım amacını karşılaştırın." : "Choose up to three profiles and compare origin, process, cup direction and intended use."}
+        copy={language === "tr" ? "En fazla üç profil seçerek menşe, işleme yöntemi, fincan profili ve önerilen kullanım alanlarını karşılaştırın." : "Choose up to three profiles and compare origin, process, cup direction and intended use."}
         marker={`${selected.length}/3`}
       />
       <OriginConstellation profiles={allProfiles} language={language} selectedIds={selected} onToggle={onToggle} comparisonFull={comparisonFull} mode="compare" />
@@ -936,7 +937,7 @@ function InquiryForm({ language, copy }) {
       </div>
       {state.emailHref && (
         <div className="inquiry-fallback" role="group" aria-label={language === "tr" ? "Doğrudan takip seçenekleri" : "Direct follow-up options"}>
-          <a className="button button--dark" href={state.emailHref}><Mail aria-hidden="true" />{language === "tr" ? "Hazırlanan e-postayı gönder" : "Send prepared email"}</a>
+          <a className="button button--dark" href={state.emailHref}><Mail aria-hidden="true" />{language === "tr" ? "E-posta taslağını aç" : "Send prepared email"}</a>
           <a className="button button--outline" href={`tel:${CONTACT_PHONE_HREF}`}><PhoneCall aria-hidden="true" />{language === "tr" ? "Telefonla ara" : "Call Coffendi"}</a>
         </div>
       )}
@@ -945,12 +946,12 @@ function InquiryForm({ language, copy }) {
 }
 
 function ContactChannels({ language }) {
-  return <div className="contact-channels"><a className="contact-channel" href={`mailto:${CONTACT_EMAIL}`}><Mail aria-hidden="true" /><span><small>{language === "tr" ? "E-posta" : "Email"}</small><strong>{CONTACT_EMAIL}</strong></span></a><a className="contact-channel" href={`tel:${CONTACT_PHONE_HREF}`}><PhoneCall aria-hidden="true" /><span><small>{language === "tr" ? "Telefon" : "Telephone"}</small><strong>{CONTACT_PHONE}</strong></span></a><div className="contact-channel"><Globe2 aria-hidden="true" /><span><small>{language === "tr" ? "Web sitesi" : "Website"}</small><strong>{CONTACT_WEBSITE}</strong><em>{language === "tr" ? "Özel alan adı daha sonra bağlanacak" : "Custom domain will be connected later"}</em></span></div></div>;
+  return <div className="contact-channels"><a className="contact-channel" href={`mailto:${CONTACT_EMAIL}`}><Mail aria-hidden="true" /><span><small>{language === "tr" ? "E-posta" : "Email"}</small><strong>{CONTACT_EMAIL}</strong></span></a><a className="contact-channel" href={`tel:${CONTACT_PHONE_HREF}`}><PhoneCall aria-hidden="true" /><span><small>{language === "tr" ? "Telefon" : "Telephone"}</small><strong>{CONTACT_PHONE}</strong></span></a><div className="contact-channel"><Globe2 aria-hidden="true" /><span><small>{language === "tr" ? "Web sitesi" : "Website"}</small><strong>{CONTACT_WEBSITE}</strong></span></div></div>;
 }
 
 function ContactPage({ language, copy }) {
   usePageMeta(language === "tr" ? "İletişim — Coffendi" : "Contact — Coffendi", language === "tr" ? "Yeşil kahve talebinizi Coffendi ile paylaşın." : "Share your green coffee inquiry with Coffendi.", "/contact", language);
-  return <><PageHero eyebrow={language === "tr" ? "İletişim ve talepler" : "Contact and inquiries"} title={language === "tr" ? "Doğru görüşme, net bir özetle başlar." : "The right conversation starts with a clear brief."} copy={language === "tr" ? "Genel sorular için iletişim bilgilerini kullanın; kahve talepleri için formu doldurun." : "Use the contact details for general questions, or complete the form for a coffee inquiry."} marker={language === "tr" ? "İnsan desteği" : "Human follow-up"} /><section className="section shell contact-layout"><aside><div className="contact-card"><p className="eyebrow eyebrow--gold">{language === "tr" ? "Doğrudan iletişim" : "Direct contact"}</p><h2>{language === "tr" ? "Size uygun kanalı seçin." : "Choose the channel that works for you."}</h2><ContactChannels language={language} /></div><div className="contact-note"><Warehouse aria-hidden="true" /><p>{language === "tr" ? "Form talepleri kaydeder. Otomatik e-posta bildirimi yapılandırılana kadar hazırlanan e-posta bağlantısı doğrudan takip sağlar." : "The form records inquiries. Until automatic email notification is configured, the prepared-email link provides a direct follow-up route."}</p></div></aside><div className="form-panel"><p className="eyebrow">{copy.form.eyebrow}</p><h2>{copy.form.title}</h2><p>{copy.form.copy}</p><InquiryForm language={language} copy={copy} /></div></section></>;
+  return <><PageHero eyebrow={language === "tr" ? "İletişim ve talepler" : "Contact and inquiries"} title={language === "tr" ? "Doğru kahveyi konuşmak, net bir taleple başlar." : "The right conversation starts with a clear brief."} copy={language === "tr" ? "Genel sorularınız için doğrudan iletişime geçin; kahve talepleriniz için formu doldurun." : "Use the contact details for general questions, or complete the form for a coffee inquiry."} marker={language === "tr" ? "Doğrudan destek" : "Human follow-up"} /><section className="section shell contact-layout"><aside><div className="contact-card"><p className="eyebrow eyebrow--gold">{language === "tr" ? "Doğrudan iletişim" : "Direct contact"}</p><h2>{language === "tr" ? "Size uygun iletişim kanalını seçin." : "Choose the channel that works for you."}</h2><ContactChannels language={language} /></div><div className="contact-note"><Warehouse aria-hidden="true" /><p>{language === "tr" ? "Talebiniz kaydedildikten sonra ekibimiz sizinle iletişime geçer. Dilerseniz hazırlanan e-postayı göndererek talebinizi doğrudan da iletebilirsiniz." : "After your inquiry is recorded, our team can follow up with you. You can also send the prepared email for a direct follow-up route."}</p></div></aside><div className="form-panel"><p className="eyebrow">{copy.form.eyebrow}</p><h2>{copy.form.title}</h2><p>{copy.form.copy}</p><InquiryForm language={language} copy={copy} /></div></section></>;
 }
 
 function PrivacyPage({ language }) {
@@ -963,7 +964,7 @@ function PageHero({ eyebrow, title, copy, marker }) {
 }
 
 function Footer({ language, copy }) {
-  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmesi" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeden başlayın. İhtiyaçla netleştirin." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w" sizes="118px" alt="Coffendi" width="256" height="243" loading="lazy" decoding="async" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>Coffendi</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><a href={`tel:${CONTACT_PHONE_HREF}`}>{CONTACT_PHONE}</a><span>{CONTACT_WEBSITE}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesi · Çevrimiçi satış yoktur" : "Informational website · No online sales"}</span></div></footer>;
+  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmeniz" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeyi keşfedin, ihtiyacınızı birlikte netleştirelim." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w" sizes="118px" alt="Coffendi" width="256" height="243" loading="lazy" decoding="async" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>Coffendi</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><a href={`tel:${CONTACT_PHONE_HREF}`}>{CONTACT_PHONE}</a><span>{CONTACT_WEBSITE}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesidir · Çevrimiçi satış yapılmaz" : "Informational website · No online sales"}</span></div></footer>;
 }
 
 function NotFound({ language }) {
@@ -984,7 +985,7 @@ function CatalogStatusPage({ language, path, error, onRetry }) {
     : language === "tr" ? "Küresel menşe kataloğu hazırlanıyor." : "Preparing the global origin catalogue.";
   const description = error
     ? language === "tr" ? `Bağlantınızı kontrol edin ve ${originCatalogMeta.countryCount} ülkelik kataloğu yeniden deneyin.` : `Check your connection and retry the ${originCatalogMeta.countryCount}-country catalogue.`
-    : language === "tr" ? `${originCatalogMeta.countryCount} ülke ve ${originCatalogMeta.sheetCount} doğrulanmış kaynak föyü yükleniyor.` : `Loading ${originCatalogMeta.countryCount} countries and ${originCatalogMeta.sheetCount} verified source sheets.`;
+    : language === "tr" ? `${originCatalogMeta.countryCount} ülke ve ${originCatalogMeta.sheetCount} doğrulanmış kaynak sayfa yükleniyor.` : `Loading ${originCatalogMeta.countryCount} countries and ${originCatalogMeta.sheetCount} verified source sheets.`;
   usePageMeta(`${title} — Coffendi`, description, path, language, { indexable: !error });
   return (
     <>

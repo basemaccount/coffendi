@@ -369,6 +369,13 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   .chapter-navigator__track { max-width: min(176px, 43vw); }
   .connection-notice { top: 78px; min-height: 56px; }
 
+  .app-shell:has(.origin-local-nav) .chapter-navigator,
+  .app-shell:has(.origin-local-nav) .back-to-top,
+  html.document-viewer-open .chapter-navigator,
+  html.document-viewer-open .back-to-top {
+    display: none;
+  }
+
   .motion-ready .page-hero__grid > div:first-child > *,
   .motion-ready .page-hero__grid > div:last-child > * { animation: mobile-rise 480ms var(--ease) both; }
   .motion-ready .page-hero__grid > div:first-child > :nth-child(2),
@@ -426,6 +433,20 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   .motion-ready .origin-atlas__readout > :nth-child(4) { animation-delay: 115ms; }
   .motion-ready .origin-atlas__readout > :nth-child(5) { animation-delay: 150ms; }
   .motion-ready .origin-atlas__readout > :nth-child(6) { animation-delay: 185ms; }
+
+  .motion-ready .origin-documents__header > *.is-revealed,
+  .motion-ready .origin-page-reader.is-revealed,
+  .motion-ready .origin-documents__filters.is-revealed,
+  .motion-ready .origin-sheet-card.is-revealed,
+  .motion-ready .origin-constellation__header > *.is-revealed {
+    animation: mobile-card-content 520ms var(--ease) both;
+    animation-delay: var(--reveal-delay, 0ms);
+  }
+
+  .motion-ready .origin-page-reader.is-revealed .origin-page-reader__counter,
+  .motion-ready .origin-sheet-card.is-revealed .origin-sheet-card__preview-action {
+    animation: mobile-pop 460ms calc(var(--reveal-delay, 0ms) + 100ms) var(--ease) both;
+  }
 }
 
 @media (min-width: 1360px) {
@@ -465,5 +486,5 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   .connection-notice { animation: none; }
   .inquiry-progress__meter > span { transition: none; }
   [data-reveal="true"] { opacity: 1 !important; translate: none !important; }
-  .back-to-top, .menu-button svg, .mobile-navigation nav a, .mobile-navigation__foot, .hero__copy > *, .hero__media, .hero__card, .page-hero__grid *, .compare-toolbar > *, .compare-picker button, .compare-table__row, .profile-card__content > *, .story-steps > li > *, .footer-grid > * > *, .footer-lead > * > *, .origin-atlas__controls button, .origin-atlas__readout > * { animation: none !important; }
+  .back-to-top, .menu-button svg, .mobile-navigation nav a, .mobile-navigation__foot, .hero__copy > *, .hero__media, .hero__card, .page-hero__grid *, .compare-toolbar > *, .compare-picker button, .compare-table__row, .profile-card__content > *, .story-steps > li > *, .footer-grid > * > *, .footer-lead > * > *, .origin-atlas__controls button, .origin-atlas__readout > *, .origin-documents__header > *, .origin-page-reader, .origin-documents__filters, .origin-sheet-card, .origin-constellation__header > * { animation: none !important; }
 }

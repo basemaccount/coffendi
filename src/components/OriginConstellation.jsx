@@ -80,14 +80,14 @@ export default function OriginConstellation({
   const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const copy = language === "tr"
     ? {
-      eyebrow: comparing ? "Coğrafi karşılaştırma" : "Menşe takımyıldızı",
-      title: comparing ? "Seçiminizi kahve kuşağında görün." : "Kahve kuşağında bir sonraki alan notuna geçin.",
-      note: "Noktalar temsili menşeleri bağlayan görsel bir indekstir; ticaret veya lojistik rotası değildir.",
-      map: "Temsili menşelerin mekânsal görünümü",
+      eyebrow: comparing ? "Coğrafi karşılaştırma" : "Menşe ağı",
+      title: comparing ? "Seçtiğiniz profilleri kahve kuşağı üzerinde görün." : "Kahve kuşağındaki diğer menşeleri keşfedin.",
+      note: "Noktalar, temsili menşeleri gösteren görsel bir dizindir; ticaret veya lojistik rotasını temsil etmez.",
+      map: "Temsili menşelerin harita görünümü",
       select: "Karşılaştırmayı değiştir",
       open: "Menşe profilini aç",
       selected: `${selectedIds.length}/3 seçildi`,
-      viewLabel: "Harita ölçeği",
+      viewLabel: "Harita görünümü",
       world: "Dünya",
       focus: "Odak",
       worldHint: "Kahve kuşağının tamamı",
@@ -173,7 +173,7 @@ export default function OriginConstellation({
               </div>
             </div>
           )}
-          <div ref={viewport} className="origin-constellation__viewport" style={{ ...styles.viewport, scrollbarWidth: compact ? "none" : undefined, overscrollBehaviorInline: compact ? "contain" : undefined, touchAction: compact ? "pan-x" : undefined }} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilir menşe haritası" : "Horizontally scrollable origin map"}>
+          <div ref={viewport} className="origin-constellation__viewport" style={{ ...styles.viewport, scrollbarWidth: compact ? "none" : undefined, overscrollBehaviorInline: compact ? "contain" : undefined, touchAction: compact ? "pan-x" : undefined }} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilen menşe haritası" : "Horizontally scrollable origin map"}>
             <div className="origin-constellation__map" data-map-view={overview ? "overview" : "focus"} style={{ ...styles.map, minWidth: compact ? overview ? "100%" : "min(700px,167vw)" : styles.map.minWidth, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" }}>
               <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
               <MapArt profiles={profiles} />

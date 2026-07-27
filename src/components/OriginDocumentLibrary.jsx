@@ -1,5 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
+import { translateCoffeeValue } from "../lib/turkishCoffee";
 import "../origin-documents.css";
 
 const local = (value, language) =>
@@ -52,16 +53,16 @@ function CountryPageReader({
   const countryName = local(country, language);
   const copy = language === "tr"
     ? {
-      eyebrow: "Ülkeye özel PDF okuyucu",
+      eyebrow: "Ülkeye özel belge okuyucu",
       title: `${countryName} kaynak sayfaları`,
-      verified: `Bu ${pageCount} sayfanın tamamı yalnızca ${countryName} menşeine aittir.`,
+      verified: `Bu okuyucudaki ${pageCount} sayfanın tamamı yalnızca ${countryName} menşesine aittir.`,
       page: "Sayfa",
       previous: "Önceki sayfa",
       next: "Sonraki sayfa",
-      enlarge: "Büyüt ve tam ekranda incele",
-      open: "PDF'yi aç",
+      enlarge: "Tam ekranda incele",
+      open: "PDF’yi yeni sekmede aç",
       download: "Bu sayfayı indir",
-      swipe: "Sayfalar arasında geçmek için kaydırın veya okları kullanın.",
+      swipe: "Sayfalar arasında geçmek için kaydırın veya ok düğmelerini kullanın.",
       pages: "Kaynak sayfalar",
       select: "Sayfayı seç",
     }
@@ -232,11 +233,11 @@ function CountryPageReader({
       <div className="origin-page-reader__details">
         <div>
           <p>
-            <span>{activeSheet.type}</span>
-            <span>{activeSheet.process}</span>
+            <span>{translateCoffeeValue(activeSheet.type, language)}</span>
+            <span>{translateCoffeeValue(activeSheet.process, language)}</span>
           </p>
           <h4>{activeSheet.grade}</h4>
-          <small>{activeSheet.flavor}</small>
+          <small>{translateCoffeeValue(activeSheet.flavor, language)}</small>
         </div>
         <nav aria-label={language === "tr" ? "Aktif sayfa işlemleri" : "Active page actions"}>
           <button
@@ -301,7 +302,7 @@ function SheetCard({ sheet, index, language, onOpen }) {
   const copy = language === "tr"
     ? {
       sheet: "Teknik föy",
-      view: "Ön izleme",
+      view: "İncele",
       download: "PDF indir",
       english: "İngilizce belge",
     }
@@ -338,19 +339,19 @@ function SheetCard({ sheet, index, language, onOpen }) {
       </button>
       <div className="origin-sheet-card__body">
         <div className="origin-sheet-card__kicker">
-          <span>{sheet.type}</span>
+          <span>{translateCoffeeValue(sheet.type, language)}</span>
           <span>{copy.english}</span>
         </div>
         <h3>{sheet.grade}</h3>
-        <p>{sheet.flavor}</p>
+        <p>{translateCoffeeValue(sheet.flavor, language)}</p>
         <dl className="origin-sheet-card__facts">
           <div>
-            <dt>{language === "tr" ? "İşleme" : "Process"}</dt>
-            <dd>{sheet.process}</dd>
+            <dt>{language === "tr" ? "İşleme yöntemi" : "Process"}</dt>
+            <dd>{translateCoffeeValue(sheet.process, language)}</dd>
           </div>
           <div>
-            <dt>{language === "tr" ? "Elek" : "Screen"}</dt>
-            <dd>{sheet.screen}</dd>
+            <dt>{language === "tr" ? "Elek ölçüsü" : "Screen"}</dt>
+            <dd>{translateCoffeeValue(sheet.screen, language)}</dd>
           </div>
         </dl>
         <div className="origin-sheet-card__actions">
@@ -401,10 +402,12 @@ function SheetViewer({
       zoomIn: "Yakınlaştır",
       fitPage: "Sayfaya sığdır",
       fitWidth: "Genişliğe sığdır",
+      fitPageShort: "Sayfa",
+      fitWidthShort: "Genişlik",
       fullscreen: "Tam ekran okuma",
       open: "PDF'yi yeni sekmede aç",
       download: "PDF indir",
-      specs: "Belge özellikleri",
+      specs: "Teknik özellikler",
       source: "Kaynak",
       page: "Sayfa",
       revision: "Sürüm",
@@ -418,14 +421,14 @@ function SheetViewer({
         type: "Tür",
         grade: "Sınıf",
         defects: "Kusurlar",
-        flavor: "Tat",
+        flavor: "Lezzet notaları",
         aroma: "Aroma",
         body: "Gövde",
         acidity: "Asidite",
-        process: "İşleme",
-        screen: "Elek",
+        process: "İşleme yöntemi",
+        screen: "Elek ölçüsü",
         moisture: "Nem",
-        packing: "Paketleme",
+        packing: "Ambalaj",
       },
     }
     : {
@@ -436,6 +439,8 @@ function SheetViewer({
       zoomIn: "Zoom in",
       fitPage: "Fit page",
       fitWidth: "Fit width",
+      fitPageShort: "Page",
+      fitWidthShort: "Width",
       fullscreen: "Fullscreen reading",
       open: "Open PDF in a new tab",
       download: "Download PDF",
@@ -612,11 +617,11 @@ function SheetViewer({
             <button type="button" onClick={() => setViewerZoom(zoom + 0.25)} aria-label={copy.zoomIn} disabled={zoom >= 3}>
               <i className="origin-ui-icon" aria-hidden="true">+</i>
             </button>
-            <button type="button" className={fit === "page" ? "is-active" : ""} onClick={() => { setFit("page"); setZoom(1); }}>
-              {copy.fitPage}
+            <button type="button" className={fit === "page" ? "is-active" : ""} onClick={() => { setFit("page"); setZoom(1); }} aria-label={copy.fitPage}>
+              {copy.fitPageShort}
             </button>
-            <button type="button" className={fit === "width" ? "is-active" : ""} onClick={() => { setFit("width"); setZoom(1); }}>
-              {copy.fitWidth}
+            <button type="button" className={fit === "width" ? "is-active" : ""} onClick={() => { setFit("width"); setZoom(1); }} aria-label={copy.fitWidth}>
+              {copy.fitWidthShort}
             </button>
             <button type="button" onClick={() => { setFit("page"); setZoom(1); }} aria-label={language === "tr" ? "Yakınlaştırmayı sıfırla" : "Reset zoom"}>
               <i className="origin-ui-icon" aria-hidden="true">↺</i>
@@ -681,7 +686,7 @@ function SheetViewer({
               {specifications.map(([field, value]) => (
                 <div key={field}>
                   <dt>{copy.fields[field]}</dt>
-                  <dd>{value}</dd>
+                  <dd>{["grade", "source"].includes(field) ? value : translateCoffeeValue(value, language)}</dd>
                 </div>
               ))}
             </dl>
@@ -751,36 +756,51 @@ export default function OriginDocumentLibrary({
   }, [catalogAttempt, profile.catalogDataUrl, profile.sheets, profile.slug]);
 
   useEffect(() => {
-    const updateLauncher = () => setLauncherVisible(window.scrollY > 120);
+    let frame = 0;
+    const updateLauncher = () => {
+      frame = 0;
+      const catalog = document.querySelector("#catalog");
+      const bounds = catalog?.getBoundingClientRect();
+      const catalogIsActive = Boolean(bounds && bounds.top <= 160 && bounds.bottom > 68);
+      setLauncherVisible(window.scrollY > 120 && !catalogIsActive);
+    };
+    const queueLauncherUpdate = () => {
+      if (!frame) frame = window.requestAnimationFrame(updateLauncher);
+    };
     updateLauncher();
-    window.addEventListener("scroll", updateLauncher, { passive: true });
-    return () => window.removeEventListener("scroll", updateLauncher);
+    window.addEventListener("scroll", queueLauncherUpdate, { passive: true });
+    window.addEventListener("resize", queueLauncherUpdate);
+    return () => {
+      window.removeEventListener("scroll", queueLauncherUpdate);
+      window.removeEventListener("resize", queueLauncherUpdate);
+      if (frame) window.cancelAnimationFrame(frame);
+    };
   }, [profile.slug]);
 
   const copy = language === "tr"
     ? {
-      eyebrow: "Ülke kataloğu",
-      title: `${local(profile.country, language)} için ${expectedSheetCount} teknik föy`,
-      intro: "Yalnızca bu menşeye ait föyleri inceleyin, büyütün, yeni sekmede açın veya PDF olarak indirin.",
-      search: "Föylerde ara",
-      placeholder: "Sınıf, tür, işlem veya tat",
+      eyebrow: "Ülkeye özel belge arşivi",
+      title: `${local(profile.country, language)} için ${expectedSheetCount} kaynak sayfa`,
+      intro: "Bu menşeye ait kaynak sayfaları okuyun, büyütün, yeni sekmede açın veya PDF olarak indirin.",
+      search: "Kaynak sayfalarda ara",
+      placeholder: "Sınıf, tür, işleme veya lezzet notası",
       type: "Tür",
-      process: "İşleme",
+      process: "İşleme yöntemi",
       all: "Tümü",
-      results: `${sheets.length} föy`,
-      filteredResults: "eşleşen föy",
+      results: `${sheets.length} kaynak sayfa`,
+      filteredResults: "eşleşen sayfa",
       reset: "Filtreleri temizle",
-      downloadAll: "Ülke kataloğunu indir",
-      emptyTitle: "Bu menşe için yayımlanmış teknik föy yok.",
+      downloadAll: "Ülke kataloğunu PDF olarak indir",
+      emptyTitle: "Bu menşe için yayımlanmış bir kaynak sayfa yok.",
       emptyCopy: "Güncel lot ve belge durumu talep sırasında doğrudan teyit edilir.",
-      noMatches: "Bu filtrelerle eşleşen föy bulunamadı.",
-      loading: "Ülkeye ait teknik föyler hazırlanıyor.",
+      noMatches: "Bu filtrelerle eşleşen bir kaynak sayfa bulunamadı.",
+      loading: "Ülkeye ait kaynak sayfalar hazırlanıyor.",
       loadingCopy: "Doğrulanmış katalog verileri güvenli kaynaktan yükleniyor.",
-      error: "Teknik föyler şu anda yüklenemedi.",
+      error: "Kaynak sayfalar şu anda yüklenemedi.",
       errorCopy: "Bağlantınızı kontrol edip bu ülkenin kataloğunu yeniden deneyin.",
       retry: "Yeniden dene",
-      floatingFile: "Ülke PDF dosyası",
-      floatingOpen: "Okuyucuyu aç",
+      floatingFile: "Ülke belge arşivi",
+      floatingOpen: "Belge okuyucuyu aç",
       floatingPages: "sayfa",
     }
     : {
@@ -822,6 +842,10 @@ export default function OriginDocumentLibrary({
         sheet.process,
         sheet.flavor,
         sheet.screen,
+        translateCoffeeValue(sheet.type, language),
+        translateCoffeeValue(sheet.process, language),
+        translateCoffeeValue(sheet.flavor, language),
+        translateCoffeeValue(sheet.screen, language),
       ].join(" ").toLocaleLowerCase(language === "tr" ? "tr-TR" : "en").includes(normalizedQuery))
     ));
   }, [language, process, query, sheets, type]);
@@ -947,14 +971,14 @@ export default function OriginDocumentLibrary({
             <span>{copy.type}</span>
             <select value={type} onChange={(event) => setType(event.target.value)}>
               <option value="all">{copy.all}</option>
-              {types.map((value) => <option key={value}>{value}</option>)}
+              {types.map((value) => <option key={value} value={value}>{translateCoffeeValue(value, language)}</option>)}
             </select>
           </label>
           <label>
             <span>{copy.process}</span>
             <select value={process} onChange={(event) => setProcess(event.target.value)}>
               <option value="all">{copy.all}</option>
-              {processes.map((value) => <option key={value}>{value}</option>)}
+              {processes.map((value) => <option key={value} value={value}>{translateCoffeeValue(value, language)}</option>)}
             </select>
           </label>
           <div className="origin-documents__filter-status">
