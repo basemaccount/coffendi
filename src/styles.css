@@ -1,12 +1,4 @@
 @font-face {
-  font-family: "Manrope";
-  font-style: normal;
-  font-weight: 400 800;
-  font-display: swap;
-  src: url("/fonts/manrope-latin-variable.woff2") format("woff2");
-}
-
-@font-face {
   font-family: "DM Serif Display";
   font-style: normal;
   font-weight: 400;

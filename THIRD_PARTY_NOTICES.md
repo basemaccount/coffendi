@@ -1,5 +1,18 @@
 # Third-party notices
 
+## Document and interface fonts
+
+The responsive interface uses the variable Manrope webfont distributed by
+[@fontsource-variable/manrope](https://fontsource.org/fonts/manrope) under the
+SIL Open Font License 1.1.
+
+The generated Turkish information PDFs embed a subset of DejaVu Sans and
+DejaVu Sans Bold distributed by
+[dejavu-fonts-ttf](https://www.npmjs.com/package/dejavu-fonts-ttf). DejaVu fonts
+are derived from Bitstream Vera and distributed under the license included with
+that package. The importer embeds only the glyphs needed by each generated
+document.
+
 ## Country flag artwork
 
 The six country flag SVGs in `public/images/flags/` are selected from

@@ -99,6 +99,11 @@ for (const check of checks) {
     await page.getByRole("button", { name: "TR" }).click();
     if ((await page.locator("h1").textContent()) === englishHeading) failures.push("desktop-home: Turkish language control did not localise the page");
     if ((await page.locator("html").getAttribute("lang")) !== "tr") failures.push("desktop-home: document language did not change to Turkish");
+    const turkishFonts = await page.evaluate(() => document.fonts.load(
+      '700 16px "Manrope"',
+      "Türkçe İı Şş Ğğ Çç Öö Üü",
+    ).then((fonts) => fonts.length));
+    if (!turkishFonts) failures.push("desktop-home: Turkish extended glyph font did not load");
   }
 
   if (check.name === "desktop-coffees") {
@@ -119,6 +124,24 @@ for (const check of checks) {
       await page.locator(".origin-document-dialog__preview img").evaluate((image) => image.decode());
       await page.locator(".origin-document-dialog__preview-status").waitFor({ state: "detached" });
       if ((await page.locator(".origin-document-dialog__specifications dl > div").count()) !== 11) failures.push(`${check.name}: viewer specifications were incomplete`);
+      if (check.name === "desktop-kenya") {
+        for (let step = 0; step < 4; step += 1) {
+          await page.getByRole("button", { name: "Zoom in" }).click();
+        }
+        await page.waitForFunction(() => (
+          document.querySelector(".origin-document-dialog__preview img")?.currentSrc.includes("-2160.webp")
+        ));
+        const highResolutionSource = await page.locator(".origin-document-dialog__preview img").evaluate((image) => image.currentSrc);
+        if (!highResolutionSource.includes("-2160.webp")) failures.push("desktop-kenya: zoom did not promote the reader to the 2160px source");
+        await page.getByRole("button", { name: "Close document viewer" }).click();
+        await page.getByRole("button", { name: "TR" }).click();
+        await page.locator(".origin-page-reader__page img[src$='-tr-1080.webp']").waitFor();
+        await page.locator(".origin-sheet-card__preview").first().click();
+        await page.locator(".origin-document-dialog").waitFor({ state: "visible" });
+        await page.locator(".origin-document-dialog__preview img[src$='-tr-1080.webp']").evaluate((image) => image.decode());
+        if ((await page.getByRole("link", { name: "İngilizce orijinali aç" }).count()) !== 1) failures.push("desktop-kenya: Turkish reader did not preserve a route to the English original");
+        if (!(await page.locator(".origin-document-dialog__provenance").getByText("Türkçe bilgi föyü", { exact: true }).isVisible())) failures.push("desktop-kenya: Turkish companion provenance was missing");
+      }
       await page.screenshot({ path: new URL(`${check.name}-viewer.png`, outputDir).pathname, fullPage: false });
     }
   }

@@ -8,6 +8,26 @@ const local = (value, language) =>
 
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
 
+const sheetAssets = (sheet, language) => {
+  const useTurkish = language === "tr" && sheet.turkishPreview;
+  return {
+    thumbnail: useTurkish ? sheet.turkishThumbnail : sheet.thumbnail,
+    preview: useTurkish ? sheet.turkishPreview : sheet.preview,
+    fullPreview: useTurkish
+      ? (sheet.turkishFullPreview || sheet.turkishPreview)
+      : (sheet.fullPreview || sheet.preview),
+    pdfUrl: useTurkish ? sheet.turkishPdfUrl : sheet.pdfUrl,
+    downloadUrl: useTurkish ? sheet.turkishDownloadUrl : sheet.downloadUrl,
+    language: useTurkish ? "tr-TR" : "en",
+  };
+};
+
+const sheetSrcSet = (assets) => [
+  `${assets.thumbnail} 360w`,
+  `${assets.preview} 1080w`,
+  assets.fullPreview && `${assets.fullPreview} 2160w`,
+].filter(Boolean).join(", ");
+
 const previewStatusStyle = {
   position: "absolute",
   zIndex: 2,
@@ -49,6 +69,7 @@ function CountryPageReader({
   const swipeStart = useRef(null);
   const suppressClick = useRef(false);
   const activeSheet = sheets[pageIndex] || sheets[0];
+  const activeAssets = activeSheet ? sheetAssets(activeSheet, language) : null;
   const pageCount = sheets.length;
   const countryName = local(country, language);
   const copy = language === "tr"
@@ -62,6 +83,7 @@ function CountryPageReader({
       enlarge: "Tam ekran görüntüle",
       open: "PDF’yi aç",
       download: "PDF sayfasını indir",
+      quality: "Yüksek çözünürlüklü Türkçe föy",
       swipe: "Sayfalar arasında kaydırın, küçük görsellerden seçim yapın veya ok düğmelerini kullanın.",
       pages: "Kaynak sayfalar",
       select: "Sayfayı seç",
@@ -76,6 +98,7 @@ function CountryPageReader({
       enlarge: "Enlarge and review fullscreen",
       open: "Open PDF",
       download: "Download this page",
+      quality: "High-resolution English original",
       swipe: "Swipe the page or use the arrows to move through the country file.",
       pages: "Source pages",
       select: "Select page",
@@ -200,9 +223,9 @@ function CountryPageReader({
         >
           {mediaReady ? (
             <img
-              key={activeSheet.preview}
-              src={activeSheet.preview}
-              srcSet={`${activeSheet.thumbnail} 360w, ${activeSheet.preview} 1080w`}
+              key={activeAssets.preview}
+              src={activeAssets.preview}
+              srcSet={sheetSrcSet(activeAssets)}
               sizes="(max-width: 760px) calc(100vw - 58px), min(62vw, 720px)"
               alt={`${activeSheet.grade} ${language === "tr" ? "PDF sayfası" : "PDF page"}`}
               width="1080"
@@ -238,6 +261,10 @@ function CountryPageReader({
           </p>
           <h4>{activeSheet.grade}</h4>
           <small>{translateCoffeeValue(activeSheet.flavor, language)}</small>
+          <small>
+            <i className="origin-ui-icon" aria-hidden="true">◇</i>
+            {copy.quality}
+          </small>
         </div>
         <nav aria-label={language === "tr" ? "Aktif sayfa işlemleri" : "Active page actions"}>
           <button
@@ -248,11 +275,11 @@ function CountryPageReader({
             <i className="origin-ui-icon" aria-hidden="true">⛶</i>
             {copy.enlarge}
           </button>
-          <a className="button button--outline button--small" href={activeSheet.pdfUrl} target="_blank" rel="noreferrer">
+          <a className="button button--outline button--small" href={activeAssets.pdfUrl} target="_blank" rel="noreferrer">
             <i className="origin-ui-icon" aria-hidden="true">↗</i>
             {copy.open}
           </a>
-          <a className="button button--outline button--small" href={activeSheet.downloadUrl}>
+          <a className="button button--outline button--small" href={activeAssets.downloadUrl}>
             <i className="origin-ui-icon" aria-hidden="true">↓</i>
             {copy.download}
           </a>
@@ -268,7 +295,9 @@ function CountryPageReader({
         <span>{copy.swipe}</span>
       </div>
       <div className="origin-page-reader__thumbnails" role="group" aria-label={copy.select}>
-        {sheets.map((sheet, index) => (
+        {sheets.map((sheet, index) => {
+          const assets = sheetAssets(sheet, language);
+          return (
           <button
             key={sheet.id}
             className={index === pageIndex ? "is-active" : ""}
@@ -279,7 +308,7 @@ function CountryPageReader({
           >
             {mediaReady ? (
               <img
-                src={sheet.thumbnail}
+                src={assets.thumbnail}
                 alt=""
                 width="360"
                 height="540"
@@ -292,25 +321,27 @@ function CountryPageReader({
             <span>{String(index + 1).padStart(2, "0")}</span>
             <strong>{sheet.grade}</strong>
           </button>
-        ))}
+          );
+        })}
       </div>
     </div>
   );
 }
 
 function SheetCard({ sheet, index, language, onOpen }) {
+  const assets = sheetAssets(sheet, language);
   const copy = language === "tr"
     ? {
       sheet: "Kaynak sayfası",
       view: "Ön izleme",
       download: "PDF’yi indir",
-      english: "İngilizce kaynak",
+      language: "Türkçe bilgi föyü",
     }
     : {
       sheet: "Reference sheet",
       view: "Preview",
       download: "Download PDF",
-      english: "English document",
+      language: "English original",
     };
 
   return (
@@ -322,7 +353,7 @@ function SheetCard({ sheet, index, language, onOpen }) {
         aria-label={`${copy.view}: ${sheet.grade}`}
       >
         <img
-          src={sheet.thumbnail}
+          src={assets.thumbnail}
           alt=""
           width="360"
           height="540"
@@ -340,7 +371,7 @@ function SheetCard({ sheet, index, language, onOpen }) {
       <div className="origin-sheet-card__body">
         <div className="origin-sheet-card__kicker">
           <span>{translateCoffeeValue(sheet.type, language)}</span>
-          <span>{copy.english}</span>
+          <span>{copy.language}</span>
         </div>
         <h3>{sheet.grade}</h3>
         <p>{translateCoffeeValue(sheet.flavor, language)}</p>
@@ -363,7 +394,7 @@ function SheetCard({ sheet, index, language, onOpen }) {
             <i className="origin-ui-icon" aria-hidden="true">▤</i>
             {copy.view}
           </button>
-          <a className="button button--outline button--small" href={sheet.downloadUrl}>
+          <a className="button button--outline button--small" href={assets.downloadUrl}>
             <i className="origin-ui-icon" aria-hidden="true">↓</i>
             {copy.download}
           </a>
@@ -405,14 +436,19 @@ function SheetViewer({
       fitPageShort: "Sayfa",
       fitWidthShort: "Genişlik",
       fullscreen: "Tam ekran okuma",
-      open: "PDF'yi yeni sekmede aç",
-      download: "PDF indir",
+      open: "Türkçe PDF’yi yeni sekmede aç",
+      download: "Türkçe PDF’yi indir",
+      alternate: "İngilizce orijinali aç",
       specs: "Kaynak sayfa özellikleri",
       source: "Kaynak",
       page: "Sayfa",
       revision: "Sürüm",
-      language: "Belge dili",
-      english: "İngilizce",
+      language: "Görüntülenen belge",
+      documentLanguage: "Türkçe bilgi föyü",
+      sourceLanguage: "Kaynak dili",
+      english: "İngilizce orijinal",
+      fidelity: "Görüntü kalitesi",
+      highResolution: "2160 px yüksek çözünürlük",
       unavailable: "Tam ekran bu tarayıcıda kullanılamıyor. Tam pencere görüntüleyici açık kalır.",
       swipe: "Sayfalar arasında geçmek için sola veya sağa kaydırın.",
       loadingPage: "Belge sayfası yükleniyor",
@@ -444,12 +480,17 @@ function SheetViewer({
       fullscreen: "Fullscreen reading",
       open: "Open PDF in a new tab",
       download: "Download PDF",
+      alternate: "Open Turkish companion",
       specs: "Sheet specifications",
       source: "Source",
       page: "Page",
       revision: "Revision",
-      language: "Document language",
+      language: "Displayed document",
+      documentLanguage: "English original",
+      sourceLanguage: "Source language",
       english: "English",
+      fidelity: "Preview quality",
+      highResolution: "2160 px high resolution",
       unavailable: "Fullscreen is unavailable in this browser. The full-window viewer remains open.",
       swipe: "Swipe left or right to move through this country’s pages.",
       loadingPage: "Loading document page",
@@ -467,9 +508,11 @@ function SheetViewer({
         moisture: "Moisture",
         packing: "Packing",
       },
-    };
+  };
 
   const isOpen = Boolean(activeSheet);
+  const activeAssets = activeSheet ? sheetAssets(activeSheet, language) : null;
+  const previewSourceKey = activeSheet ? `${activeSheet.id}:${activeAssets.language}` : "";
 
   useEffect(() => {
     const element = dialog.current;
@@ -506,16 +549,16 @@ function SheetViewer({
     ];
     const images = neighbors.map((sheet) => {
       const image = new Image();
-      image.src = sheet.preview;
+      image.src = sheetAssets(sheet, language).preview;
       return image;
     });
     return () => images.forEach((image) => {
       image.src = "";
     });
-  }, [activeIndex, activeSheet, sheets]);
+  }, [activeIndex, activeSheet, language, sheets]);
 
   if (!activeSheet) return null;
-  const previewStatus = previewState.source === activeSheet.preview
+  const previewStatus = previewState.source === previewSourceKey
     ? previewState.status
     : "loading";
 
@@ -592,7 +635,7 @@ function SheetViewer({
               {String(activeIndex + 1).padStart(2, "0")} / {String(sheets.length).padStart(2, "0")}
             </span>
           </div>
-          <button className="origin-document-dialog__close" type="button" onClick={onClose} aria-label={copy.close}>
+          <button className="origin-document-dialog__close" type="button" onClick={onClose} aria-label={copy.close} autoFocus>
             <i className="origin-ui-icon" aria-hidden="true">×</i>
           </button>
         </header>
@@ -632,13 +675,24 @@ function SheetViewer({
             </button>
           </div>
           <div className="origin-document-dialog__document-actions">
-            <a href={activeSheet.pdfUrl} target="_blank" rel="noreferrer" aria-label={copy.open}>
+            <a href={activeAssets.pdfUrl} target="_blank" rel="noreferrer" aria-label={copy.open}>
               <i className="origin-ui-icon" aria-hidden="true">↗</i>
               <span>{copy.open}</span>
             </a>
-            <a href={activeSheet.downloadUrl} aria-label={copy.download}>
+            <a href={activeAssets.downloadUrl} aria-label={copy.download}>
               <i className="origin-ui-icon" aria-hidden="true">↓</i>
               <span>{copy.download}</span>
+            </a>
+            <a
+              href={language === "tr"
+                ? activeSheet.pdfUrl
+                : (activeSheet.turkishPdfUrl || activeSheet.pdfUrl)}
+              target="_blank"
+              rel="noreferrer"
+              aria-label={copy.alternate}
+            >
+              <i className="origin-ui-icon" aria-hidden="true">{language === "tr" ? "EN" : "TR"}</i>
+              <span>{copy.alternate}</span>
             </a>
           </div>
         </div>
@@ -657,6 +711,29 @@ function SheetViewer({
             onPointerCancel={() => {
               swipeStart.current = null;
             }}
+            onKeyDown={(event) => {
+              if (event.key === "ArrowLeft" && sheets.length > 1) {
+                event.preventDefault();
+                onStep(-1);
+              }
+              if (event.key === "ArrowRight" && sheets.length > 1) {
+                event.preventDefault();
+                onStep(1);
+              }
+              if (event.key === "+" || event.key === "=") {
+                event.preventDefault();
+                setViewerZoom(zoom + 0.25);
+              }
+              if (event.key === "-") {
+                event.preventDefault();
+                setViewerZoom(zoom - 0.25);
+              }
+              if (event.key === "0") {
+                event.preventDefault();
+                setFit("page");
+                setZoom(1);
+              }
+            }}
           >
             {previewStatus !== "ready" && (
               <div className={`origin-document-dialog__preview-status is-${previewStatus}`} style={previewStatusStyle} role="status" aria-live="polite">
@@ -665,15 +742,20 @@ function SheetViewer({
               </div>
             )}
             <img
-              key={activeSheet.preview}
-              src={activeSheet.preview}
+              key={previewSourceKey}
+              src={activeAssets.preview}
+              srcSet={sheetSrcSet(activeAssets)}
+              sizes={fit === "custom"
+                ? `${Math.round(1080 * Math.min(zoom, 2))}px`
+                : "(max-width: 820px) calc(100vw - 20px), min(1060px, calc(100vw - 410px))"}
               alt={`${activeSheet.grade} ${language === "tr" ? "referans föyü" : "reference sheet"}`}
-              width="1080"
-              height="1620"
+              width="2160"
+              height="3240"
               decoding="async"
+              fetchPriority="high"
               draggable="false"
-              onLoad={() => setPreviewState({ source: activeSheet.preview, status: "ready" })}
-              onError={() => setPreviewState({ source: activeSheet.preview, status: "error" })}
+              onLoad={() => setPreviewState({ source: previewSourceKey, status: "ready" })}
+              onError={() => setPreviewState({ source: previewSourceKey, status: "error" })}
               style={fit === "custom" ? { width: `${zoom * 100}%` } : undefined}
             />
           </div>
@@ -694,7 +776,9 @@ function SheetViewer({
               <p><strong>{copy.source}</strong><span>{activeSheet.sourceDocument}</span></p>
               <p><strong>{copy.page}</strong><span>{activeSheet.sourcePage}</span></p>
               <p><strong>{copy.revision}</strong><span>{activeSheet.revision}</span></p>
-              <p><strong>{copy.language}</strong><span>{copy.english}</span></p>
+              <p><strong>{copy.language}</strong><span>{copy.documentLanguage}</span></p>
+              <p><strong>{copy.sourceLanguage}</strong><span>{copy.english}</span></p>
+              <p><strong>{copy.fidelity}</strong><span>{copy.highResolution}</span></p>
             </div>
           </aside>
         </div>
@@ -790,7 +874,8 @@ export default function OriginDocumentLibrary({
       results: `${sheets.length} kaynak sayfası`,
       filteredResults: "eşleşen kaynak sayfası",
       reset: "Filtreleri temizle",
-      downloadAll: "Ülke dosyasının tamamını indir",
+      downloadAll: "Türkçe ülke dosyasını indir",
+      alternateBundle: "İngilizce orijinal katalog",
       emptyTitle: "Bu menşe için yayımlanmış bir kaynak sayfa yok.",
       emptyCopy: "Güncel lot ve belge durumu talep sırasında doğrudan teyit edilir.",
       noMatches: "Bu filtrelerle eşleşen bir kaynak sayfa bulunamadı.",
@@ -816,6 +901,7 @@ export default function OriginDocumentLibrary({
       filteredResults: "matching sheets",
       reset: "Clear filters",
       downloadAll: "Download country catalogue",
+      alternateBundle: "Turkish companion catalogue",
       emptyTitle: "No reference sheets are published for this origin.",
       emptyCopy: "Current lots and document availability are confirmed directly during an inquiry.",
       noMatches: "No sheets match these filters.",
@@ -859,6 +945,12 @@ export default function OriginDocumentLibrary({
   const activeSheetId = new URLSearchParams(location.search).get("sheet");
   const activeIndex = sheets.findIndex((sheet) => sheet.id === activeSheetId);
   const activeSheet = activeIndex >= 0 ? sheets[activeIndex] : null;
+  const localizedBundleDownloadUrl = language === "tr"
+    ? (profile.turkishBundleDownloadUrl || profile.bundleDownloadUrl)
+    : profile.bundleDownloadUrl;
+  const alternateBundleUrl = language === "tr"
+    ? profile.bundleUrl
+    : profile.turkishBundleUrl;
 
   const setActiveSheet = (sheetId, { replace = false } = {}) => {
     const params = new URLSearchParams(location.search);
@@ -953,12 +1045,20 @@ export default function OriginDocumentLibrary({
             <h2 id={titleId}>{copy.title}</h2>
             <p>{copy.intro}</p>
           </div>
-          {profile.bundleDownloadUrl && (
-            <a className="button button--dark" href={profile.bundleDownloadUrl}>
-              <i className="origin-ui-icon" aria-hidden="true">↓</i>
-              {copy.downloadAll}
-            </a>
-          )}
+          <div className="origin-documents__header-actions detail-actions">
+            {localizedBundleDownloadUrl && (
+              <a className="button button--dark" href={localizedBundleDownloadUrl}>
+                <i className="origin-ui-icon" aria-hidden="true">↓</i>
+                {copy.downloadAll}
+              </a>
+            )}
+            {alternateBundleUrl && (
+              <a className="button button--outline" href={alternateBundleUrl} target="_blank" rel="noreferrer">
+                <i className="origin-ui-icon" aria-hidden="true">{language === "tr" ? "EN" : "TR"}</i>
+                {copy.alternateBundle}
+              </a>
+            )}
+          </div>
         </header>
 
         <CountryPageReader

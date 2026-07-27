@@ -565,7 +565,19 @@ function ProfileCard({ profile, language, selected, onToggle, copy, comparisonFu
     <article ref={imageContainer} className="profile-card">
       <Link className={`profile-card__image ${profile.heroKind === "document" ? "profile-card__image--document" : ""}`} to={`/origins/${profile.slug}`}>
         {shouldLoadImage ? (
-          <img src={profile.cardImage || profile.image} srcSet={profile.cardImage ? undefined : profile.srcSet} sizes="(max-width: 820px) calc(100vw - 34px), (max-width: 1100px) calc(50vw - 36px), 390px" alt={localized(profile.alt, language)} width={profile.heroKind === "document" ? "360" : "1200"} height={profile.heroKind === "document" ? "540" : "800"} loading="lazy" decoding="async" style={{ viewTransitionName: `coffee-${profile.id}` }} />
+          <img
+            src={(language === "tr" && profile.cardImageTr) || profile.cardImage || profile.image}
+            srcSet={profile.cardImage || profile.cardImageTr
+              ? undefined
+              : ((language === "tr" && profile.srcSetTr) || profile.srcSet)}
+            sizes="(max-width: 820px) calc(100vw - 34px), (max-width: 1100px) calc(50vw - 36px), 390px"
+            alt={localized(profile.alt, language)}
+            width={profile.heroKind === "document" ? "360" : "1200"}
+            height={profile.heroKind === "document" ? "540" : "800"}
+            loading="lazy"
+            decoding="async"
+            style={{ viewTransitionName: `coffee-${profile.id}` }}
+          />
         ) : (
           <i className="profile-card__image-placeholder" aria-hidden="true" />
         )}
@@ -713,7 +725,7 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profil
     canonicalPath,
     language,
     profile ? {
-      image: `${SITE_URL}${profile.image}`,
+      image: `${SITE_URL}${(language === "tr" && profile.imageTr) || profile.image}`,
       imageAlt: localized(profile.alt, language),
     } : undefined,
   );
@@ -726,8 +738,8 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profil
         <div className="shell profile-detail__grid">
           <div className="profile-detail__media">
             <img
-              src={profile.image}
-              srcSet={profile.srcSet}
+              src={(language === "tr" && profile.imageTr) || profile.image}
+              srcSet={(language === "tr" && profile.srcSetTr) || profile.srcSet}
               sizes="(max-width: 760px) calc(100vw - 34px), (max-width: 1100px) min(820px, 95vw), 580px"
               alt={localized(profile.alt, language)}
               width={profile.heroKind === "document" ? "1080" : "1200"}

@@ -1,4 +1,4 @@
-import { access, readFile } from "node:fs/promises";
+import { access, open, readFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import {
@@ -117,37 +117,69 @@ const requiredFields = [
   "packing",
   "thumbnail",
   "preview",
+  "fullPreview",
+  "turkishThumbnail",
+  "turkishPreview",
+  "turkishFullPreview",
   "pdfUrl",
   "downloadUrl",
+  "turkishPdfUrl",
+  "turkishDownloadUrl",
   "sourceDocument",
   "sourcePage",
   "revision",
+  "assetRevision",
   "language",
   "checksum",
+  "turkishLanguage",
+  "turkishChecksum",
 ];
 
 function assert(condition, message) {
   if (!condition) throw new Error(message);
 }
 
+async function readWebpDimensions(filename) {
+  const handle = await open(filename, "r");
+  try {
+    const header = Buffer.alloc(30);
+    await handle.read(header, 0, header.length, 0);
+    const file = await handle.stat();
+    assert(header.toString("ascii", 0, 4) === "RIFF", `${filename}: invalid RIFF header`);
+    assert(header.toString("ascii", 8, 12) === "WEBP", `${filename}: invalid WebP header`);
+    assert(header.toString("ascii", 12, 16) === "VP8X", `${filename}: generated preview is missing its VP8X dimensions`);
+    return {
+      width: 1 + header.readUIntLE(24, 3),
+      height: 1 + header.readUIntLE(27, 3),
+      bytes: file.size,
+    };
+  } finally {
+    await handle.close();
+  }
+}
+
 assert(originCatalogMeta.sheetCount === 117, "Catalog metadata must declare 117 sheets");
 assert(originCatalogMeta.countryCount === 38, "Catalog metadata must declare 38 PDF countries");
 assert(originCatalogMeta.exportedPageCount === 117, "Catalog metadata must account for all 117 unique pages");
+assert(originCatalogMeta.assetRevision === "hd-tr-v1", "Catalog metadata must identify the current high-definition asset revision");
 assert(originCatalogCountries.length === 38, "Generated catalog must contain 38 PDF countries");
 const countryCatalogs = await Promise.all(originCatalogCountries.map(async (country) => {
   assert(country.dataUrl.startsWith("/catalog/data/"), `${country.slug}: invalid deferred catalog URL`);
   const payload = JSON.parse(await readFile(path.join(projectRoot, "public", country.dataUrl), "utf8"));
   assert(payload.countrySlug === country.slug, `${country.slug}: deferred country catalog mismatch`);
   assert(payload.revision === originCatalogMeta.revision, `${country.slug}: deferred catalog revision mismatch`);
+  assert(payload.assetRevision === originCatalogMeta.assetRevision, `${country.slug}: deferred asset revision mismatch`);
   return { country, sheets: payload.sheets };
 }));
 const originCatalogSheets = countryCatalogs.flatMap(({ sheets }) => sheets);
 assert(originCatalogSheets.length === 117, "Generated catalog must contain 117 sheets");
 assert(new Set(originCatalogSheets.map(({ id }) => id)).size === 117, "Every sheet ID must be unique");
 assert(new Set(originCatalogSheets.map(({ checksum }) => checksum)).size === 117, "Every canonical one-page PDF must have a unique checksum");
+assert(new Set(originCatalogSheets.map(({ turkishChecksum }) => turkishChecksum)).size === 117, "Every Turkish information PDF must have a unique checksum");
 assert(new Set(allOriginIsos).size === 38, "Expanded Coffendi origins must contain 38 unique ISO codes");
 
 const sourcePages = new Set();
+let totalPreviewBytes = 0;
 for (const { country, sheets } of countryCatalogs) {
   assert(expectedCounts[country.slug] === country.sheetCount, `${country.slug}: unexpected sheet count`);
   assert(country.sheetCount === sheets.length, `${country.slug}: deferred sheet count mismatch`);
@@ -157,9 +189,15 @@ for (const { country, sheets } of countryCatalogs) {
   );
   assert(country.websiteProfile.directions.length === sheets.length, `${country.slug}: deferred profile directions are incomplete`);
   assert(country.websiteProfile.catalogDataUrl === country.dataUrl, `${country.slug}: website profile catalog relationship mismatch`);
+  assert(country.websiteProfile.imageTr === sheets[0].turkishPreview, `${country.slug}: Turkish hero preview mismatch`);
+  assert(country.websiteProfile.cardImageTr === sheets[0].turkishThumbnail, `${country.slug}: Turkish card preview mismatch`);
+  assert(country.websiteProfile.srcSetTr.includes(sheets[0].turkishFullPreview), `${country.slug}: Turkish hero srcset is missing its high-resolution source`);
   assert(country.firstSheet.id === sheets[0].id, `${country.slug}: lightweight hero sheet mismatch`);
   assert(country.bundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: bundle must use private delivery endpoint`);
   assert(country.bundleDownloadUrl.includes("download=1"), `${country.slug}: bundle download URL missing`);
+  assert(country.turkishBundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: Turkish bundle must use private delivery endpoint`);
+  assert(country.turkishBundleDownloadUrl.includes("download=1"), `${country.slug}: Turkish bundle download URL missing`);
+  assert(/^[a-f0-9]{64}$/.test(country.turkishBundleChecksum), `${country.slug}: invalid Turkish bundle checksum`);
   assert(country.map.x >= 0 && country.map.x <= 100, `${country.slug}: projected x is outside map`);
   assert(country.map.y >= 0 && country.map.y <= 100, `${country.slug}: projected y is outside map`);
 
@@ -170,16 +208,40 @@ for (const { country, sheets } of countryCatalogs) {
     assert(sheet.countrySlug === country.slug, `${sheet.id}: country relationship mismatch`);
     assert(sheet.pdfUrl.startsWith("/api/catalog-document?path="), `${sheet.id}: PDF must use private delivery endpoint`);
     assert(sheet.downloadUrl.includes("download=1"), `${sheet.id}: download URL missing`);
+    assert(sheet.turkishPdfUrl.startsWith("/api/catalog-document?path="), `${sheet.id}: Turkish PDF must use private delivery endpoint`);
+    assert(sheet.turkishDownloadUrl.includes("download=1"), `${sheet.id}: Turkish download URL missing`);
     assert(sheet.language === "en", `${sheet.id}: unreviewed translation entered source documents`);
+    assert(sheet.turkishLanguage === "tr-TR", `${sheet.id}: Turkish companion language metadata is missing`);
+    assert(sheet.assetRevision === originCatalogMeta.assetRevision, `${sheet.id}: stale preview asset revision`);
     assert(/^[a-f0-9]{64}$/.test(sheet.checksum), `${sheet.id}: invalid checksum`);
+    assert(/^[a-f0-9]{64}$/.test(sheet.turkishChecksum), `${sheet.id}: invalid Turkish checksum`);
 
     const sourcePage = `${sheet.sourceDocument}:${sheet.sourcePage}`;
     assert(!sourcePages.has(sourcePage), `${sheet.id}: duplicate canonical source page ${sourcePage}`);
     sourcePages.add(sourcePage);
 
-    for (const preview of [sheet.thumbnail, sheet.preview]) {
+    const previews = [
+      [sheet.thumbnail, 360, 540],
+      [sheet.preview, 1080, 1620],
+      [sheet.fullPreview, 2160, 3240],
+      [sheet.turkishThumbnail, 360, 540],
+      [sheet.turkishPreview, 1080, 1620],
+      [sheet.turkishFullPreview, 2160, 3240],
+    ];
+    for (const [preview, expectedWidth, expectedHeight] of previews) {
       assert(preview.startsWith("/catalog/previews/"), `${sheet.id}: invalid preview path`);
-      await access(path.join(projectRoot, "public", preview));
+      const previewPath = path.join(projectRoot, "public", preview);
+      await access(previewPath);
+      const dimensions = await readWebpDimensions(previewPath);
+      totalPreviewBytes += dimensions.bytes;
+      assert(dimensions.width === expectedWidth, `${sheet.id}: ${preview} width is ${dimensions.width}, expected ${expectedWidth}`);
+      assert(dimensions.height === expectedHeight, `${sheet.id}: ${preview} height is ${dimensions.height}, expected ${expectedHeight}`);
+      const maximumBytes = expectedWidth === 360
+        ? 150_000
+        : expectedWidth === 1080
+          ? 800_000
+          : 2_500_000;
+      assert(dimensions.bytes <= maximumBytes, `${sheet.id}: ${preview} exceeds its ${maximumBytes}-byte delivery budget`);
     }
   }
 }
@@ -192,4 +254,5 @@ for (const iso of allOriginIsos) {
 }
 
 assert(sourcePages.size === 117, "Canonical source-page coverage must equal 117");
-console.log("Origin catalog verification passed: 38 origins, 117 canonical sheets, 234 previews, and 38 verified local flags.");
+assert(totalPreviewBytes <= 150 * 1024 * 1024, `Responsive previews exceed the 150 MiB catalog budget (${totalPreviewBytes} bytes)`);
+console.log("Origin catalog verification passed: 38 origins, 117 canonical sheets, 117 Turkish companion PDFs, 702 responsive previews, 76 country bundles, and 38 verified local flags.");

@@ -3,10 +3,12 @@ import { mkdir, readFile, rm, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { createCanvas } from "@napi-rs/canvas";
+import fontkit from "@pdf-lib/fontkit";
 import { put } from "@vercel/blob";
 import { geoNaturalEarth1 } from "d3-geo";
-import { PDFDocument } from "pdf-lib";
+import { PDFDocument, rgb } from "pdf-lib";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
+import { translateCoffeeValue } from "../src/lib/turkishCoffee.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot =
@@ -16,10 +18,33 @@ const workRoot = path.join(projectRoot, ".catalog-work");
 const previewRoot = path.join(projectRoot, "public", "catalog", "previews");
 const catalogDataRoot = path.join(projectRoot, "public", "catalog", "data");
 const outputDataFile = path.join(projectRoot, "src", "originCatalog.js");
+const fontRoot = path.join(projectRoot, "node_modules", "dejavu-fonts-ttf", "ttf");
 const uploadDocuments = process.env.UPLOAD_ORIGIN_BLOBS === "1";
 const reuseUploadedDocuments = process.env.REUSE_ORIGIN_BLOBS === "1";
 const catalogRevision = "2026-07-27-full";
 const catalogRevisionDate = new Date("2026-07-27T00:00:00.000Z");
+const assetRevision = "hd-tr-v1";
+const previewWidths = {
+  thumbnail: 360,
+  preview: 1080,
+  full: 2160,
+};
+const previewQualities = {
+  thumbnail: 72,
+  preview: 82,
+  full: 84,
+};
+
+const pdfColors = {
+  cream: rgb(0.98, 0.96, 0.91),
+  paper: rgb(1, 0.992, 0.965),
+  green: rgb(0.07, 0.22, 0.18),
+  greenSoft: rgb(0.12, 0.31, 0.25),
+  gold: rgb(0.76, 0.52, 0.2),
+  muted: rgb(0.34, 0.39, 0.36),
+  line: rgb(0.83, 0.79, 0.7),
+  white: rgb(1, 1, 1),
+};
 
 const sources = {
   p1: {
@@ -639,6 +664,363 @@ async function renderPage(page, targetWidth, quality) {
   return canvas.encode("webp", quality);
 }
 
+function wrapPdfText(value, font, size, maximumWidth) {
+  const paragraphs = String(value || "").split(/\r?\n/);
+  const lines = [];
+  for (const paragraph of paragraphs) {
+    const words = paragraph.trim().split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      lines.push("");
+      continue;
+    }
+    let line = "";
+    for (const word of words) {
+      const candidate = line ? `${line} ${word}` : word;
+      if (font.widthOfTextAtSize(candidate, size) <= maximumWidth || !line) {
+        line = candidate;
+      } else {
+        lines.push(line);
+        line = word;
+      }
+    }
+    if (line) lines.push(line);
+  }
+  return lines;
+}
+
+function drawWrappedPdfText(page, value, {
+  font,
+  size,
+  x,
+  y,
+  maximumWidth,
+  color = pdfColors.green,
+  lineHeight = size * 1.28,
+  maximumLines = Infinity,
+}) {
+  const lines = wrapPdfText(value, font, size, maximumWidth).slice(0, maximumLines);
+  lines.forEach((line, index) => {
+    page.drawText(line, {
+      x,
+      y: y - (index * lineHeight),
+      size,
+      font,
+      color,
+    });
+  });
+  return y - (lines.length * lineHeight);
+}
+
+function translatePdfValue(value) {
+  return translateCoffeeValue(value, "tr");
+}
+
+async function createTurkishSheetPdf({
+  country,
+  extracted,
+  sourceDocument,
+  sourcePage,
+  normalFontBytes,
+  boldFontBytes,
+}) {
+  const document = await PDFDocument.create();
+  document.registerFontkit(fontkit);
+  const [normal, bold] = await Promise.all([
+    document.embedFont(normalFontBytes, { subset: true }),
+    document.embedFont(boldFontBytes, { subset: true }),
+  ]);
+  const page = document.addPage([576, 864]);
+  const { width, height } = page.getSize();
+  const countryName = country.countryTr;
+  const specifications = extracted.specifications;
+
+  document.setTitle(`${countryName} — ${specifications.grade} — Türkçe bilgi föyü`);
+  document.setSubject("Coffendi menşe kataloğu Türkçe bilgi föyü");
+  document.setLanguage("tr-TR");
+  document.setCreator("Coffendi");
+  document.setProducer("Coffendi origin catalog importer");
+  document.setKeywords([
+    "Coffendi",
+    countryName,
+    "yeşil kahve",
+    "menşe",
+    "Türkçe bilgi föyü",
+  ]);
+  document.setCreationDate(catalogRevisionDate);
+  document.setModificationDate(catalogRevisionDate);
+
+  page.drawRectangle({
+    x: 0,
+    y: 0,
+    width,
+    height,
+    color: pdfColors.cream,
+  });
+  page.drawRectangle({
+    x: 0,
+    y: 634,
+    width,
+    height: 230,
+    color: pdfColors.green,
+  });
+  page.drawRectangle({
+    x: 0,
+    y: 854,
+    width,
+    height: 10,
+    color: pdfColors.gold,
+  });
+  page.drawText("COFFENDI  •  TÜRKÇE BİLGİ FÖYÜ", {
+    x: 40,
+    y: 821,
+    size: 9,
+    font: bold,
+    color: pdfColors.gold,
+  });
+  page.drawText(countryName.toLocaleUpperCase("tr-TR"), {
+    x: 40,
+    y: 784,
+    size: 24,
+    font: bold,
+    color: pdfColors.white,
+  });
+  drawWrappedPdfText(page, specifications.grade, {
+    font: bold,
+    size: 18,
+    x: 40,
+    y: 748,
+    maximumWidth: 496,
+    color: pdfColors.white,
+    lineHeight: 22,
+    maximumLines: 3,
+  });
+
+  const processText = translatePdfValue(specifications.process);
+  const typeText = translatePdfValue(specifications.type);
+  page.drawRectangle({
+    x: 40,
+    y: 654,
+    width: 496,
+    height: 42,
+    color: pdfColors.greenSoft,
+    borderColor: rgb(0.24, 0.43, 0.36),
+    borderWidth: 0.8,
+  });
+  page.drawText(`${typeText}  •  ${processText}`, {
+    x: 54,
+    y: 671,
+    size: 10,
+    font: bold,
+    color: pdfColors.white,
+  });
+
+  page.drawText("DOĞRULANMIŞ TEKNİK ÖZELLİKLER", {
+    x: 40,
+    y: 599,
+    size: 10,
+    font: bold,
+    color: pdfColors.green,
+  });
+  page.drawText("DUYUSAL PROFİL VE KULLANIM", {
+    x: 310,
+    y: 599,
+    size: 10,
+    font: bold,
+    color: pdfColors.green,
+  });
+  page.drawLine({
+    start: { x: 40, y: 588 },
+    end: { x: 266, y: 588 },
+    thickness: 1.5,
+    color: pdfColors.gold,
+  });
+  page.drawLine({
+    start: { x: 310, y: 588 },
+    end: { x: 536, y: 588 },
+    thickness: 1.5,
+    color: pdfColors.gold,
+  });
+
+  const fieldLabelsTr = {
+    type: "Tür",
+    defects: "Kusur sınırı",
+    flavor: "Lezzet profili",
+    aroma: "Aroma",
+    body: "Gövde",
+    acidity: "Asidite",
+    process: "İşleme yöntemi",
+    screen: "Elek ölçüsü",
+    moisture: "Nem",
+    packing: "Ambalaj",
+  };
+  const fields = [
+    "type",
+    "defects",
+    "flavor",
+    "aroma",
+    "body",
+    "acidity",
+    "process",
+    "screen",
+    "moisture",
+    "packing",
+  ];
+  let fieldY = 562;
+  for (const field of fields) {
+    page.drawText(fieldLabelsTr[field].toLocaleUpperCase("tr-TR"), {
+      x: 40,
+      y: fieldY,
+      size: 6.6,
+      font: bold,
+      color: pdfColors.gold,
+    });
+    fieldY = drawWrappedPdfText(page, translatePdfValue(specifications[field]), {
+      font: normal,
+      size: 8.8,
+      x: 40,
+      y: fieldY - 13,
+      maximumWidth: 226,
+      color: pdfColors.green,
+      lineHeight: 11.5,
+      maximumLines: 2,
+    }) - 7;
+    page.drawLine({
+      start: { x: 40, y: fieldY + 2 },
+      end: { x: 266, y: fieldY + 2 },
+      thickness: 0.5,
+      color: pdfColors.line,
+    });
+  }
+
+  let rightY = 562;
+  const drawListSection = (title, values) => {
+    page.drawText(title, {
+      x: 310,
+      y: rightY,
+      size: 7,
+      font: bold,
+      color: pdfColors.gold,
+    });
+    rightY -= 18;
+    for (const value of values) {
+      page.drawCircle({
+        x: 314,
+        y: rightY + 3,
+        size: 2.4,
+        color: pdfColors.gold,
+      });
+      rightY = drawWrappedPdfText(page, translatePdfValue(value), {
+        font: normal,
+        size: 9.2,
+        x: 324,
+        y: rightY,
+        maximumWidth: 212,
+        color: pdfColors.green,
+        lineHeight: 12,
+        maximumLines: 2,
+      }) - 3;
+    }
+    rightY -= 9;
+  };
+
+  drawListSection(
+    "TADIM NOTLARI",
+    extracted.tastingNotes.length ? extracted.tastingNotes : [specifications.flavor],
+  );
+  drawListSection(
+    "ÖNERİLEN KULLANIM",
+    extracted.perfectFor.length ? extracted.perfectFor : ["Uygulama, talep sırasında teyit edilir"],
+  );
+
+  page.drawText("BELGE KAYNAĞI", {
+    x: 310,
+    y: rightY,
+    size: 7,
+    font: bold,
+    color: pdfColors.gold,
+  });
+  rightY -= 18;
+  rightY = drawWrappedPdfText(page, `${sourceDocument} • Sayfa ${sourcePage}`, {
+    font: normal,
+    size: 8.8,
+    x: 310,
+    y: rightY,
+    maximumWidth: 226,
+    color: pdfColors.green,
+    lineHeight: 12,
+    maximumLines: 2,
+  }) - 6;
+  rightY = drawWrappedPdfText(
+    page,
+    "Bu belge, İngilizce kaynak sayfadaki teknik alanların Türkçe bilgi özetidir. Ticari ürün sınıfı adları doğruluk için özgün biçiminde korunmuştur.",
+    {
+      font: normal,
+      size: 7.8,
+      x: 310,
+      y: rightY,
+      maximumWidth: 226,
+      color: pdfColors.muted,
+      lineHeight: 10.5,
+      maximumLines: 6,
+    },
+  ) - 12;
+
+  page.drawRectangle({
+    x: 310,
+    y: Math.max(86, rightY - 62),
+    width: 226,
+    height: 62,
+    color: pdfColors.paper,
+    borderColor: pdfColors.line,
+    borderWidth: 0.8,
+  });
+  page.drawText("BELGE DURUMU", {
+    x: 324,
+    y: Math.max(110, rightY - 30),
+    size: 6.8,
+    font: bold,
+    color: pdfColors.gold,
+  });
+  page.drawText("Türkçe • Aranabilir metin • Yüksek çözünürlük", {
+    x: 324,
+    y: Math.max(96, rightY - 45),
+    size: 7.5,
+    font: normal,
+    color: pdfColors.green,
+  });
+
+  page.drawRectangle({
+    x: 0,
+    y: 0,
+    width,
+    height: 58,
+    color: pdfColors.green,
+  });
+  page.drawText("Kaynak doğrulama", {
+    x: 40,
+    y: 34,
+    size: 6.8,
+    font: bold,
+    color: pdfColors.gold,
+  });
+  page.drawText(`${sourceDocument} • ${sourcePage}. sayfa • ${catalogRevision}`, {
+    x: 40,
+    y: 19,
+    size: 7.7,
+    font: normal,
+    color: pdfColors.white,
+  });
+  page.drawText("coffendi.com", {
+    x: 454,
+    y: 25,
+    size: 8,
+    font: bold,
+    color: pdfColors.white,
+  });
+
+  return Buffer.from(await document.save({ useObjectStreams: true }));
+}
+
 async function uploadPdf(pathname, bytes) {
   if (!uploadDocuments && !reuseUploadedDocuments) return null;
   if (reuseUploadedDocuments) {
@@ -684,6 +1066,10 @@ async function main() {
   await mkdir(workRoot, { recursive: true });
   await mkdir(previewRoot, { recursive: true });
 
+  const [normalFontBytes, boldFontBytes] = await Promise.all([
+    readFile(path.join(fontRoot, "DejaVuSans.ttf")),
+    readFile(path.join(fontRoot, "DejaVuSans-Bold.ttf")),
+  ]);
   const sourceDocuments = {};
   for (const [key, source] of Object.entries(sources)) {
     const bytes = await readFile(source.path);
@@ -709,6 +1095,7 @@ async function main() {
     const expectedCountry = country.sourceCountry || country.country;
     const sheets = [];
     const countryPdf = await PDFDocument.create();
+    const turkishCountryPdf = await PDFDocument.create();
     for (const reference of pageReferences) {
       const source = sourceDocuments[reference.sourceKey];
       const [bundlePage] = await countryPdf.copyPages(
@@ -737,29 +1124,79 @@ async function main() {
       onePagePdf.setModificationDate(catalogRevisionDate);
       const pdfBytes = Buffer.from(await onePagePdf.save({ useObjectStreams: true }));
       const hash = createHash("sha256").update(pdfBytes).digest("hex");
+      const turkishPdfBytes = await createTurkishSheetPdf({
+        country,
+        extracted,
+        sourceDocument: source.label,
+        sourcePage: pageNumber,
+        normalFontBytes,
+        boldFontBytes,
+      });
+      const turkishHash = createHash("sha256").update(turkishPdfBytes).digest("hex");
       const id = `${country.slug}-${slugify(extracted.specifications.grade)}`;
-      const versionedName = `${id}-${hash.slice(0, 10)}`;
+      const versionedName = `${id}-${hash.slice(0, 10)}-${assetRevision}`;
       const countryPreviewRoot = path.join(previewRoot, country.slug);
       await mkdir(countryPreviewRoot, { recursive: true });
 
-      const [thumbnail, preview] = await Promise.all([
-        renderPage(extracted.page, 360, 72),
-        renderPage(extracted.page, 1080, 80),
+      const turkishTask = pdfjs.getDocument({
+        data: new Uint8Array(turkishPdfBytes),
+        disableWorker: true,
+      });
+      const turkishPdf = await turkishTask.promise;
+      const turkishPage = await turkishPdf.getPage(1);
+      const [
+        thumbnail,
+        preview,
+        fullPreview,
+        turkishThumbnail,
+        turkishPreview,
+        turkishFullPreview,
+      ] = await Promise.all([
+        renderPage(extracted.page, previewWidths.thumbnail, previewQualities.thumbnail),
+        renderPage(extracted.page, previewWidths.preview, previewQualities.preview),
+        renderPage(extracted.page, previewWidths.full, previewQualities.full),
+        renderPage(turkishPage, previewWidths.thumbnail, previewQualities.thumbnail),
+        renderPage(turkishPage, previewWidths.preview, previewQualities.preview),
+        renderPage(turkishPage, previewWidths.full, previewQualities.full),
       ]);
-      const thumbnailFile = `${versionedName}-360.webp`;
-      const previewFile = `${versionedName}-1080.webp`;
+      await turkishTask.destroy();
+      const thumbnailFile = `${versionedName}-${previewWidths.thumbnail}.webp`;
+      const previewFile = `${versionedName}-${previewWidths.preview}.webp`;
+      const fullPreviewFile = `${versionedName}-${previewWidths.full}.webp`;
+      const turkishThumbnailFile = `${versionedName}-tr-${previewWidths.thumbnail}.webp`;
+      const turkishPreviewFile = `${versionedName}-tr-${previewWidths.preview}.webp`;
+      const turkishFullPreviewFile = `${versionedName}-tr-${previewWidths.full}.webp`;
       await Promise.all([
         writeFile(path.join(countryPreviewRoot, thumbnailFile), thumbnail),
         writeFile(path.join(countryPreviewRoot, previewFile), preview),
+        writeFile(path.join(countryPreviewRoot, fullPreviewFile), fullPreview),
+        writeFile(path.join(countryPreviewRoot, turkishThumbnailFile), turkishThumbnail),
+        writeFile(path.join(countryPreviewRoot, turkishPreviewFile), turkishPreview),
+        writeFile(path.join(countryPreviewRoot, turkishFullPreviewFile), turkishFullPreview),
         writeFile(path.join(workRoot, `${versionedName}.pdf`), pdfBytes),
+        writeFile(path.join(workRoot, `${versionedName}-tr.pdf`), turkishPdfBytes),
       ]);
 
       const remote = await uploadPdf(
         `coffendi/origins/${catalogRevision}/${country.slug}/${versionedName}.pdf`,
         pdfBytes,
       );
+      const turkishRemote = await uploadPdf(
+        `coffendi/origins/${catalogRevision}/${country.slug}/${versionedName}-tr.pdf`,
+        turkishPdfBytes,
+      );
       const pdfUrl = remote?.url || `/catalog/documents/${country.slug}/${versionedName}.pdf`;
       const downloadUrl = remote?.downloadUrl || `${pdfUrl}?download=1`;
+      const turkishPdfUrl = turkishRemote?.url
+        || `/catalog/documents/${country.slug}/${versionedName}-tr.pdf`;
+      const turkishDownloadUrl = turkishRemote?.downloadUrl || `${turkishPdfUrl}?download=1`;
+
+      const turkishPageDocument = await PDFDocument.load(turkishPdfBytes);
+      const [turkishBundlePage] = await turkishCountryPdf.copyPages(
+        turkishPageDocument,
+        [0],
+      );
+      turkishCountryPdf.addPage(turkishBundlePage);
 
       sheets.push({
         id,
@@ -780,13 +1217,22 @@ async function main() {
         perfectFor: extracted.perfectFor,
         thumbnail: `/catalog/previews/${country.slug}/${thumbnailFile}`,
         preview: `/catalog/previews/${country.slug}/${previewFile}`,
+        fullPreview: `/catalog/previews/${country.slug}/${fullPreviewFile}`,
+        turkishThumbnail: `/catalog/previews/${country.slug}/${turkishThumbnailFile}`,
+        turkishPreview: `/catalog/previews/${country.slug}/${turkishPreviewFile}`,
+        turkishFullPreview: `/catalog/previews/${country.slug}/${turkishFullPreviewFile}`,
         pdfUrl,
         downloadUrl,
+        turkishPdfUrl,
+        turkishDownloadUrl,
         sourceDocument: source.label,
         sourcePage: pageNumber,
         revision: catalogRevision,
+        assetRevision,
         language: "en",
         checksum: hash,
+        turkishLanguage: "tr-TR",
+        turkishChecksum: turkishHash,
       });
       process.stdout.write(`Sheet ${sheets.length}/${pageReferences.length}: ${country.country} — ${extracted.specifications.grade}\n`);
     }
@@ -803,6 +1249,21 @@ async function main() {
     const bundleRemote = await uploadPdf(
       `coffendi/origins/${catalogRevision}/${country.slug}/${country.slug}-catalog-${bundleHash.slice(0, 10)}.pdf`,
       bundleBytes,
+    );
+    turkishCountryPdf.setTitle(`${country.countryTr} — Coffendi Türkçe menşe kataloğu`);
+    turkishCountryPdf.setSubject("Coffendi Türkçe ülke bilgi föyü koleksiyonu");
+    turkishCountryPdf.setLanguage("tr-TR");
+    turkishCountryPdf.setCreator("Coffendi");
+    turkishCountryPdf.setProducer("Coffendi origin catalog importer");
+    turkishCountryPdf.setCreationDate(catalogRevisionDate);
+    turkishCountryPdf.setModificationDate(catalogRevisionDate);
+    const turkishBundleBytes = Buffer.from(
+      await turkishCountryPdf.save({ useObjectStreams: true }),
+    );
+    const turkishBundleHash = createHash("sha256").update(turkishBundleBytes).digest("hex");
+    const turkishBundleRemote = await uploadPdf(
+      `coffendi/origins/${catalogRevision}/${country.slug}/${country.slug}-catalog-tr-${turkishBundleHash.slice(0, 10)}.pdf`,
+      turkishBundleBytes,
     );
     const [projectedX, projectedY] = projection(country.coordinates);
     const map = {
@@ -832,6 +1293,9 @@ async function main() {
       bundleUrl: bundleRemote?.url || "",
       bundleDownloadUrl: bundleRemote?.downloadUrl || "",
       bundleChecksum: bundleHash,
+      turkishBundleUrl: turkishBundleRemote?.url || "",
+      turkishBundleDownloadUrl: turkishBundleRemote?.downloadUrl || "",
+      turkishBundleChecksum: turkishBundleHash,
       sheets,
     });
   }
@@ -847,6 +1311,7 @@ async function main() {
   for (const country of generatedCountries) {
     const payload = `${JSON.stringify({
       revision: catalogRevision,
+      assetRevision,
       countrySlug: country.slug,
       sheets: country.sheets,
     })}\n`;
@@ -898,8 +1363,11 @@ async function main() {
         tr: "Sezon ve güncel lot ayrıntıları her taleple birlikte teyit edilir.",
       },
       image: firstSheet.preview,
-      srcSet: `${firstSheet.thumbnail} 360w, ${firstSheet.preview} 1080w`,
+      srcSet: `${firstSheet.thumbnail} 360w, ${firstSheet.preview} 1080w, ${firstSheet.fullPreview} 2160w`,
       cardImage: firstSheet.thumbnail,
+      imageTr: firstSheet.turkishPreview,
+      srcSetTr: `${firstSheet.turkishThumbnail} 360w, ${firstSheet.turkishPreview} 1080w, ${firstSheet.turkishFullPreview} 2160w`,
+      cardImageTr: firstSheet.turkishThumbnail,
       alt: {
         en: `Preview of the ${firstSheet.grade} reference sheet`,
         tr: `${firstSheet.grade} referans föyünün ön izlemesi`,
@@ -911,7 +1379,10 @@ async function main() {
       catalogDataUrl: `/catalog/data/${dataFilename}`,
       bundleUrl: country.bundleUrl,
       bundleDownloadUrl: country.bundleDownloadUrl,
+      turkishBundleUrl: country.turkishBundleUrl,
+      turkishBundleDownloadUrl: country.turkishBundleDownloadUrl,
       catalogRevision,
+      assetRevision,
       featured: false,
     };
     catalogSummaries.push({
@@ -922,9 +1393,16 @@ async function main() {
         grade: firstSheet.grade,
         thumbnail: firstSheet.thumbnail,
         preview: firstSheet.preview,
+        fullPreview: firstSheet.fullPreview,
+        turkishThumbnail: firstSheet.turkishThumbnail,
+        turkishPreview: firstSheet.turkishPreview,
+        turkishFullPreview: firstSheet.turkishFullPreview,
         pdfUrl: firstSheet.pdfUrl,
         downloadUrl: firstSheet.downloadUrl,
+        turkishPdfUrl: firstSheet.turkishPdfUrl,
+        turkishDownloadUrl: firstSheet.turkishDownloadUrl,
         checksum: firstSheet.checksum,
+        turkishChecksum: firstSheet.turkishChecksum,
       },
       dataUrl: `/catalog/data/${dataFilename}`,
       dataChecksum: dataHash,
@@ -935,6 +1413,7 @@ async function main() {
 
   const catalogIndexPayload = `${JSON.stringify({
     revision: catalogRevision,
+    assetRevision,
     countries: catalogSummaries,
   })}\n`;
   const catalogIndexHash = createHash("sha256").update(catalogIndexPayload).digest("hex").slice(0, 10);
@@ -949,6 +1428,7 @@ async function main() {
     `export const originCatalogMeta = ${JSON.stringify(
       {
         revision: catalogRevision,
+        assetRevision,
         exportedPageCount: 117,
         sheetCount: 117,
         countryCount: 38,
@@ -976,7 +1456,7 @@ async function main() {
   for (const source of Object.values(sourceDocuments)) await source.task.destroy();
   await rm(workRoot, { recursive: true, force: true });
 
-  const previewCount = generatedCountries.reduce((total, country) => total + country.sheets.length * 2, 0);
+  const previewCount = generatedCountries.reduce((total, country) => total + country.sheets.length * 6, 0);
   console.log(`Generated ${generatedCountries.length} countries, 117 sheets and ${previewCount} previews.`);
   console.log(`Document delivery: ${uploadDocuments ? "uploaded to Vercel Blob" : reuseUploadedDocuments ? "reused existing Vercel Blob paths" : "local fallback paths"}.`);
 }

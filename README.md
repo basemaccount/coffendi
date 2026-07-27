@@ -159,6 +159,31 @@ The optional acknowledgment webhook receives only the buyer email, name, referen
 timestamp and template identifier; the email provider or automation owns the final
 approved message and sender-domain configuration.
 
+## Origin document pipeline
+
+`npm run import:origin-catalog` maps the approved source exports to 38 origin
+profiles and 117 unique source pages. The importer preserves each English source
+page as the original record, builds country bundles, and creates a separate
+searchable Turkish information sheet for every source page. Turkish documents
+identify their English source document and page and keep commercial grade names
+unchanged where translating them would alter the trade designation.
+
+Every language receives responsive WebP previews at 360×540, 1080×1620 and
+2160×3240. Preview pathnames include the PDF checksum and asset-pipeline revision
+because `/catalog/previews/` is cached as immutable. Do not overwrite an existing
+preview pathname with changed bytes.
+
+The protected English and Turkish PDFs are uploaded to private Vercel Blob
+storage when the importer is run with:
+
+```bash
+UPLOAD_ORIGIN_BLOBS=1 node --env-file=.env.local scripts/import-origin-catalog.mjs
+```
+
+`npm run test:origins` verifies all country/page relationships, both document
+languages, all country bundles, checksums, local flags, and the dimensions of all
+702 responsive preview assets.
+
 ## Launch and operations documentation
 
 - `docs/merchant-handoff.md` — merchant-owned catalog, business, policy, shipping

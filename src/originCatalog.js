@@ -4,6 +4,7 @@
 
 export const originCatalogMeta = {
   "revision": "2026-07-27-full",
+  "assetRevision": "hd-tr-v1",
   "exportedPageCount": 117,
   "sheetCount": 117,
   "countryCount": 38,
@@ -44,4 +45,4 @@ export const originCatalogMeta = {
   ]
 };
 
-export const originCatalogIndexUrl = "/catalog/data/origin-index-76cb8e952a.json";
+export const originCatalogIndexUrl = "/catalog/data/origin-index-08f903063e.json";

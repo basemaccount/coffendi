@@ -62,6 +62,16 @@ const downloadDocument = await fetch(`${baseUrl}${representativeSheet.downloadUr
 assert.equal(downloadDocument.ok, true, `Protected PDF download returned ${downloadDocument.status}`);
 assert.match(downloadDocument.headers.get("content-disposition") || "", /^attachment;/);
 
+const turkishDocument = await fetch(`${baseUrl}${representativeSheet.turkishPdfUrl}`, {
+  method: "HEAD",
+  redirect: "follow",
+  signal: AbortSignal.timeout(12_000),
+});
+assert.equal(turkishDocument.ok, true, `Protected Turkish PDF endpoint returned ${turkishDocument.status}`);
+assert.match(turkishDocument.headers.get("content-type") || "", /^application\/pdf/);
+assert.match(turkishDocument.headers.get("content-disposition") || "", /^inline;/);
+assert.ok(turkishDocument.headers.get("etag"), "Protected Turkish PDF endpoint did not publish an ETag");
+
 const rejectedDocument = await fetch(`${baseUrl}/api/catalog-document?path=${encodeURIComponent("coffendi/origins/2026-07-27-full/../../secret.pdf")}`, {
   redirect: "manual",
   signal: AbortSignal.timeout(12_000),
@@ -75,4 +85,18 @@ const preview = await fetch(`${baseUrl}${representativeSheet.thumbnail}`, {
 assert.equal(preview.ok, true, `Catalog preview returned ${preview.status}`);
 assert.match(preview.headers.get("cache-control") || "", /immutable/);
 
-console.log(`Production smoke checks passed for ${routes.length} informational routes, all ${originRoutes.length} origin profiles, the protected document boundary, security headers, sitemap and robots at ${baseUrl}.`);
+const highResolutionPreview = await fetch(`${baseUrl}${representativeSheet.fullPreview}`, {
+  method: "HEAD",
+  signal: AbortSignal.timeout(12_000),
+});
+assert.equal(highResolutionPreview.ok, true, `High-resolution preview returned ${highResolutionPreview.status}`);
+assert.match(highResolutionPreview.headers.get("cache-control") || "", /immutable/);
+
+const turkishPreview = await fetch(`${baseUrl}${representativeSheet.turkishFullPreview}`, {
+  method: "HEAD",
+  signal: AbortSignal.timeout(12_000),
+});
+assert.equal(turkishPreview.ok, true, `Turkish high-resolution preview returned ${turkishPreview.status}`);
+assert.match(turkishPreview.headers.get("cache-control") || "", /immutable/);
+
+console.log(`Production smoke checks passed for ${routes.length} informational routes, all ${originRoutes.length} origin profiles, English and Turkish protected documents, high-resolution previews, security headers, sitemap and robots at ${baseUrl}.`);
