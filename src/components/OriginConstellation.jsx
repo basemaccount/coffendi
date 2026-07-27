@@ -22,7 +22,7 @@ const styles = {
   art: { position: "absolute", inset: 0, width: "100%", height: "100%", color: "#dce8e1" },
   equator: { fill: "none", stroke: "rgba(239,201,121,.35)", strokeDasharray: "6 9", vectorEffect: "non-scaling-stroke" },
   thread: { fill: "none", stroke: "rgba(239,201,121,.34)", strokeWidth: 1.5, strokeDasharray: "5 9", vectorEffect: "non-scaling-stroke", animation: "origin-thread-flow 10s linear infinite" },
-  pin: { position: "absolute", width: 52, height: 58, display: "grid", justifyItems: "center", gap: 1, padding: 5, border: 0, borderRadius: 10, textDecoration: "none", transform: "translate(-50%,-50%)", transition: "scale 240ms var(--ease),background-color 180ms ease,opacity 180ms ease" },
+  pin: { position: "absolute", width: 44, height: 44, display: "grid", justifyItems: "center", gap: 1, padding: 2, border: 0, borderRadius: 10, textDecoration: "none", transform: "translate(-50%,-50%)", transition: "scale 240ms var(--ease),background-color 180ms ease,opacity 180ms ease" },
   pinCode: { fontSize: 6, fontWeight: 800, letterSpacing: ".08em" },
   rail: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 1, background: "rgba(255,255,255,.12)" },
   railItem: { minWidth: 0, minHeight: 72, display: "grid", gridTemplateColumns: "auto 1fr auto", alignItems: "center", gap: 9, padding: 10, border: 0, color: "var(--white)", textAlign: "left", textDecoration: "none", transition: "background-color 180ms ease" },
@@ -53,7 +53,7 @@ function MapArt({ profiles }) {
       <rect width="1000" height="520" fill="url(#constellation-grid)" />
       <path className="origin-constellation__equator" style={styles.equator} d="M0 260H1000" />
       <OriginMapAnchors profiles={profiles} />
-      {profiles.length > 1 && <polyline className="origin-constellation__thread" style={{ ...styles.thread, animation: reduceMotion ? "none" : styles.thread.animation }} points={points} />}
+      {profiles.length > 1 && <polyline className="origin-constellation__thread" style={{ ...styles.thread, display: "none", animation: "none" }} points={points} />}
     </svg>
   );
 }
@@ -133,7 +133,7 @@ export default function OriginConstellation({
   }, [activeId, compact, reduceMotion, selectedKey]);
 
   return (
-    <section className={`origin-constellation origin-constellation--${mode}`} style={styles.section} aria-labelledby={`origin-constellation-${mode}-title`}>
+    <section id={mode === "navigate" ? "origin-network" : undefined} className={`origin-constellation origin-constellation--${mode}`} style={styles.section} aria-labelledby={`origin-constellation-${mode}-title`}>
       <div className="shell">
         <div className="origin-constellation__header" style={styles.header}>
           <div>
@@ -173,7 +173,7 @@ export default function OriginConstellation({
               </div>
             </div>
           )}
-          <div ref={viewport} className="origin-constellation__viewport" style={{ ...styles.viewport, scrollbarWidth: compact ? "none" : undefined, overscrollBehaviorInline: compact ? "contain" : undefined, touchAction: compact ? "pan-x" : undefined }}>
+          <div ref={viewport} className="origin-constellation__viewport" style={{ ...styles.viewport, scrollbarWidth: compact ? "none" : undefined, overscrollBehaviorInline: compact ? "contain" : undefined, touchAction: compact ? "pan-x" : undefined }} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilir menşe haritası" : "Horizontally scrollable origin map"}>
             <div className="origin-constellation__map" data-map-view={overview ? "overview" : "focus"} style={{ ...styles.map, minWidth: compact ? overview ? "100%" : "min(700px,167vw)" : styles.map.minWidth, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" }}>
               <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
               <MapArt profiles={profiles} />
@@ -192,21 +192,16 @@ export default function OriginConstellation({
                   color: isSelected ? "var(--green)" : "#9db5a9",
                   boxShadow: isSelected ? "0 0 0 5px rgba(239,201,121,.14),0 14px 30px rgba(0,0,0,.25)" : "none",
                   opacity: unavailable ? .4 : 1,
+                  pointerEvents: "none",
                   "--constellation-index": index,
                 },
-                "aria-label": `${comparing ? copy.select : copy.open}: ${local(profile.country, language)}`,
               };
 
-                return comparing ? (
-                  <button key={profile.id} {...shared} type="button" onClick={() => onToggle(profile.id)} aria-pressed={isSelected} disabled={unavailable}>
+                return (
+                  <span key={profile.id} {...shared} aria-hidden="true">
                     <OriginFlag profile={profile} size={overview && !isSelected ? "tiny" : "small"} />
                     <span style={styles.pinCode}>{profile.iso}</span>
-                  </button>
-                ) : (
-                  <LinkComponent key={profile.id} {...shared} to={`/coffees/${profile.id}`} aria-current={profile.id === activeId ? "page" : undefined}>
-                    <OriginFlag profile={profile} size={overview && !isSelected ? "tiny" : "small"} />
-                    <span style={styles.pinCode}>{profile.iso}</span>
-                  </LinkComponent>
+                  </span>
                 );
               })}
             </div>
@@ -232,7 +227,7 @@ export default function OriginConstellation({
               return comparing ? (
                 <button key={profile.id} type="button" className={isSelected ? "is-active" : ""} style={itemStyle} onClick={() => onToggle(profile.id)} aria-pressed={isSelected} disabled={unavailable}>{content}</button>
               ) : (
-                <LinkComponent key={profile.id} className={isSelected ? "is-active" : ""} style={itemStyle} to={`/coffees/${profile.id}`} aria-current={isSelected ? "page" : undefined}>{content}</LinkComponent>
+                <LinkComponent key={profile.id} className={isSelected ? "is-active" : ""} style={itemStyle} to={`/origins/${profile.slug}`} aria-current={isSelected ? "page" : undefined}>{content}</LinkComponent>
               );
             })}
           </div>

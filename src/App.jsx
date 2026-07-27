@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import {
   ArrowRight,
   Bean,
@@ -33,6 +33,7 @@ import OriginFlag from "./components/OriginFlag";
 import { Link, NavLink } from "./components/TransitionLink";
 import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
+import { originCatalogIndexUrl, originCatalogMeta } from "./originCatalog";
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
 const CONTACT_EMAIL = "info@makendi.com";
@@ -41,6 +42,7 @@ const CONTACT_PHONE_HREF = "+902163407028";
 const CONTACT_WEBSITE = "www.coffendi.com";
 const DEFAULT_SHARE_IMAGE = `${SITE_URL}/images/green-green-beans-sack.webp`;
 const DEFAULT_SHARE_IMAGE_ALT = "Green coffee beans in a jute sack";
+const OriginDocumentLibrary = lazy(() => import("./components/OriginDocumentLibrary"));
 
 const messages = {
   en: {
@@ -113,7 +115,7 @@ const messages = {
   },
 };
 
-const coffeeProfiles = [
+const baseCoffeeProfiles = [
   {
     id: "ethiopia-washed",
     iso: "ET",
@@ -259,6 +261,58 @@ const coffeeProfiles = [
     ],
   },
 ];
+
+const baseIsoCodes = new Set(baseCoffeeProfiles.map((profile) => profile.iso));
+
+function mergeCatalogCountry(profile, catalog) {
+  if (!catalog) {
+    return {
+      ...profile,
+      slug: profile.country.en.toLowerCase().replace(/[^a-z0-9]+/g, "-"),
+      featured: true,
+      sheets: [],
+      sheetCount: 0,
+      catalogDataUrl: "",
+      bundleUrl: "",
+      bundleDownloadUrl: "",
+    };
+  }
+
+  const catalogProfile = catalog.websiteProfile;
+  return {
+    ...profile,
+    slug: catalogProfile.slug,
+    featured: true,
+    zone: catalogProfile.zone,
+    processFamily: catalogProfile.processFamily,
+    map: catalogProfile.map,
+    pin: catalogProfile.pin,
+    directions: catalogProfile.directions,
+    sheets: [],
+    sheetCount: catalogProfile.sheetCount,
+    catalogDataUrl: catalogProfile.catalogDataUrl,
+    bundleUrl: catalogProfile.bundleUrl,
+    bundleDownloadUrl: catalogProfile.bundleDownloadUrl,
+    catalogRevision: originCatalogMeta.revision,
+  };
+}
+
+function createCatalogProfile(catalog) {
+  return {
+    ...catalog.websiteProfile,
+    featured: false,
+  };
+}
+
+function buildCoffeeProfiles(originCatalogCountries = []) {
+  const catalogByIso = new Map(originCatalogCountries.map((country) => [country.iso, country]));
+  return [
+    ...baseCoffeeProfiles.map((profile) => mergeCatalogCountry(profile, catalogByIso.get(profile.iso))),
+    ...originCatalogCountries
+      .filter((catalog) => !baseIsoCodes.has(catalog.iso))
+      .map(createCatalogProfile),
+  ];
+}
 
 function localized(value, language) {
   return typeof value === "object" && value !== null ? value[language] : value;
@@ -488,34 +542,59 @@ function SectionHeading({ eyebrow, title, copy, action }) {
 
 function ProfileCard({ profile, language, selected, onToggle, copy, comparisonFull = false }) {
   const unavailable = comparisonFull && !selected;
+  const deferredDocumentImage = profile.heroKind === "document";
+  const imageContainer = useRef(null);
+  const [shouldLoadImage, setShouldLoadImage] = useState(!deferredDocumentImage);
+
+  useEffect(() => {
+    if (!deferredDocumentImage || shouldLoadImage) return undefined;
+    const element = imageContainer.current;
+    if (!element || !("IntersectionObserver" in window)) {
+      setShouldLoadImage(true);
+      return undefined;
+    }
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setShouldLoadImage(true);
+      observer.disconnect();
+    }, { rootMargin: "240px 0px" });
+    observer.observe(element);
+    return () => observer.disconnect();
+  }, [deferredDocumentImage, shouldLoadImage]);
+
   return (
-    <article className="profile-card">
-      <Link className="profile-card__image" to={`/coffees/${profile.id}`}>
-        <img src={profile.image} srcSet={profile.srcSet} sizes="(max-width: 820px) calc(100vw - 34px), (max-width: 1100px) calc(50vw - 36px), 390px" alt={localized(profile.alt, language)} width="1200" height="800" loading="lazy" decoding="async" style={{ viewTransitionName: `coffee-${profile.id}` }} />
+    <article ref={imageContainer} className="profile-card">
+      <Link className={`profile-card__image ${profile.heroKind === "document" ? "profile-card__image--document" : ""}`} to={`/origins/${profile.slug}`}>
+        {shouldLoadImage ? (
+          <img src={profile.cardImage || profile.image} srcSet={profile.cardImage ? undefined : profile.srcSet} sizes="(max-width: 820px) calc(100vw - 34px), (max-width: 1100px) calc(50vw - 36px), 390px" alt={localized(profile.alt, language)} width={profile.heroKind === "document" ? "360" : "1200"} height={profile.heroKind === "document" ? "540" : "800"} loading="lazy" decoding="async" style={{ viewTransitionName: `coffee-${profile.id}` }} />
+        ) : (
+          <i className="profile-card__image-placeholder" aria-hidden="true" />
+        )}
         <span className="profile-card__process"><OriginFlag profile={profile} size="small" /><span>{localized(profile.process, language)}</span></span>
       </Link>
       <div className="profile-card__content">
         <p className="eyebrow profile-card__origin"><OriginFlag profile={profile} size="tiny" />{localized(profile.country, language)}</p>
-        <h3><Link to={`/coffees/${profile.id}`}>{localized(profile.name, language)}</Link></h3>
+        <h3><Link to={`/origins/${profile.slug}`}>{localized(profile.name, language)}</Link></h3>
         <p>{localized(profile.profile, language)}</p>
         <dl><div><dt>{language === "tr" ? "Bölge" : "Region"}</dt><dd>{profile.region}</dd></div><div><dt>{language === "tr" ? "Kullanım yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div></dl>
         <div className="profile-card__actions">
           <button className={`button button--compare ${selected ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selected} disabled={unavailable} title={unavailable ? copy.comparisonFullHint : undefined}>{selected ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selected ? copy.removeCompare : unavailable ? copy.comparisonFull : copy.addCompare}</button>
-          <Link className="circle-link" to={`/coffees/${profile.id}`} aria-label={`${copy.learnMore}: ${localized(profile.name, language)}`}><ArrowRight aria-hidden="true" /></Link>
+          <Link className="circle-link" to={`/origins/${profile.slug}`} aria-label={`${copy.learnMore}: ${localized(profile.name, language)}`}><ArrowRight aria-hidden="true" /></Link>
         </div>
       </div>
     </article>
   );
 }
 
-function HomePage({ language, copy, selected, onToggle, comparisonFull }) {
+function HomePage({ language, copy, selected, onToggle, comparisonFull, profiles }) {
   usePageMeta(
     language === "tr" ? "Coffendi — Menşeden kavurucuya yeşil kahve" : "Coffendi — Green coffee, from origin to roaster",
     language === "tr" ? "Yeşil kahve menşelerini, profilleri ve Coffendi talep yolunu keşfedin." : "Explore green coffee origins, representative profiles and the Coffendi inquiry pathway.",
     "/",
     language,
   );
-  const featured = coffeeProfiles.slice(0, 3);
+  const featured = profiles.slice(0, 3);
+  const atlasProfiles = profiles.filter(({ featured: isFeatured }) => isFeatured);
   return (
     <>
       <section className="hero">
@@ -537,7 +616,7 @@ function HomePage({ language, copy, selected, onToggle, comparisonFull }) {
 
       <section className="service-strip"><div className="shell"><div><MapPin aria-hidden="true" /><span>{language === "tr" ? "Menşe bağlamı" : "Origin context"}</span></div><div><Coffee aria-hidden="true" /><span>{language === "tr" ? "Fincan yönü" : "Cup direction"}</span></div><div><PackageCheck aria-hidden="true" /><span>{language === "tr" ? "Belge teyidi" : "Document confirmation"}</span></div><div><Ship aria-hidden="true" /><span>{language === "tr" ? "Talebe göre lojistik" : "Logistics by inquiry"}</span></div></div></section>
 
-      <OriginAtlas profiles={coffeeProfiles} language={language} LinkComponent={Link} />
+      <OriginAtlas profiles={atlasProfiles} language={language} LinkComponent={Link} />
 
       <section className="section shell">
         <SectionHeading eyebrow={language === "tr" ? "Başlangıç profilleri" : "Starting profiles"} title={language === "tr" ? "Önce fincan yönünü bulun." : "Find the cup direction first."} copy={language === "tr" ? "Bunlar canlı stok veya fiyat teklifi değil, ilk görüşmeyi netleştiren temsili menşe profilleridir." : "These are representative origin profiles—not live stock or offers—designed to make the first conversation more precise."} action={<Link className="text-link" to="/coffees">{language === "tr" ? "Tüm profiller" : "All profiles"}<ArrowRight aria-hidden="true" /></Link>} />
@@ -556,16 +635,16 @@ function HomePage({ language, copy, selected, onToggle, comparisonFull }) {
   );
 }
 
-function CoffeesPage({ language, copy, selected, onToggle, comparisonFull }) {
+function CoffeesPage({ language, copy, selected, onToggle, comparisonFull, profiles }) {
   usePageMeta(language === "tr" ? "Yeşil kahve profilleri — Coffendi" : "Green coffee profiles — Coffendi", language === "tr" ? "Temsili Coffendi yeşil kahve profillerini keşfedin ve karşılaştırın." : "Explore and compare representative Coffendi green coffee profiles.", "/coffees", language);
-  const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(coffeeProfiles, language);
+  const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(profiles, language);
   return (
     <>
-      <PageHero eyebrow={language === "tr" ? "Yeşil kahve kütüphanesi" : "Green coffee library"} title={language === "tr" ? "Kahve seçimi net bir yönle başlar." : "Coffee selection starts with a clear direction."} copy={language === "tr" ? "Temsili profilleri keşfedin. Güncel ürün, kalite, miktar ve lojistik ayrıntıları her talepte ayrıca teyit edilir." : "Explore representative profiles. Current product, quality, quantity and logistics details are confirmed separately for every inquiry."} marker={`0${coffeeProfiles.length}`} />
+      <PageHero eyebrow={language === "tr" ? "Yeşil kahve kütüphanesi" : "Green coffee library"} title={language === "tr" ? "Kahve seçimi net bir yönle başlar." : "Coffee selection starts with a clear direction."} copy={language === "tr" ? "Temsili profilleri keşfedin. Güncel ürün, kalite, miktar ve lojistik ayrıntıları her talepte ayrıca teyit edilir." : "Explore representative profiles. Current product, quality, quantity and logistics details are confirmed separately for every inquiry."} marker={String(profiles.length).padStart(2, "0")} />
       <section className="section shell coffee-library" aria-labelledby="coffee-library-title">
         <h2 id="coffee-library-title" className="visually-hidden">{language === "tr" ? "Filtrelenebilir yeşil kahve profilleri" : "Filterable green coffee profiles"}</h2>
         <div className="catalog-note"><Bean aria-hidden="true" /><p>{copy.sourceNote}</p></div>
-        <OriginFilters profiles={coffeeProfiles} language={language} filters={filters} onChange={updateFilter} onReset={resetFilters} hasFilters={hasFilters} resultCount={filteredProfiles.length} idPrefix="library-origin" compact />
+        <OriginFilters profiles={profiles} language={language} filters={filters} onChange={updateFilter} onReset={resetFilters} hasFilters={hasFilters} resultCount={filteredProfiles.length} idPrefix="library-origin" compact />
         {filteredProfiles.length ? (
           <div className="profile-grid profile-grid--catalog" aria-live="polite">{filteredProfiles.map((profile) => <ProfileCard key={profile.id} profile={profile} language={language} selected={selected.includes(profile.id)} onToggle={onToggle} copy={copy} comparisonFull={comparisonFull} />)}</div>
         ) : (
@@ -576,25 +655,28 @@ function CoffeesPage({ language, copy, selected, onToggle, comparisonFull }) {
   );
 }
 
-function CoffeePage({ language, copy, selected, onToggle, comparisonFull }) {
-  const { coffeeId } = useParams();
-  const profile = coffeeProfiles.find(({ id }) => id === coffeeId);
+function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profiles }) {
+  const { coffeeId, countrySlug } = useParams();
+  const profile = countrySlug
+    ? profiles.find(({ slug }) => slug === countrySlug)
+    : profiles.find(({ id }) => id === coffeeId);
+  const canonicalPath = profile ? `/origins/${profile.slug}` : "/origins";
   usePageMeta(
     profile ? `${localized(profile.name, language)} — Coffendi` : "Green coffee — Coffendi",
     profile ? localized(profile.profile, language) : "Explore Coffendi green coffee profiles.",
-    profile ? `/coffees/${profile.id}` : "/coffees",
+    canonicalPath,
     language,
     profile ? {
       image: `${SITE_URL}${profile.image}`,
       imageAlt: localized(profile.alt, language),
     } : undefined,
   );
-  if (!profile) return <Navigate to="/coffees" replace />;
+  if (!profile) return <Navigate to="/origins" replace />;
   const selectedProfile = selected.includes(profile.id);
   const unavailable = comparisonFull && !selectedProfile;
   return (
     <>
-      <section className="profile-detail">
+      <section id="overview" className={`profile-detail ${profile.heroKind === "document" ? "profile-detail--document" : ""}`}>
         <div className="shell profile-detail__grid">
           <div className="profile-detail__media">
             <img
@@ -602,16 +684,28 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull }) {
               srcSet={profile.srcSet}
               sizes="(max-width: 760px) calc(100vw - 34px), (max-width: 1100px) min(820px, 95vw), 580px"
               alt={localized(profile.alt, language)}
-              width="1200"
-              height="800"
+              width={profile.heroKind === "document" ? "1080" : "1200"}
+              height={profile.heroKind === "document" ? "1620" : "800"}
               fetchPriority="high"
               decoding="async"
               style={{ viewTransitionName: `coffee-${profile.id}` }}
             />
-            <span className="profile-detail__origin-badge"><OriginFlag profile={profile} size="medium" />{localized(profile.country, language)}</span>
+            <span className="profile-detail__origin-badge">
+              <OriginFlag profile={profile} size="medium" />
+              <span>
+                {localized(profile.country, language)}
+                {profile.sheetCount > 0 && (
+                  <small>
+                    {profile.sheetCount} {language === "tr"
+                      ? "teknik föy"
+                      : profile.sheetCount === 1 ? "reference sheet" : "reference sheets"}
+                  </small>
+                )}
+              </span>
+            </span>
           </div>
           <div className="profile-detail__copy">
-            <Link className="breadcrumbs" to="/coffees">{copy.backCoffees}<ChevronRight aria-hidden="true" /></Link>
+            <Link className="breadcrumbs" to="/origins">{language === "tr" ? "Menşelere dön" : "Back to origins"}<ChevronRight aria-hidden="true" /></Link>
             <p className="eyebrow profile-detail__region"><OriginFlag profile={profile} size="tiny" />{profile.region}</p>
             <h1>{localized(profile.name, language)}</h1>
             <p className="profile-detail__lede">{localized(profile.profile, language)}</p>
@@ -621,8 +715,10 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull }) {
               <div><dt>{language === "tr" ? "İşleme" : "Process"}</dt><dd>{localized(profile.process, language)}</dd></div>
               <div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{localized(profile.use, language)}</dd></div>
               <div><dt>{language === "tr" ? "Hasat bağlamı" : "Harvest context"}</dt><dd>{localized(profile.harvest, language)}</dd></div>
+              <div><dt>{language === "tr" ? "Katalog" : "Catalogue"}</dt><dd>{profile.sheetCount > 0 ? `${profile.sheetCount} ${language === "tr" ? "teknik föy" : profile.sheetCount === 1 ? "reference sheet" : "reference sheets"}` : language === "tr" ? "Talep üzerine teyit edilir" : "Confirmed on request"}</dd></div>
             </dl>
             <div className="detail-actions">
+              {profile.sheetCount > 0 && <a className="button button--gold" href="#catalog"><Bean aria-hidden="true" />{language === "tr" ? "Föyleri incele" : "Browse sheets"}</a>}
               <button className={`button button--compare ${selectedProfile ? "is-selected" : ""} ${unavailable ? "is-unavailable" : ""}`} type="button" onClick={() => onToggle(profile.id)} aria-pressed={selectedProfile} disabled={unavailable} title={unavailable ? copy.comparisonFullHint : undefined}>{selectedProfile ? <Check aria-hidden="true" /> : <GitCompareArrows aria-hidden="true" />}{selectedProfile ? copy.removeCompare : unavailable ? copy.comparisonFull : copy.addCompare}</button>
               <Link className="button button--dark" to="/contact">{copy.requestInfo}<ArrowRight aria-hidden="true" /></Link>
             </div>
@@ -630,7 +726,25 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull }) {
           </div>
         </div>
       </section>
-      <OriginConstellation profiles={coffeeProfiles} language={language} LinkComponent={Link} activeId={profile.id} />
+      <nav className="origin-local-nav" aria-label={language === "tr" ? "Menşe sayfası bölümleri" : "Origin page sections"}>
+        <div className="shell">
+          <span><OriginFlag profile={profile} size="small" /><strong>{localized(profile.country, language)}</strong></span>
+          <div>
+            <a href="#overview">{language === "tr" ? "Genel bakış" : "Overview"}</a>
+            <a href="#catalog">{language === "tr" ? "Teknik föyler" : "Reference sheets"}</a>
+            <a href="#origin-network">{language === "tr" ? "Menşe haritası" : "Origin map"}</a>
+            <Link to="/contact">{language === "tr" ? "Talep oluştur" : "Start an inquiry"}</Link>
+          </div>
+        </div>
+      </nav>
+      <Suspense fallback={(
+        <section id="catalog" className="section" aria-busy="true">
+          <div className="shell catalog-note"><Bean aria-hidden="true" /><p>{language === "tr" ? "Ülke kataloğu hazırlanıyor." : "Preparing the country catalogue."}</p></div>
+        </section>
+      )}>
+        <OriginDocumentLibrary profile={profile} language={language} />
+      </Suspense>
+      <OriginConstellation profiles={profiles} language={language} LinkComponent={Link} activeId={profile.id} />
       <section className="section shell">
         <SectionHeading eyebrow={language === "tr" ? "Karar çerçevesi" : "Decision framework"} title={language === "tr" ? "Bir sonraki görüşmede neyi teyit etmelisiniz?" : "What should the next conversation confirm?"} />
         <div className="decision-grid">
@@ -643,14 +757,29 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull }) {
   );
 }
 
-function OriginsPage({ language }) {
-  usePageMeta(language === "tr" ? "Yeşil kahve menşeleri — Coffendi" : "Green coffee origins — Coffendi", language === "tr" ? "Coffendi'nin yeşil kahve menşe yaklaşımını keşfedin." : "Explore Coffendi’s green coffee origin framework.", "/origins", language);
-  return <><PageHero eyebrow={language === "tr" ? "Menşe bağlamı" : "Origin context"} title={language === "tr" ? "Her menşe, tek bir tat tanımından daha fazlasıdır." : "Every origin is more than one flavour description."} copy={language === "tr" ? "Bölge, çeşit, işleme, hasat, üretici yapısı ve lojistik birlikte değerlendirilmelidir." : "Region, variety, process, harvest, producer structure and logistics should be considered together."} marker={language === "tr" ? "Küresel" : "Global"} /><OriginExplorer profiles={coffeeProfiles} language={language} LinkComponent={Link} /></>;
+function OriginsPage({ language, profiles }) {
+  usePageMeta(
+    language === "tr" ? "26 yeşil kahve menşesi — Coffendi" : "26 green coffee origins — Coffendi",
+    language === "tr" ? "Coffendi'nin 26 ülkelik menşe atlasını ve 60 kaynak föyünü keşfedin." : "Explore Coffendi’s 26-country origin atlas and 60 source-backed reference sheets.",
+    "/origins",
+    language,
+  );
+  return (
+    <>
+      <PageHero
+        eyebrow={language === "tr" ? "Küresel menşe atlası" : "Global origin atlas"}
+        title={language === "tr" ? "26 ülke. 60 kaynak föyü. Tek bir açık atlas." : "26 countries. 60 source sheets. One clear atlas."}
+        copy={language === "tr" ? "Ülkeye, bölgeye, işleme yöntemine veya fincan yönüne göre keşfedin; ardından yalnızca seçtiğiniz ülkeye ait föyleri inceleyin ve indirin." : "Explore by country, region, process, or cup direction, then review and download only the sheets related to the selected origin."}
+        marker={String(profiles.length).padStart(2, "0")}
+      />
+      <OriginExplorer profiles={profiles} language={language} LinkComponent={Link} />
+    </>
+  );
 }
 
-function ComparePage({ language, copy, selected, onToggle, onClear }) {
+function ComparePage({ language, copy, selected, onToggle, onClear, profiles: allProfiles }) {
   usePageMeta(language === "tr" ? "Yeşil kahve karşılaştırması — Coffendi" : "Green coffee comparison — Coffendi", language === "tr" ? "Temsili yeşil kahve profillerini yan yana karşılaştırın." : "Compare representative green coffee profiles side by side.", "/compare", language);
-  const profiles = coffeeProfiles.filter(({ id }) => selected.includes(id));
+  const profiles = allProfiles.filter(({ id }) => selected.includes(id));
   const comparisonFull = selected.length >= 3;
   const selectionStatus = comparisonFull
     ? language === "tr" ? "Üç profil seçildi. Başka bir profil eklemek için önce birini kaldırın." : "Three profiles selected. Remove one before adding another."
@@ -672,7 +801,7 @@ function ComparePage({ language, copy, selected, onToggle, onClear }) {
         copy={language === "tr" ? "En fazla üç profili seçin; menşe, süreç, fincan yönü ve kullanım amacını karşılaştırın." : "Choose up to three profiles and compare origin, process, cup direction and intended use."}
         marker={`${selected.length}/3`}
       />
-      <OriginConstellation profiles={coffeeProfiles} language={language} selectedIds={selected} onToggle={onToggle} comparisonFull={comparisonFull} mode="compare" />
+      <OriginConstellation profiles={allProfiles} language={language} selectedIds={selected} onToggle={onToggle} comparisonFull={comparisonFull} mode="compare" />
       <section className="section shell compare-workbench">
         <div className="compare-toolbar">
           <div>
@@ -686,7 +815,7 @@ function ComparePage({ language, copy, selected, onToggle, onClear }) {
           {selected.length > 0 && <button className="compare-toolbar__clear" type="button" onClick={onClear}><X aria-hidden="true" />{language === "tr" ? "Seçimi temizle" : "Clear selection"}</button>}
         </div>
         <div className="compare-picker" role="group" aria-label={language === "tr" ? "Karşılaştırma profilleri" : "Comparison profiles"}>
-          {coffeeProfiles.map((profile, index) => {
+          {allProfiles.map((profile, index) => {
             const isSelected = selected.includes(profile.id);
             const unavailable = comparisonFull && !isSelected;
             return (
@@ -849,20 +978,97 @@ function NotFound({ language }) {
   return <section className="section shell not-found"><span>404</span><h1>{language === "tr" ? "Bu sayfa bulunamadı." : "This page could not be found."}</h1><Link className="button button--dark" to="/">{language === "tr" ? "Ana sayfaya dön" : "Return home"}</Link></section>;
 }
 
-export default function App() {
+function CatalogStatusPage({ language, path, error, onRetry }) {
+  const title = error
+    ? language === "tr" ? "Menşe kataloğu şu anda yüklenemiyor." : "The origin catalogue could not be loaded."
+    : language === "tr" ? "Küresel menşe kataloğu hazırlanıyor." : "Preparing the global origin catalogue.";
+  const description = error
+    ? language === "tr" ? "Bağlantınızı kontrol edin ve 26 ülkelik kataloğu yeniden deneyin." : "Check your connection and retry the 26-country catalogue."
+    : language === "tr" ? "26 ülke ve 60 doğrulanmış kaynak föyü yükleniyor." : "Loading 26 countries and 60 verified source sheets.";
+  usePageMeta(`${title} — Coffendi`, description, path, language, { indexable: !error });
+  return (
+    <>
+      <PageHero
+        eyebrow={language === "tr" ? "Coffendi menşe atlası" : "Coffendi origin atlas"}
+        title={title}
+        copy={description}
+        marker={error ? "!" : "26"}
+      />
+      <section className="section shell catalog-route-status" aria-live="polite" aria-busy={!error}>
+        <Globe2 aria-hidden="true" />
+        <p>{description}</p>
+        {error && (
+          <button className="button button--dark" type="button" onClick={onRetry}>
+            {language === "tr" ? "Kataloğu yeniden dene" : "Retry the catalogue"}
+          </button>
+        )}
+      </section>
+    </>
+  );
+}
+
+export default function App({ initialOriginCatalog = null }) {
+  const location = useLocation();
   const [storedLanguage, setLanguage] = usePersistentState("coffendi-language", "en");
   const [selected, setSelected] = usePersistentState("coffendi-green-comparison", ["ethiopia-washed", "brazil-classic"]);
+  const [catalogAttempt, setCatalogAttempt] = useState(0);
+  const [catalogState, setCatalogState] = useState(() => initialOriginCatalog || { status: "idle", countries: [] });
   const language = storedLanguage === "tr" ? "tr" : "en";
   const copy = messages[language] || messages.en;
-  const safeSelected = useMemo(() => Array.isArray(selected) ? selected.filter((id) => coffeeProfiles.some((profile) => profile.id === id)).slice(0, 3) : [], [selected]);
+  const catalogRequired = location.pathname === "/compare"
+    || location.pathname === "/coffees"
+    || location.pathname.startsWith("/coffees/")
+    || location.pathname === "/origins"
+    || location.pathname.startsWith("/origins/");
+  const profiles = useMemo(() => buildCoffeeProfiles(catalogState.countries), [catalogState.countries]);
+  const safeSelected = useMemo(() => Array.isArray(selected) ? selected.filter((id) => profiles.some((profile) => profile.id === id)).slice(0, 3) : [], [profiles, selected]);
 
   useEffect(() => { document.documentElement.lang = language; }, [language]);
   useEffect(() => {
     if (storedLanguage !== language) setLanguage(language);
   }, [language, setLanguage, storedLanguage]);
+  useEffect(() => {
+    if (catalogState.status === "ready") return undefined;
+    const controller = new AbortController();
+    let idleHandle = 0;
+    const loadCatalog = () => {
+      setCatalogState((current) => ({ ...current, status: "loading" }));
+      fetch(originCatalogIndexUrl, {
+        signal: controller.signal,
+        cache: "force-cache",
+        headers: { Accept: "application/json" },
+      })
+        .then((response) => {
+          if (!response.ok) throw new Error(`Origin index returned ${response.status}`);
+          return response.json();
+        })
+        .then((payload) => {
+          if (payload.revision !== originCatalogMeta.revision || !Array.isArray(payload.countries) || payload.countries.length !== 22) {
+            throw new Error("Origin index validation failed");
+          }
+          setCatalogState({ status: "ready", countries: payload.countries });
+        })
+        .catch((error) => {
+          if (error.name !== "AbortError") setCatalogState({ status: "error", countries: [] });
+        });
+    };
+
+    if (catalogRequired) loadCatalog();
+    else if ("requestIdleCallback" in window) idleHandle = window.requestIdleCallback(loadCatalog, { timeout: 1500 });
+    else idleHandle = window.setTimeout(loadCatalog, 300);
+
+    return () => {
+      controller.abort();
+      if ("cancelIdleCallback" in window) window.cancelIdleCallback(idleHandle);
+      else window.clearTimeout(idleHandle);
+    };
+    // A retry or transition into a catalog route should perform exactly one validated request.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [catalogAttempt, catalogRequired]);
+
   const toggleCompare = (id) => {
     setSelected((current) => {
-      const safe = Array.isArray(current) ? current.filter((value) => coffeeProfiles.some((profile) => profile.id === value)).slice(0, 3) : [];
+      const safe = Array.isArray(current) ? current.filter((value) => profiles.some((profile) => profile.id === value)).slice(0, 3) : [];
       if (safe.includes(id)) return safe.filter((value) => value !== id);
       return safe.length < 3 ? [...safe, id] : safe;
     });
@@ -870,5 +1076,37 @@ export default function App() {
   const clearComparison = () => setSelected([]);
   const comparisonFull = safeSelected.length >= 3;
 
-  return <div className="app-shell"><a className="skip-link" href="#main-content">{language === "tr" ? "İçeriğe geç" : "Skip to content"}</a><ScrollManager /><ExperienceLayer language={language} /><Header language={language} setLanguage={setLanguage} copy={copy} /><main id="main-content"><Routes><Route path="/" element={<HomePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} comparisonFull={comparisonFull} />} /><Route path="/coffees" element={<CoffeesPage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} comparisonFull={comparisonFull} />} /><Route path="/coffees/:coffeeId" element={<CoffeePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} comparisonFull={comparisonFull} />} /><Route path="/origins" element={<OriginsPage language={language} />} /><Route path="/compare" element={<ComparePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} onClear={clearComparison} />} /><Route path="/approach" element={<ApproachPage language={language} />} /><Route path="/contact" element={<ContactPage language={language} copy={copy} />} /><Route path="/privacy" element={<PrivacyPage language={language} />} /><Route path="*" element={<NotFound language={language} />} /></Routes></main><Footer language={language} copy={copy} /></div>;
+  const catalogPending = catalogRequired && catalogState.status !== "ready";
+  return (
+    <div className="app-shell">
+      <a className="skip-link" href="#main-content">{language === "tr" ? "İçeriğe geç" : "Skip to content"}</a>
+      <ScrollManager />
+      <ExperienceLayer language={language} />
+      <Header language={language} setLanguage={setLanguage} copy={copy} />
+      <main id="main-content">
+        {catalogPending ? (
+          <CatalogStatusPage
+            language={language}
+            path={location.pathname}
+            error={catalogState.status === "error"}
+            onRetry={() => setCatalogAttempt((attempt) => attempt + 1)}
+          />
+        ) : (
+          <Routes>
+            <Route path="/" element={<HomePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} comparisonFull={comparisonFull} profiles={profiles} />} />
+            <Route path="/coffees" element={<CoffeesPage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} comparisonFull={comparisonFull} profiles={profiles} />} />
+            <Route path="/coffees/:coffeeId" element={<CoffeePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} comparisonFull={comparisonFull} profiles={profiles} />} />
+            <Route path="/origins" element={<OriginsPage language={language} profiles={profiles} />} />
+            <Route path="/origins/:countrySlug" element={<CoffeePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} comparisonFull={comparisonFull} profiles={profiles} />} />
+            <Route path="/compare" element={<ComparePage language={language} copy={copy} selected={safeSelected} onToggle={toggleCompare} onClear={clearComparison} profiles={profiles} />} />
+            <Route path="/approach" element={<ApproachPage language={language} />} />
+            <Route path="/contact" element={<ContactPage language={language} copy={copy} />} />
+            <Route path="/privacy" element={<PrivacyPage language={language} />} />
+            <Route path="*" element={<NotFound language={language} />} />
+          </Routes>
+        )}
+      </main>
+      <Footer language={language} copy={copy} />
+    </div>
+  );
 }

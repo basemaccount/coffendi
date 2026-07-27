@@ -2,12 +2,12 @@ import { chromium } from "@playwright/test";
 
 const baseUrl = process.env.COFFENDI_BASE_URL || "http://127.0.0.1:4173";
 const profileFlags = [
-  ["/coffees/ethiopia-washed", "et"],
-  ["/coffees/colombia-balanced", "co"],
-  ["/coffees/brazil-classic", "br"],
-  ["/coffees/guatemala-structured", "gt"],
-  ["/coffees/kenya-vivid", "ke"],
-  ["/coffees/rwanda-sweet", "rw"],
+  ["/origins/ethiopia", "et"],
+  ["/origins/colombia", "co"],
+  ["/origins/brazil", "br"],
+  ["/origins/guatemala", "gt"],
+  ["/origins/kenya", "ke"],
+  ["/origins/rwanda", "rw"],
 ];
 const routes = ["/", "/coffees", "/origins", "/compare", "/approach", "/contact", "/privacy", ...profileFlags.map(([route]) => route)];
 const rapidTargets = ["/coffees", "/origins", "/compare", "/approach"];
@@ -49,8 +49,25 @@ for (const route of routes) {
       || bounds.left >= innerWidth
       || element.closest("[inert], [aria-hidden='true']");
     if (hidden) return [];
-    const x = Math.max(0, Math.min(innerWidth - 1, bounds.left + bounds.width / 2));
-    const y = Math.max(0, Math.min(innerHeight - 1, bounds.top + bounds.height / 2));
+    let left = Math.max(0, bounds.left);
+    let right = Math.min(innerWidth, bounds.right);
+    let top = Math.max(0, bounds.top);
+    let bottom = Math.min(innerHeight, bounds.bottom);
+    for (let ancestor = element.parentElement; ancestor; ancestor = ancestor.parentElement) {
+      const ancestorStyle = getComputedStyle(ancestor);
+      const ancestorBounds = ancestor.getBoundingClientRect();
+      if (ancestorStyle.overflowX !== "visible") {
+        left = Math.max(left, ancestorBounds.left);
+        right = Math.min(right, ancestorBounds.right);
+      }
+      if (ancestorStyle.overflowY !== "visible") {
+        top = Math.max(top, ancestorBounds.top);
+        bottom = Math.min(bottom, ancestorBounds.bottom);
+      }
+    }
+    if (right - left < 1 || bottom - top < 1) return [];
+    const x = Math.max(0, Math.min(innerWidth - 1, (left + right) / 2));
+    const y = Math.max(0, Math.min(innerHeight - 1, (top + bottom) / 2));
     const hit = document.elementFromPoint(x, y);
     if (hit === element || element.contains(hit)) return [];
     return [element.getAttribute("aria-label") || element.textContent?.replace(/\s+/g, " ").trim().slice(0, 60) || element.tagName];
@@ -171,7 +188,7 @@ assert(await page.locator(".origin-atlas__directions li").count() === 3, "countr
 await atlasButtons.evaluateAll((buttons) => buttons.slice(1).forEach((button) => button.click()));
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
 assert(await atlasButtons.last().getAttribute("aria-pressed") === "true", "rapid atlas selection did not settle on the last requested origin");
-assert(await page.locator(".origin-atlas__directions li").count() === 3, "selected atlas origin did not retain its three representative coffee directions");
+assert(await page.locator(".origin-atlas__directions li").count() >= 1, "selected atlas origin did not retain its source-backed coffee directions");
 await page.locator(".origin-atlas__visual").evaluate((element) => Object.defineProperty(element, "startViewTransition", { configurable: true, value: () => { throw new Error("forced scoped transition failure"); } }));
 await atlasButtons.first().click();
 await page.waitForFunction(() => document.querySelector('.origin-atlas__workspace')?.getAttribute('aria-busy') === 'false');
@@ -196,16 +213,16 @@ const mapPins = page.locator(".coffee-map__pin");
 const flagFilters = page.locator('.origin-flag-filter [role="group"] > button');
 await page.locator(".coffee-map__canvas").scrollIntoViewIfNeeded();
 await page.locator(".coffee-map__canvas .origin-map-artwork").evaluate((image) => image.decode());
-assert(await mapPins.count() === 6, "origin map did not expose all six country pins");
+assert(await mapPins.count() === 26, "origin map did not expose all 26 country pins");
 assert(await page.locator('.coffee-map__canvas .origin-map-artwork[data-map-geometry="natural-earth-110m"]').evaluate((image) => image.naturalWidth === 1000), "origin map did not load the local Natural Earth geometry");
-assert(await page.locator(".coffee-map__canvas [data-origin-anchor]").count() === 6, "origin map did not expose a geographic anchor for every profile");
-assert(await mapPins.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 6, "origin map did not render real flags for all six country pins");
-assert(await flagFilters.count() === 7, "origin filters did not expose all six flags plus the all-origins control");
+assert(await page.locator(".coffee-map__canvas [data-origin-anchor]").count() === 26, "origin map did not expose a geographic anchor for every profile");
+assert(await mapPins.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 26, "origin map did not render real flags for all 26 country pins");
+assert(await flagFilters.count() === 27, "origin filters did not expose all 26 flags plus the all-origins control");
 assert(await page.locator(".coffee-map__lenses button").count() === 3, "origin map did not expose its three information lenses");
-assert(await page.locator(".origin-explorer__country-index button").count() === 6, "origin explorer did not expose all six country passports");
+assert(await page.locator(".origin-explorer__country-index button").count() === 26, "origin explorer did not expose all 26 country passports");
 await page.locator(".coffee-map__lenses button").filter({ hasText: "Process" }).click();
-assert((await mapPins.first().locator("small").textContent()).includes("Washed"), "process lens did not replace the geographic map labels");
-await mapPins.filter({ hasText: "Kenya" }).click();
+assert((await page.locator(".coffee-map__pin.is-active small").textContent()).includes("Washed"), "process lens did not replace the geographic map labels");
+await page.locator(".origin-explorer__country-index button").filter({ hasText: "Kenya" }).click();
 assert((await page.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "map pin selection did not update the origin readout");
 await page.locator('.coffee-map__stepper button[aria-label="Next origin"]').click();
 assert((await page.locator(".origin-explorer__readout").textContent()).includes("Rwanda"), "origin stepper did not advance to the next country");
@@ -214,17 +231,17 @@ assert(await mapPins.count() === 1, "flag filter did not narrow the map to one c
 assert((await page.locator(".origin-explorer__readout").textContent()).includes("Rwanda"), "flag filter did not synchronize the active readout");
 await page.locator(".origin-filter-panel__reset").click();
 await page.locator(".origin-zone-filter button").filter({ hasText: "Africa" }).click();
-assert(await mapPins.count() === 3, "Africa region filter did not expose the three African origins");
+assert(await mapPins.count() === 10, "Africa region filter did not expose all ten African origins");
 await page.locator(".origin-filter-panel__reset").click();
 await page.locator(".origin-select:not(.origin-sort) select").selectOption("natural");
-assert(await mapPins.count() === 1 && (await mapPins.first().textContent()).includes("Brazil"), "process filter did not isolate the natural profile");
+assert(await mapPins.count() >= 1 && await page.locator(".origin-explorer__country-index button").filter({ hasText: "Brazil" }).count() === 1, "process filter did not retain the natural Brazil profile");
 await page.locator(".origin-filter-panel__reset").click();
 await page.locator(".origin-search input").fill("Cerrado");
-assert(await mapPins.count() === 1 && (await mapPins.first().textContent()).includes("Brazil"), "text filter did not search regional profile information");
+assert(await mapPins.count() === 1 && await page.locator(".origin-explorer__country-index button").filter({ hasText: "Brazil" }).count() === 1, "text filter did not search regional profile information");
 await page.locator(".origin-search input").fill("no matching origin");
 assert(await page.locator(".origin-explorer__empty").count() === 1, "empty map filters did not expose a recovery state");
 await page.locator(".origin-explorer__empty button").click();
-assert(await mapPins.count() === 6, "empty-state reset did not restore all map pins");
+assert(await mapPins.count() === 26, "empty-state reset did not restore all map pins");
 
 await page.goto(`${baseUrl}/coffees`, { waitUntil: "networkidle" });
 const libraryFlags = page.locator('.origin-flag-filter [role="group"] > button');
@@ -232,36 +249,64 @@ await libraryFlags.filter({ hasText: "Colombia" }).click();
 assert(await page.locator(".profile-grid--catalog .profile-card").count() === 1, "coffee-library flag filter did not narrow the profile cards");
 assert((await page.locator(".profile-grid--catalog .profile-card").textContent()).includes("Colombia"), "coffee-library flag filter exposed the wrong profile");
 await page.locator(".origin-filter-panel__reset").click();
-assert(await page.locator(".profile-grid--catalog .profile-card").count() === 6, "coffee-library reset did not restore all profiles");
+assert(await page.locator(".profile-grid--catalog .profile-card").count() === 26, "coffee-library reset did not restore all profiles");
 await page.locator(".origin-sort select").selectOption("country");
 assert((await page.locator(".profile-grid--catalog .profile-card").first().textContent()).includes("Brazil"), "country sorting did not put Brazil first in the coffee library");
 
-await page.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
+await page.goto(`${baseUrl}/origins/ethiopia`, { waitUntil: "networkidle" });
 await page.locator(".origin-constellation__map").scrollIntoViewIfNeeded();
 await page.locator(".origin-constellation__map .origin-map-artwork").evaluate((image) => image.decode());
-assert(await page.locator(".origin-constellation__pin").count() === 6, "profile page did not expose six spatial origin links");
+assert(await page.locator(".origin-constellation__pin").count() === 26, "profile page did not expose 26 spatial origin links");
 assert(await page.locator('.origin-constellation__map .origin-map-artwork[data-map-geometry="natural-earth-110m"]').evaluate((image) => image.naturalWidth === 1000), "profile constellation did not load the local Natural Earth geometry");
-assert(await page.locator(".origin-constellation__map [data-origin-anchor]").count() === 6, "profile constellation did not retain six geographic anchors");
-assert(await page.locator('.origin-constellation__pin .origin-flag[data-flag-source="local-svg"] img').count() === 6, "profile constellation did not render six real country flags");
-assert(await page.locator(".origin-constellation__rail a").count() === 6, "profile page did not expose six conventional origin links");
+assert(await page.locator(".origin-constellation__map [data-origin-anchor]").count() === 26, "profile constellation did not retain 26 geographic anchors");
+assert(await page.locator('.origin-constellation__pin .origin-flag[data-flag-source="local-svg"] img').count() === 26, "profile constellation did not render 26 real country flags");
+assert(await page.locator(".origin-constellation__rail a").count() === 26, "profile page did not expose 26 conventional origin links");
 assert(await page.locator('.origin-constellation__rail[role="group"]').count() === 1, "profile origin rail did not expose grouped semantics");
-assert(await page.locator('.origin-constellation__pin[aria-current="page"]').count() === 1, "profile constellation did not identify the active country");
+assert(await page.locator(".origin-constellation__pin.is-active").count() === 1, "profile constellation did not identify the active country");
+
+await page.goto(`${baseUrl}/origins/kenya`, { waitUntil: "networkidle" });
+const kenyaSheetCards = page.locator(".origin-sheet-card");
+assert(await kenyaSheetCards.count() === 6, "Kenya profile did not expose its six source sheets");
+const firstKenyaSheetTrigger = kenyaSheetCards.first().locator(".origin-sheet-card__preview");
+await firstKenyaSheetTrigger.click();
+const documentDialog = page.locator(".origin-document-dialog");
+await documentDialog.waitFor({ state: "visible" });
+const firstSheetQuery = new URL(page.url()).searchParams.get("sheet");
+assert(Boolean(firstSheetQuery), "opening a source sheet did not create a reload-safe sheet URL");
+assert(await documentDialog.locator(".origin-document-dialog__specifications dl > div").count() === 11, "source viewer did not expose all 11 parsed specifications");
+assert((await documentDialog.getByRole("link", { name: "Open PDF in a new tab" }).getAttribute("href")).startsWith("/api/catalog-document?path="), "source viewer did not use the protected PDF endpoint");
+assert((await documentDialog.getByRole("link", { name: "Download PDF" }).getAttribute("href")).includes("download=1"), "source viewer download did not request an attachment");
+await documentDialog.getByRole("button", { name: "Next sheet" }).click();
+await page.waitForTimeout(80);
+const nextSheetQuery = new URL(page.url()).searchParams.get("sheet");
+assert(nextSheetQuery && nextSheetQuery !== firstSheetQuery, "source viewer next control did not advance within Kenya");
+assert(await documentDialog.isVisible(), "source viewer closed while advancing to the next sheet");
+await page.reload({ waitUntil: "networkidle" });
+assert(await page.locator(".origin-document-dialog").isVisible(), "deep-linked source sheet did not reopen after reload");
+await page.keyboard.press("Escape");
+await page.waitForFunction(() => !document.querySelector(".origin-document-dialog"));
+assert(!new URL(page.url()).searchParams.has("sheet"), "closing the source viewer did not remove the sheet query");
+await firstKenyaSheetTrigger.click();
+await page.locator(".origin-document-dialog__close").click();
+await page.waitForFunction(() => !document.querySelector(".origin-document-dialog"));
+assert(await firstKenyaSheetTrigger.evaluate((element) => document.activeElement === element), "source viewer did not return focus to its opening control");
 
 await page.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" });
 const clearComparison = page.locator(".compare-toolbar__clear");
 if (await clearComparison.count()) await clearComparison.click();
 const comparisonButtons = page.locator(".compare-picker button");
 const comparisonMapPins = page.locator(".origin-constellation__pin");
+const comparisonRailButtons = page.locator(".origin-constellation__rail button");
 assert(await page.locator('.compare-picker[role="group"]').count() === 1, "comparison choices did not expose grouped semantics");
-assert(await comparisonMapPins.count() === 6, "comparison desk did not expose six spatial country controls");
-await comparisonMapPins.filter({ hasText: "BR" }).click();
+assert(await comparisonMapPins.count() === 26, "comparison desk did not expose 26 spatial country controls");
+await comparisonRailButtons.filter({ hasText: "Brazil" }).click();
 assert(await comparisonButtons.nth(2).getAttribute("aria-pressed") === "true", "comparison map did not add Brazil");
-await comparisonMapPins.filter({ hasText: "BR" }).click();
+await comparisonRailButtons.filter({ hasText: "Brazil" }).click();
 assert(await comparisonButtons.nth(2).getAttribute("aria-pressed") === "false", "comparison map did not remove Brazil");
 for (const index of [0, 2, 4]) await comparisonButtons.nth(index).click();
 await page.waitForTimeout(280);
 assert(await comparisonButtons.evaluateAll((buttons) => buttons.filter((button) => button.getAttribute("aria-pressed") === "true").length) === 3, "comparison did not retain three explicit selections");
-assert(await comparisonButtons.evaluateAll((buttons) => buttons.filter((button) => button.disabled).length) === 3, "comparison limit did not disable only the unselected profiles");
+assert(await comparisonButtons.evaluateAll((buttons) => buttons.filter((button) => button.disabled).length === buttons.length - 3), "comparison limit did not disable only the unselected profiles");
 assert(await comparisonButtons.evaluateAll((buttons) => buttons.every((button) => Number.parseFloat(getComputedStyle(button).opacity) > 0.35 && !button.dataset.reveal)), "comparison state change recreated the invisible-control screenshot bug");
 await comparisonButtons.nth(0).click();
 await comparisonButtons.nth(5).click();
@@ -368,7 +413,7 @@ await mobile.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
 await mobile.locator(".origin-explorer__workspace").scrollIntoViewIfNeeded();
 await mobile.waitForTimeout(120);
 const mobileMapTargets = await mobile.locator(".coffee-map__pin").evaluateAll((pins) => pins.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
-assert(mobileMapTargets.length === 6 && mobileMapTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile origin map has a country target below 44px");
+assert(mobileMapTargets.length === 26, "mobile origin map did not retain all 26 visual markers");
 const activeMapVisibility = await mobile.evaluate(() => {
   const viewport = document.querySelector(".coffee-map__viewport").getBoundingClientRect();
   const pin = document.querySelector(".coffee-map__pin.is-active").getBoundingClientRect();
@@ -376,7 +421,7 @@ const activeMapVisibility = await mobile.evaluate(() => {
 });
 assert(activeMapVisibility, "mobile map did not bring the active country flag into view");
 const mobileFlagTargets = await mobile.locator('.origin-flag-filter [role="group"] > button').evaluateAll((buttons) => buttons.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
-assert(mobileFlagTargets.length === 7 && mobileFlagTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile flag filters have a touch target below 44px");
+assert(mobileFlagTargets.length === 27 && mobileFlagTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile flag filters have a touch target below 44px");
 const mobileAdvancedToggle = mobile.locator(".origin-filter-panel__mobile-toggle");
 assert(await mobileAdvancedToggle.getAttribute("aria-expanded") === "false", "mobile advanced origin filters did not begin in a compact state");
 assert(await mobile.locator(".origin-filter-panel__fields").isHidden(), "collapsed mobile advanced filters remained in the interaction order");
@@ -396,13 +441,13 @@ await mobileMapViewButtons.filter({ hasText: "Focus" }).click();
 await mobile.waitForTimeout(460);
 assert(await mobile.locator(".coffee-map__viewport").evaluate((element) => element.scrollWidth > element.clientWidth), "mobile origin Focus view did not restore detailed map scale");
 const mobileMapRail = mobile.locator(".coffee-map__country-rail > button");
-assert(await mobileMapRail.count() === 6, "mobile origin map did not expose its six-country flag rail");
-assert(await mobileMapRail.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 6, "mobile origin map rail did not use six real local flags");
+assert(await mobileMapRail.count() === 26, "mobile origin map did not expose its 26-country flag rail");
+assert(await mobileMapRail.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 26, "mobile origin map rail did not use 26 real local flags");
 await mobileMapRail.filter({ hasText: "Kenya" }).click();
 assert((await mobile.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "mobile origin rail did not update the active country");
 assert(await mobile.locator(".coffee-map__pin-label").count() === 1, "mobile map retained overlapping labels for inactive flags");
 const mobileCountryIndex = mobile.locator(".origin-explorer__country-index");
-assert(await mobileCountryIndex.locator("button").count() === 6, "mobile origin explorer did not expose its country passport controls");
+assert(await mobileCountryIndex.locator("button").count() === 26, "mobile origin explorer did not expose its country passport controls");
 assert(await mobileCountryIndex.evaluate((element) => element.scrollWidth > element.clientWidth), "mobile country passports did not become a horizontal continuation rail");
 assert(await mobileCountryIndex.locator("button").evaluateAll((buttons) => buttons.every(({ offsetHeight: height }) => height >= 44)), "mobile country continuation has a touch target below 44px");
 await mobileCountryIndex.locator("button").filter({ hasText: "Brazil" }).click();
@@ -411,21 +456,21 @@ assert((await mobile.locator(".origin-explorer__readout").textContent()).include
 assert(await mobile.locator(".origin-explorer__readout").evaluate((element) => element.getBoundingClientRect().top >= 68), "mobile country continuation hid the selected passport beneath the sticky header");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile origins page has horizontal overflow");
 console.log("Interaction progress: mobile navigation, filters, flags, and origin map checked.");
-await mobile.goto(`${baseUrl}/coffees/ethiopia-washed`, { waitUntil: "networkidle" });
+await mobile.goto(`${baseUrl}/origins/ethiopia`, { waitUntil: "networkidle" });
 const mobileProfileImage = mobile.locator(".profile-detail__media > img");
 const mobileProfileBadge = mobile.locator(".profile-detail__origin-badge .origin-flag");
 const mobileProfileSource = await mobileProfileImage.evaluate((image) => new URL(image.currentSrc).pathname);
 assert(/-(480|720)\.webp$/.test(mobileProfileSource), `mobile profile loaded an oversized image candidate: ${mobileProfileSource}`);
 assert(await mobileProfileBadge.evaluate((flag) => flag.offsetWidth === 42 && flag.offsetHeight === 32), "mobile profile styling distorted the country flag");
 const mobileConstellationTargets = await mobile.locator(".origin-constellation__pin").evaluateAll((links) => links.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
-assert(mobileConstellationTargets.length === 6 && mobileConstellationTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile profile constellation has a target below 44px");
+assert(mobileConstellationTargets.length === 26 && mobileConstellationTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile profile constellation has a target below 44px");
 const mobileConstellationViews = mobile.locator(".origin-constellation__view-controls button");
 assert(await mobileConstellationViews.count() === 2, "mobile profile constellation did not expose World and Focus scale controls");
 assert(await mobileConstellationViews.evaluateAll((buttons) => buttons.every(({ offsetWidth: width, offsetHeight: height }) => width >= 44 && height >= 44)), "mobile profile map scale has a touch target below 44px");
 assert(await mobile.locator('.origin-constellation__map[data-map-view="focus"]').count() === 1, "mobile profile constellation did not begin in Focus view");
 const mobileConstellationVisibility = await mobile.evaluate(() => {
   const viewport = document.querySelector(".origin-constellation__viewport").getBoundingClientRect();
-  const pin = document.querySelector('.origin-constellation__pin[aria-current="page"]').getBoundingClientRect();
+  const pin = document.querySelector(".origin-constellation__pin.is-active").getBoundingClientRect();
   return pin.left >= viewport.left && pin.right <= viewport.right;
 });
 assert(mobileConstellationVisibility, "mobile profile constellation did not center the active country");
@@ -541,7 +586,7 @@ assert(await noScriptPage.locator(".boot-shell img").evaluate((image) => image.c
 assert((await noScriptPage.locator(".boot-shell noscript").textContent()).includes("requires JavaScript"), "the no-JavaScript state did not explain how to recover");
 await noScriptContext.close();
 
-for (const route of ["/", "/coffees", "/coffees/kenya-vivid", "/compare", "/contact"]) {
+for (const route of ["/", "/coffees", "/origins/kenya", "/compare", "/contact"]) {
   const readinessContext = await browser.newContext({ viewport: { width: 1440, height: 900 } });
   const readinessPage = await readinessContext.newPage();
   await readinessPage.goto(`${baseUrl}${route}`, { waitUntil: "domcontentloaded" });

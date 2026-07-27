@@ -66,7 +66,7 @@ function useSafeTransitionClick({
     let releaseTimer = 0;
 
     const commitNavigation = () => {
-      if (navigationCommitted) return;
+      if (navigationCommitted || sequence !== transitionSequence) return;
       navigationCommitted = true;
       navigate(to, { replace, state, preventScrollReset, relative, flushSync: true });
     };

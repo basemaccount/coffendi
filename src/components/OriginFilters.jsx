@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Globe2, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
 import OriginFlag from "./OriginFlag";
 
 const EMPTY_FILTERS = { query: "", zone: "all", process: "all", country: "all", sort: "atlas" };
@@ -46,14 +47,53 @@ export function filterOriginProfiles(profiles, filters, language) {
 }
 
 export function useOriginProfileFilters(profiles, language) {
-  const [filters, setFilters] = useState(EMPTY_FILTERS);
+  const location = useLocation();
+  const navigate = useNavigate();
+  const readFilters = (search) => {
+    const params = new URLSearchParams(search);
+    return {
+      query: params.get("q") || "",
+      zone: params.get("zone") || "all",
+      process: params.get("process") || "all",
+      country: params.get("country") || "all",
+      sort: params.get("sort") || "atlas",
+    };
+  };
+  const [filters, setFilters] = useState(() => readFilters(location.search));
   const filteredProfiles = useMemo(
     () => filterOriginProfiles(profiles, filters, language),
     [filters, language, profiles],
   );
-  const updateFilter = (key, value) => setFilters((current) => ({ ...current, [key]: value }));
-  const resetFilters = () => setFilters(EMPTY_FILTERS);
+  const persistFilters = (next, replace = false) => {
+    const params = new URLSearchParams(location.search);
+    ["q", "zone", "process", "country", "sort"].forEach((key) => params.delete(key));
+    if (next.query) params.set("q", next.query);
+    if (next.zone !== "all") params.set("zone", next.zone);
+    if (next.process !== "all") params.set("process", next.process);
+    if (next.country !== "all") params.set("country", next.country);
+    if (next.sort !== "atlas") params.set("sort", next.sort);
+    navigate(
+      { pathname: location.pathname, search: params.toString() ? `?${params}` : "" },
+      { replace, preventScrollReset: true },
+    );
+  };
+  const updateFilter = (key, value) => {
+    const next = { ...filters, [key]: value };
+    setFilters(next);
+    persistFilters(next, key === "query");
+  };
+  const resetFilters = () => {
+    setFilters(EMPTY_FILTERS);
+    persistFilters(EMPTY_FILTERS);
+  };
   const hasFilters = Object.entries(filters).some(([key, value]) => value !== EMPTY_FILTERS[key]);
+
+  useEffect(() => {
+    const next = readFilters(location.search);
+    if (Object.keys(EMPTY_FILTERS).some((key) => next[key] !== filters[key])) setFilters(next);
+    // The URL is the external source of truth for browser Back/Forward.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.search]);
 
   return { filters, filteredProfiles, updateFilter, resetFilters, hasFilters };
 }
@@ -85,6 +125,9 @@ export default function OriginFilters({
       all: "Tümü",
       africa: "Afrika",
       latinAmerica: "Latin Amerika",
+      asia: "Asya",
+      pacific: "Pasifik",
+      middleEast: "Orta Doğu",
       washed: "Yıkanmış",
       natural: "Natural",
       mixed: "Çoklu süreç",
@@ -108,6 +151,9 @@ export default function OriginFilters({
       all: "All",
       africa: "Africa",
       latinAmerica: "Latin America",
+      asia: "Asia",
+      pacific: "Pacific",
+      middleEast: "Middle East",
       washed: "Washed",
       natural: "Natural",
       mixed: "Multi-process",
@@ -119,7 +165,15 @@ export default function OriginFilters({
       showAdvanced: "Search and advanced filters",
       hideAdvanced: "Hide advanced filters",
     };
-  const zones = [["all", copy.all], ["africa", copy.africa], ["latin-america", copy.latinAmerica]];
+  const availableZones = new Set(profiles.map((profile) => profile.zone));
+  const zones = [
+    ["all", copy.all],
+    ["africa", copy.africa],
+    ["latin-america", copy.latinAmerica],
+    ["asia", copy.asia],
+    ["pacific", copy.pacific],
+    ["middle-east", copy.middleEast],
+  ].filter(([value]) => value === "all" || availableZones.has(value));
   const advancedId = `${idPrefix}-advanced-filters`;
 
   useEffect(() => {

@@ -1,6 +1,7 @@
 node_modules/
 dist/
 test-output/
+.catalog-work/
 .vercel/
 .DS_Store
 .env*

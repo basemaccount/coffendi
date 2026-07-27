@@ -267,6 +267,7 @@
 
 .coffee-map {
   min-width: 0;
+  align-self: start;
   padding: 12px;
   overflow: hidden;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -319,8 +320,8 @@
 .coffee-map__pin {
   position: absolute;
   z-index: 4;
-  width: 68px;
-  min-height: 68px;
+  width: 44px;
+  min-height: 44px;
   display: grid;
   justify-items: center;
   gap: 4px;
@@ -353,6 +354,20 @@
   white-space: nowrap;
 }
 .coffee-map__pin small { max-width: 102px; overflow: hidden; padding: 0 7px 4px; color: #9fb8ad; font-size: 5px; text-overflow: ellipsis; white-space: nowrap; }
+.coffee-map__pin-code {
+  min-width: 27px;
+  margin-top: -3px;
+  padding: 3px 5px;
+  border: 1px solid rgba(255, 255, 255, .14);
+  border-radius: 999px;
+  background: rgba(9, 35, 27, .88);
+  color: #d8e6df;
+  font-size: 6px;
+  font-weight: 900;
+  letter-spacing: .08em;
+  line-height: 1;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, .22);
+}
 
 .coffee-map__pin:hover .origin-flag { border-color: var(--gold-light); box-shadow: 0 0 0 5px rgba(239, 201, 121, 0.14), 0 12px 28px rgba(0, 0, 0, 0.26); filter: saturate(1.1); transform: translateY(-4px) rotate(-3deg) scale(1.07); }
 .coffee-map__pin:hover .coffee-map__pin-label { background: var(--paper); transform: translateY(-2px); }

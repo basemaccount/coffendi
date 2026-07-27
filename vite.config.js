@@ -4,6 +4,20 @@ import { defineConfig } from "vite";
 export default defineConfig({
   plugins: [react()],
   build: {
+    cssMinify: "lightningcss",
+    minify: "terser",
+    terserOptions: {
+      ecma: 2022,
+      module: true,
+      toplevel: true,
+      compress: {
+        passes: 2,
+        pure_getters: true,
+      },
+      format: {
+        comments: false,
+      },
+    },
     rollupOptions: {
       output: {
         manualChunks(id) {

@@ -18,7 +18,7 @@ assert.match(headerMap.get("strict-transport-security") || "", /max-age=31536000
 const browser = await chromium.launch();
 const failures = [];
 
-for (const path of ["/", "/coffees/ethiopia-washed", "/compare", "/contact"]) {
+for (const path of ["/", "/origins/ethiopia", "/origins/indonesia", "/origins/kenya?sheet=kenya-aa-ab-faq-main-crop-export-classifications", "/compare", "/contact"]) {
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   const page = await context.newPage();
   const policyErrors = [];

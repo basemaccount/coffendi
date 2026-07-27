@@ -1,12 +1,23 @@
-import { writeFileSync } from "node:fs";
+import { readFileSync, writeFileSync } from "node:fs";
+import path from "node:path";
+import { originCatalogIndexUrl } from "../src/originCatalog.js";
 
 const baseUrl = String(process.env.PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
-const profiles = ["ethiopia-washed", "colombia-balanced", "brazil-classic", "guatemala-structured", "kenya-vivid", "rwanda-sweet"];
+const originCatalogCountries = JSON.parse(
+  readFileSync(path.join(process.cwd(), "public", originCatalogIndexUrl), "utf8"),
+).countries;
+const originSlugs = [
+  "ethiopia",
+  "colombia",
+  "brazil",
+  "guatemala",
+  ...originCatalogCountries.map(({ slug }) => slug),
+];
 const routes = [
   ["/", "weekly", "1.0"],
   ["/coffees", "monthly", "0.9"],
-  ...profiles.map((profile) => [`/coffees/${profile}`, "monthly", "0.8"]),
-  ["/origins", "monthly", "0.8"],
+  ["/origins", "monthly", "0.9"],
+  ...originSlugs.map((slug) => [`/origins/${slug}`, "monthly", "0.8"]),
   ["/compare", "monthly", "0.8"],
   ["/approach", "monthly", "0.7"],
   ["/contact", "monthly", "0.7"],

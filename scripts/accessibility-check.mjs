@@ -2,7 +2,19 @@ import AxeBuilder from "@axe-core/playwright";
 import { chromium } from "@playwright/test";
 
 const baseUrl = process.env.COFFENDI_BASE_URL || "http://127.0.0.1:4173";
-const routes = ["/", "/coffees", "/coffees/ethiopia-washed", "/origins", "/compare", "/approach", "/contact", "/privacy"];
+const routes = [
+  "/",
+  "/coffees",
+  "/origins",
+  "/origins/ethiopia",
+  "/origins/indonesia",
+  "/origins/kenya",
+  "/origins/kenya?sheet=kenya-aa-ab-faq-main-crop-export-classifications",
+  "/compare",
+  "/approach",
+  "/contact",
+  "/privacy",
+];
 const checks = routes.flatMap((path) => [
   { name: `desktop-${path === "/" ? "home" : path.split("/").filter(Boolean).join("-")}`, path, width: 1440, height: 1000 },
   { name: `mobile-${path === "/" ? "home" : path.split("/").filter(Boolean).join("-")}`, path, width: 390, height: 844 },

@@ -160,7 +160,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
               <div><dt>{language === "tr" ? "Bölge odağı" : "Regional focus"}</dt><dd>{active.region}</dd></div>
               <div><dt>{language === "tr" ? "Program yönü" : "Program direction"}</dt><dd>{local(active.use, language)}</dd></div>
             </dl>
-            <LinkComponent className="button button--gold" to={`/coffees/${active.id}`}>{language === "tr" ? "Alan notunu aç" : "Open field note"}<ArrowRight aria-hidden="true" /></LinkComponent>
+            <LinkComponent className="button button--gold" to={`/origins/${active.slug}`}>{language === "tr" ? "Menşe profilini aç" : "Open origin profile"}<ArrowRight aria-hidden="true" /></LinkComponent>
           </div>
         </div>
       </div>
