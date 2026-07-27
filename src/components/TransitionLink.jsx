@@ -48,6 +48,7 @@ function useSafeTransitionClick({
       return;
     }
 
+    document.documentElement.classList.add("route-pending");
     window.dispatchEvent(new Event("app:before-navigation"));
 
     if (reduceMotion || typeof document.startViewTransition !== "function") return;

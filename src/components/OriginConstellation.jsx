@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { GitCompareArrows, Globe2, LocateFixed, Map, Orbit } from "lucide-react";
+import { useNavigate } from "react-router";
 import { useCompactOriginLayout } from "./OriginFilters";
 import OriginFlag from "./OriginFlag";
 import OriginMapAnchors, { originPinPosition } from "./OriginMapAnchors";
@@ -70,6 +71,7 @@ export default function OriginConstellation({
   originSearch = "",
 }) {
   const compact = useCompactOriginLayout();
+  const navigate = useNavigate();
   const viewport = useRef(null);
   const rail = useRef(null);
   const [viewMode, setViewMode] = useState("focus");
@@ -174,7 +176,7 @@ export default function OriginConstellation({
               </div>
             </div>
           )}
-          <div ref={viewport} className="origin-constellation__viewport" style={{ ...styles.viewport, scrollbarWidth: compact ? "none" : undefined, overscrollBehaviorInline: compact ? "contain" : undefined, touchAction: compact ? "pan-x" : undefined }} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilen menşe haritası" : "Horizontally scrollable origin map"}>
+          <div ref={viewport} className="origin-constellation__viewport" style={{ ...styles.viewport, scrollbarWidth: compact ? "none" : undefined, overscrollBehaviorInline: compact ? "contain" : undefined, touchAction: compact ? "manipulation" : undefined }} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilen menşe haritası" : "Horizontally scrollable origin map"}>
             <div className="origin-constellation__map" data-map-view={overview ? "overview" : "focus"} style={{ ...styles.map, minWidth: compact ? overview ? "100%" : "min(700px,167vw)" : styles.map.minWidth, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" }}>
               <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
               <MapArt profiles={profiles} />
@@ -193,16 +195,45 @@ export default function OriginConstellation({
                   color: isSelected ? "var(--green)" : "#9db5a9",
                   boxShadow: isSelected ? "0 0 0 5px rgba(239,201,121,.14),0 14px 30px rgba(0,0,0,.25)" : "none",
                   opacity: unavailable ? .4 : 1,
-                  pointerEvents: "none",
                   "--constellation-index": index,
                 },
               };
+              const pinContent = (
+                <>
+                  <OriginFlag profile={profile} size={overview && !isSelected ? "tiny" : "small"} />
+                  <span style={styles.pinCode} aria-hidden="true">{profile.iso}</span>
+                </>
+              );
+              const accessibleLabel = `${comparing ? copy.select : copy.open}: ${local(profile.country, language)}`;
 
-                return (
-                  <span key={profile.id} {...shared} aria-hidden="true">
-                    <OriginFlag profile={profile} size={overview && !isSelected ? "tiny" : "small"} />
-                    <span style={styles.pinCode}>{profile.iso}</span>
-                  </span>
+                return comparing ? (
+                  <button
+                    key={profile.id}
+                    {...shared}
+                    type="button"
+                    onClick={() => onToggle(profile.id)}
+                    aria-label={accessibleLabel}
+                    aria-pressed={isSelected}
+                    disabled={unavailable}
+                  >
+                    {pinContent}
+                  </button>
+                ) : (
+                  <button
+                    key={profile.id}
+                    {...shared}
+                    type="button"
+                    onClick={() => {
+                      if (isSelected) return;
+                      document.documentElement.classList.add("route-pending");
+                      window.dispatchEvent(new Event("app:before-navigation"));
+                      navigate(`/origins/${profile.slug}`, { state: originSearch ? { originSearch } : undefined });
+                    }}
+                    aria-label={accessibleLabel}
+                    aria-current={isSelected ? "page" : undefined}
+                  >
+                    {pinContent}
+                  </button>
                 );
               })}
             </div>

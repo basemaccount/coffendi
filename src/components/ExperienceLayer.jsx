@@ -212,6 +212,7 @@ export default function ExperienceLayer({ language }) {
   }, [pathname, language]);
 
   useEffect(() => {
+    document.documentElement.classList.remove("route-pending");
     const timer = window.setTimeout(() => {
       const suffix = language === "tr" ? "Sayfa yüklendi." : "Page loaded.";
       setRouteAnnouncement(`${document.title}. ${suffix}`);

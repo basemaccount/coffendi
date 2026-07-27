@@ -177,6 +177,16 @@ assert(new Set(originCatalogSheets.map(({ id }) => id)).size === 117, "Every she
 assert(new Set(originCatalogSheets.map(({ checksum }) => checksum)).size === 117, "Every canonical one-page PDF must have a unique checksum");
 assert(new Set(originCatalogSheets.map(({ turkishChecksum }) => turkishChecksum)).size === 117, "Every Turkish information PDF must have a unique checksum");
 assert(new Set(allOriginIsos).size === 38, "Expanded Coffendi origins must contain 38 unique ISO codes");
+for (let left = 0; left < originCatalogCountries.length; left += 1) {
+  const a = originCatalogCountries[left];
+  assert(a.pin?.x >= 3 && a.pin.x <= 97, `${a.slug}: resolved pin x is outside the safe map area`);
+  assert(a.pin?.y >= 5.76 && a.pin.y <= 94.24, `${a.slug}: resolved pin y is outside the safe map area`);
+  for (let right = left + 1; right < originCatalogCountries.length; right += 1) {
+    const b = originCatalogCountries[right];
+    const distance = Math.hypot((a.pin.x - b.pin.x) * 10, (a.pin.y - b.pin.y) * 5.2);
+    assert(distance >= 69.8, `${a.slug}/${b.slug}: resolved map controls overlap (${distance.toFixed(2)}px)`);
+  }
+}
 
 const sourcePages = new Set();
 let totalPreviewBytes = 0;
@@ -189,6 +199,10 @@ for (const { country, sheets } of countryCatalogs) {
   );
   assert(country.websiteProfile.directions.length === sheets.length, `${country.slug}: deferred profile directions are incomplete`);
   assert(country.websiteProfile.catalogDataUrl === country.dataUrl, `${country.slug}: website profile catalog relationship mismatch`);
+  assert(
+    country.websiteProfile.pin.x === country.pin.x && country.websiteProfile.pin.y === country.pin.y,
+    `${country.slug}: website profile is using a stale map pin`,
+  );
   assert(country.websiteProfile.imageTr === sheets[0].turkishPreview, `${country.slug}: Turkish hero preview mismatch`);
   assert(country.websiteProfile.cardImageTr === sheets[0].turkishThumbnail, `${country.slug}: Turkish card preview mismatch`);
   assert(country.websiteProfile.srcSetTr.includes(sheets[0].turkishFullPreview), `${country.slug}: Turkish hero srcset is missing its high-resolution source`);

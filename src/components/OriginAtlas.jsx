@@ -52,7 +52,14 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
   };
 
   const selectProfile = (profile) => {
-    if (profile.id === active.id) return;
+    if (profile.id === active.id) {
+      if (pendingId) {
+        selectionRequest.current += 1;
+        window.clearTimeout(selectionTimer.current);
+        setPendingId(null);
+      }
+      return;
+    }
     const request = ++selectionRequest.current;
     setPendingId(profile.id);
     window.clearTimeout(selectionTimer.current);

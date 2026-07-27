@@ -98,24 +98,6 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
     rail.scrollTo({ left, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }, [activeId]);
 
-  const selectNearestPin = (event) => {
-    if (!event.detail) return;
-    const box = event.currentTarget.getBoundingClientRect();
-    const x = ((event.clientX - box.left) / box.width) * 100;
-    const y = ((event.clientY - box.top) / box.height) * 100;
-    let nearest = profiles[0];
-    let shortest = Infinity;
-    profiles.forEach((profile) => {
-      const pin = originPinPosition(profile);
-      const distance = Math.hypot(pin.x - x, pin.y - y);
-      if (distance < shortest) {
-        nearest = profile;
-        shortest = distance;
-      }
-    });
-    onSelect(nearest.id);
-  };
-
   return (
     <>
       {compact && (
@@ -171,12 +153,11 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           </div>
         </div>
       )}
-      <div ref={viewport} className="coffee-map__viewport" style={compact ? { scrollbarWidth: "none", overscrollBehaviorInline: "contain", touchAction: "pan-x" } : undefined} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilen menşe haritası" : "Horizontally scrollable origin map"}>
+      <div ref={viewport} className="coffee-map__viewport" style={compact ? { scrollbarWidth: "none", overscrollBehaviorInline: "contain", touchAction: "manipulation" } : undefined} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilen menşe haritası" : "Horizontally scrollable origin map"}>
         <div
           className={`coffee-map__canvas ${overview ? "is-overview" : "is-focus"}`}
           data-map-view={overview ? "overview" : "focus"}
           style={compact ? { minWidth: overview ? "100%" : 700, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" } : undefined}
-          onClick={selectNearestPin}
         >
         <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
         <svg className="coffee-map__art" viewBox="0 0 1000 520" aria-hidden="true" preserveAspectRatio="none">
@@ -205,9 +186,14 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
             type="button"
             className={`coffee-map__pin ${selected ? "is-active" : ""}`}
             style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
-            onClick={({ detail }) => detail || onSelect(profile.id)}
+            data-origin-pin={profile.id}
+            onClick={(event) => {
+              event.stopPropagation();
+              onSelect(profile.id);
+            }}
             aria-label={`${local(profile.country, language)} · ${lensValue(profile, lens, language)}`}
             aria-pressed={selected}
+            tabIndex={selected ? 0 : -1}
           >
             <OriginFlag profile={profile} size={overview ? selected ? "small" : "tiny" : compact && !selected ? "small" : "map"} style={compact && !selected ? { opacity: overview ? 0.72 : 0.84 } : undefined} />
             {selected ? <span className="coffee-map__pin-label"><strong>{local(profile.country, language)}</strong><small>{lensValue(profile, lens, language)}</small></span> : <span className="coffee-map__pin-code" aria-hidden="true">{profile.iso}</span>}

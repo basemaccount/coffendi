@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import contactHandler from "../api/contact.js";
 import commerceStatusHandler from "../api/commerce-status.js";
 import { commerceConfiguration, publicCommerceStatus } from "../server/commerce.js";
+import { healthHandler } from "../server/submissions.js";
 import {
   acknowledgmentStatus,
   notificationStatus,
@@ -58,6 +59,24 @@ assert.equal(invalidCountries.checks.countries, false);
 const publicStatusResponse = await invoke(commerceStatusHandler, { method: "GET", headers: {} });
 assert.equal(publicStatusResponse.statusCode, 200);
 assert.deepEqual(Object.keys(publicStatusResponse.body).sort(), ["message", "ok", "purchasePath", "ready"]);
+const publicStatusHead = await invoke(commerceStatusHandler, { method: "HEAD", headers: {} });
+assert.equal(publicStatusHead.statusCode, 200);
+assert.equal(publicStatusHead.body, null);
+assert.equal(publicStatusHead.headers["cache-control"], "private, no-store");
+assert.equal(publicStatusHead.headers["x-content-type-options"], "nosniff");
+const rejectedStatusMethod = await invoke(commerceStatusHandler, { method: "POST", headers: {} });
+assert.equal(rejectedStatusMethod.statusCode, 405);
+assert.equal(rejectedStatusMethod.headers.allow, "GET, HEAD");
+assert.match(rejectedStatusMethod.headers["content-type"], /^application\/json/);
+
+const healthHead = await invoke(healthHandler, { method: "HEAD", headers: {} });
+assert.equal(healthHead.statusCode, 200);
+assert.equal(healthHead.body, null);
+assert.equal(healthHead.headers["cache-control"], "private, no-store");
+assert.equal(healthHead.headers["x-content-type-options"], "nosniff");
+const rejectedHealthMethod = await invoke(healthHandler, { method: "PATCH", headers: {} });
+assert.equal(rejectedHealthMethod.statusCode, 405);
+assert.equal(rejectedHealthMethod.headers.allow, "GET, HEAD");
 
 const invalidContactResponse = await invoke(contactHandler, {
   method: "POST",

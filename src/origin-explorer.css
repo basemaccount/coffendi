@@ -358,12 +358,12 @@
   max-width: 94px;
   padding: 4px 7px 2px;
   color: #dfe9e4;
-  font-size: 7px;
+  font-size: 9px;
   letter-spacing: 0.04em;
   line-height: 1.2;
   white-space: nowrap;
 }
-.coffee-map__pin small { max-width: 102px; overflow: hidden; padding: 0 7px 4px; color: #9fb8ad; font-size: 5px; text-overflow: ellipsis; white-space: nowrap; }
+.coffee-map__pin small { max-width: 112px; overflow: hidden; padding: 0 7px 5px; color: #9fb8ad; font-size: 7px; line-height: 1.3; text-overflow: ellipsis; white-space: nowrap; }
 .coffee-map__pin-code {
   min-width: 27px;
   margin-top: -3px;
@@ -372,7 +372,7 @@
   border-radius: 999px;
   background: rgba(9, 35, 27, .88);
   color: #d8e6df;
-  font-size: 6px;
+  font-size: 7px;
   font-weight: 900;
   letter-spacing: .08em;
   line-height: 1;
@@ -385,6 +385,9 @@
 .coffee-map__pin.is-active strong { color: var(--green); }
 .coffee-map__pin.is-active small { color: #173d31; }
 .coffee-map__pin:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 4px; border-radius: 14px; }
+.origin-constellation__pin:hover { scale: 1.08; }
+.origin-constellation__pin:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 4px; }
+.origin-constellation__pin:disabled { cursor: not-allowed; scale: 1; }
 
 .profile-detail__descriptor {
   max-width: 620px;

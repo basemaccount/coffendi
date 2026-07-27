@@ -33,6 +33,16 @@ assert.match(home.headers.get("content-security-policy") || "", /default-src 'se
 assert.match(home.headers.get("strict-transport-security") || "", /max-age=31536000/);
 assert.equal(home.headers.get("x-content-type-options"), "nosniff");
 assert.equal(home.headers.get("x-frame-options"), "DENY");
+for (const endpoint of ["/api/health", "/api/commerce-status"]) {
+  const response = await fetch(`${baseUrl}${endpoint}`, {
+    method: "HEAD",
+    signal: AbortSignal.timeout(12_000),
+  });
+  assert.equal(response.ok, true, `${endpoint} HEAD returned ${response.status}`);
+  assert.match(response.headers.get("content-type") || "", /^application\/json/);
+  assert.equal(response.headers.get("cache-control"), "private, no-store");
+  assert.equal(response.headers.get("x-content-type-options"), "nosniff");
+}
 const sitemap = await (await request("/sitemap.xml")).text();
 assert.ok(sitemap.includes(`<loc>${canonicalUrl}/compare</loc>`), "Sitemap is missing the comparison route");
 assert.ok(sitemap.includes(`<loc>${canonicalUrl}/contact</loc>`), "Sitemap is missing the contact route");
@@ -52,6 +62,9 @@ assert.equal(inlineDocument.ok, true, `Protected PDF endpoint returned ${inlineD
 assert.match(inlineDocument.headers.get("content-type") || "", /^application\/pdf/);
 assert.match(inlineDocument.headers.get("content-disposition") || "", /^inline;/);
 assert.ok(inlineDocument.headers.get("etag"), "Protected PDF endpoint did not publish an ETag");
+assert.equal(inlineDocument.headers.get("content-language"), "en");
+assert.ok(Number(inlineDocument.headers.get("content-length")) > 0, "Protected PDF endpoint did not publish its byte length");
+assert.ok(inlineDocument.headers.get("last-modified"), "Protected PDF endpoint did not publish its modification time");
 assert.equal(inlineDocument.headers.get("x-content-type-options"), "nosniff");
 
 const downloadDocument = await fetch(`${baseUrl}${representativeSheet.downloadUrl}`, {
@@ -71,6 +84,9 @@ assert.equal(turkishDocument.ok, true, `Protected Turkish PDF endpoint returned 
 assert.match(turkishDocument.headers.get("content-type") || "", /^application\/pdf/);
 assert.match(turkishDocument.headers.get("content-disposition") || "", /^inline;/);
 assert.ok(turkishDocument.headers.get("etag"), "Protected Turkish PDF endpoint did not publish an ETag");
+assert.equal(turkishDocument.headers.get("content-language"), "tr");
+assert.ok(Number(turkishDocument.headers.get("content-length")) > 0, "Protected Turkish PDF endpoint did not publish its byte length");
+assert.ok(turkishDocument.headers.get("last-modified"), "Protected Turkish PDF endpoint did not publish its modification time");
 
 const rejectedDocument = await fetch(`${baseUrl}/api/catalog-document?path=${encodeURIComponent("coffendi/origins/2026-07-27-full/../../secret.pdf")}`, {
   redirect: "manual",

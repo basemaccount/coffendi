@@ -45,6 +45,13 @@ export default async function handler(req, res) {
     );
     res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
     res.setHeader("ETag", result.blob.etag);
+    res.setHeader("Content-Language", pathname.endsWith("-tr.pdf") ? "tr" : "en");
+    if (Number.isFinite(result.blob.size)) {
+      res.setHeader("Content-Length", String(result.blob.size));
+    }
+    if (result.blob.uploadedAt) {
+      res.setHeader("Last-Modified", new Date(result.blob.uploadedAt).toUTCString());
+    }
     res.setHeader("X-Content-Type-Options", "nosniff");
 
     if (req.method === "HEAD") return res.status(200).end();

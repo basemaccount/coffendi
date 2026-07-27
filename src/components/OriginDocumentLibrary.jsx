@@ -818,7 +818,7 @@ export default function OriginDocumentLibrary({
 
     setCatalogState({ status: "loading", sheets: [] });
     fetch(profile.catalogDataUrl, {
-      signal: controller.signal,
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]),
       cache: "force-cache",
       headers: { Accept: "application/json" },
     })
@@ -832,8 +832,8 @@ export default function OriginDocumentLibrary({
         }
         setCatalogState({ status: "ready", sheets: payload.sheets });
       })
-      .catch((error) => {
-        if (error.name !== "AbortError") setCatalogState({ status: "error", sheets: [] });
+      .catch(() => {
+        if (!controller.signal.aborted) setCatalogState({ status: "error", sheets: [] });
       });
 
     return () => controller.abort();

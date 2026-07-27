@@ -6,6 +6,7 @@ import { createCanvas } from "@napi-rs/canvas";
 import fontkit from "@pdf-lib/fontkit";
 import { put } from "@vercel/blob";
 import { geoNaturalEarth1 } from "d3-geo";
+import { resolveOriginPinLayout } from "./origin-pin-layout.mjs";
 import { PDFDocument, rgb } from "pdf-lib";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 import { translateCoffeeValue } from "../src/lib/turkishCoffee.js";
@@ -1308,7 +1309,7 @@ async function main() {
   await mkdir(catalogDataRoot, { recursive: true });
 
   const catalogSummaries = [];
-  for (const country of generatedCountries) {
+  for (const country of resolveOriginPinLayout(generatedCountries)) {
     const payload = `${JSON.stringify({
       revision: catalogRevision,
       assetRevision,

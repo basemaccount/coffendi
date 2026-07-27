@@ -32,9 +32,11 @@
   transform: translateX(-110%);
 }
 
-html.route-changing .route-loader { opacity: 1; }
+html.route-changing .route-loader,
+html.route-pending .route-loader { opacity: 1; }
 html.route-changing .route-loader::before { animation: route-boundary-pass 620ms var(--ease) both; }
-html.route-changing .route-loader span { animation: route-loader-sweep 720ms var(--ease) infinite; }
+html.route-changing .route-loader span,
+html.route-pending .route-loader span { animation: route-loader-sweep 720ms var(--ease) infinite; }
 
 .scroll-progress {
   position: fixed;

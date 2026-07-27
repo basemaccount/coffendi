@@ -673,7 +673,10 @@ function OriginLocalNavigation({ profile, language }) {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => entry.isIntersecting && setActiveSection(entry.target.id));
     }, { rootMargin: "-150px 0px -60%" });
-    ["overview", "catalog", "origin-network"].forEach((id) => observer.observe(document.getElementById(id)));
+    ["overview", "catalog", "origin-network"]
+      .map((id) => document.getElementById(id))
+      .filter(Boolean)
+      .forEach((section) => observer.observe(section));
     return () => observer.disconnect();
   }, []);
 
@@ -959,11 +962,14 @@ function ApproachPage({ language }) {
 function InquiryForm({ language, copy }) {
   const [state, setState] = useState({ status: "idle", message: "", emailHref: "" });
   const formRef = useRef(null);
+  const submitting = useRef(false);
   const handleSubmit = async (event) => {
     event.preventDefault();
+    if (submitting.current) return;
     const form = event.currentTarget;
     const data = new FormData(form);
     const emailHref = inquiryEmailHref(data, language);
+    submitting.current = true;
     setState({ status: "submitting", message: "", emailHref: "" });
     try {
       await submitRequest("/api/inquiries", { name: data.get("name"), company: data.get("company"), email: data.get("email"), country: data.get("country"), volume: data.get("volume"), message: data.get("message"), audience: "roaster", consent: data.get("consent") === "on", source: `coffendi-green-${language}`, website: data.get("website") || "" });
@@ -971,6 +977,8 @@ function InquiryForm({ language, copy }) {
       setState({ status: "success", message: copy.form.success, emailHref });
     } catch {
       setState({ status: "error", message: copy.form.error, emailHref });
+    } finally {
+      submitting.current = false;
     }
   };
   return (
@@ -1090,7 +1098,7 @@ export default function App({ initialOriginCatalog = null }) {
     const loadCatalog = () => {
       setCatalogState((current) => ({ ...current, status: "loading" }));
       fetch(originCatalogIndexUrl, {
-        signal: controller.signal,
+        signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]),
         cache: "force-cache",
         headers: { Accept: "application/json" },
       })
@@ -1104,8 +1112,8 @@ export default function App({ initialOriginCatalog = null }) {
           }
           setCatalogState({ status: "ready", countries: payload.countries });
         })
-        .catch((error) => {
-          if (error.name !== "AbortError") setCatalogState({ status: "error", countries: [] });
+        .catch(() => {
+          if (!controller.signal.aborted) setCatalogState({ status: "error", countries: [] });
         });
     };
 

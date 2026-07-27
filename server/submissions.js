@@ -337,18 +337,27 @@ export function createSubmissionHandler(kind) {
 }
 
 export function healthHandler(request, response) {
-  if (request.method !== "GET") {
-    response.setHeader("Allow", "GET");
+  if (request.method !== "GET" && request.method !== "HEAD") {
+    response.setHeader("Allow", "GET, HEAD");
     respond(response, 405, { ok: false, message: "Method not allowed." });
     return;
   }
 
-  respond(response, 200, {
+  const body = {
     ok: true,
     service: "coffendi-submissions",
     storage: process.env.BLOB_READ_WRITE_TOKEN ? "configured" : "unavailable",
     notifications: notificationStatus(),
     acknowledgments: acknowledgmentStatus(),
     timestamp: new Date().toISOString(),
-  });
+  };
+  if (request.method === "HEAD") {
+    response.statusCode = 200;
+    response.setHeader("Content-Type", "application/json; charset=utf-8");
+    response.setHeader("Cache-Control", "private, no-store");
+    response.setHeader("X-Content-Type-Options", "nosniff");
+    response.end();
+    return;
+  }
+  respond(response, 200, body);
 }

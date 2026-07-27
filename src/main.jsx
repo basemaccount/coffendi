@@ -23,6 +23,7 @@ if (catalogRoute) {
     const response = await fetch(originCatalogIndexUrl, {
       cache: "force-cache",
       headers: { Accept: "application/json" },
+      signal: AbortSignal.timeout(8_000),
     });
     if (!response.ok) throw new Error(`Origin index returned ${response.status}`);
     const payload = await response.json();
