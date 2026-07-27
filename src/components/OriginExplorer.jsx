@@ -384,7 +384,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
               <div className="origin-explorer__signals" style={styles.signals}><strong style={styles.signalTitle}><Radar style={styles.signalIcon} aria-hidden="true" />{copy.signals}</strong><div style={styles.signalList}>{signals.map((signal) => <span key={signal} style={styles.signal}>{signal}</span>)}</div></div>
               <div className="origin-explorer__directions">
                 <strong>{copy.directions}</strong>
-                <ol>{active.directions.map((direction, index) => <li key={direction.name}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{direction.name}</b><small>{local(direction.process, language)} · {local(direction.cup, language)}</small></div></li>)}</ol>
+                <ol>{active.directions.map((direction, index) => <li key={direction.sheetId || local(direction.name, "en")}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{local(direction.name, language)}</b><small>{local(direction.process, language)} · {local(direction.cup, language)}</small></div></li>)}</ol>
               </div>
               <div className="origin-explorer__actions" style={styles.actions}><LinkComponent className="button button--gold" to={`/origins/${active.slug}`} state={{ originSearch: location.search }}>{copy.profile}<ArrowRight aria-hidden="true" /></LinkComponent><LinkComponent className="button button--glass" to="/contact">{copy.inquiry}</LinkComponent></div>
             </article>

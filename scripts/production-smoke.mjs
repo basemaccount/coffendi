@@ -88,6 +88,39 @@ assert.equal(turkishDocument.headers.get("content-language"), "tr");
 assert.ok(Number(turkishDocument.headers.get("content-length")) > 0, "Protected Turkish PDF endpoint did not publish its byte length");
 assert.ok(turkishDocument.headers.get("last-modified"), "Protected Turkish PDF endpoint did not publish its modification time");
 
+const sourceDocument = await fetch(`${baseUrl}${representativeSheet.sourcePdfUrl}`, {
+  method: "HEAD",
+  redirect: "follow",
+  signal: AbortSignal.timeout(12_000),
+});
+assert.equal(sourceDocument.ok, true, `Protected source-original PDF endpoint returned ${sourceDocument.status}`);
+assert.match(sourceDocument.headers.get("content-type") || "", /^application\/pdf/);
+assert.match(sourceDocument.headers.get("content-disposition") || "", /^inline;/);
+assert.ok(sourceDocument.headers.get("etag"), "Protected source-original PDF endpoint did not publish an ETag");
+assert.equal(sourceDocument.headers.get("content-language"), "en");
+assert.ok(Number(sourceDocument.headers.get("content-length")) > 0, "Protected source-original PDF endpoint did not publish its byte length");
+assert.ok(sourceDocument.headers.get("last-modified"), "Protected source-original PDF endpoint did not publish its modification time");
+assert.equal(sourceDocument.headers.get("x-content-type-options"), "nosniff");
+
+const representativeCountry = originCatalogCountries[0];
+for (const [label, documentUrl, language] of [
+  ["generated English country bundle", representativeCountry.bundleUrl, "en"],
+  ["generated Turkish country bundle", representativeCountry.turkishBundleUrl, "tr"],
+  ["source-original country bundle", representativeCountry.sourceBundleUrl, "en"],
+]) {
+  const bundle = await fetch(`${baseUrl}${documentUrl}`, {
+    method: "HEAD",
+    redirect: "follow",
+    signal: AbortSignal.timeout(12_000),
+  });
+  assert.equal(bundle.ok, true, `Protected ${label} returned ${bundle.status}`);
+  assert.match(bundle.headers.get("content-type") || "", /^application\/pdf/);
+  assert.match(bundle.headers.get("content-disposition") || "", /^inline;/);
+  assert.equal(bundle.headers.get("content-language"), language);
+  assert.ok(Number(bundle.headers.get("content-length")) > 0, `Protected ${label} did not publish its byte length`);
+  assert.equal(bundle.headers.get("x-content-type-options"), "nosniff");
+}
+
 const rejectedDocument = await fetch(`${baseUrl}/api/catalog-document?path=${encodeURIComponent("coffendi/origins/2026-07-27-full/../../secret.pdf")}`, {
   redirect: "manual",
   signal: AbortSignal.timeout(12_000),
@@ -134,4 +167,4 @@ const turkishPreview = await fetch(`${baseUrl}${representativeSheet.turkishFullP
 assert.equal(turkishPreview.ok, true, `Turkish high-resolution preview returned ${turkishPreview.status}`);
 assert.match(turkishPreview.headers.get("cache-control") || "", /immutable/);
 
-console.log(`Production smoke checks passed for ${routes.length} informational routes, all ${originRoutes.length} origin profiles, English and Turkish protected documents, high-resolution previews, security headers, sitemap and robots at ${baseUrl}.`);
+console.log(`Production smoke checks passed for ${routes.length} informational routes, all ${originRoutes.length} origin profiles, generated English and Turkish documents, preserved source originals, all three country bundles, high-resolution previews, security headers, sitemap and robots at ${baseUrl}.`);

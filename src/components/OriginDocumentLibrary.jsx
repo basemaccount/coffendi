@@ -1,12 +1,21 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { normalizeCoffeeSearch, translateCoffeeValue } from "../lib/turkishCoffee";
+import {
+  normalizeCoffeeSearch,
+  translateCoffeeValue,
+} from "../lib/turkishCoffee";
 import "../origin-documents.css";
 
 const local = (value, language) =>
   typeof value === "object" && value !== null ? value[language] : value;
 
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+
+const displayGrade = (sheet, language) => (
+  language === "tr"
+    ? (sheet.gradeTr || sheet.grade)
+    : sheet.grade
+);
 
 const sheetAssets = (sheet, language) => {
   const useTurkish = language === "tr" && sheet.turkishPreview;
@@ -83,7 +92,7 @@ function CountryPageReader({
       enlarge: "Tam ekran görüntüle",
       open: "PDF’yi aç",
       download: "PDF sayfasını indir",
-      quality: "Yüksek çözünürlüklü Türkçe föy",
+      quality: "270 PPI Türkçe teknik föy",
       swipe: "Sayfalar arasında kaydırın, küçük görsellerden seçim yapın veya ok düğmelerini kullanın.",
       pages: "Kaynak sayfalar",
       select: "Sayfayı seç",
@@ -98,7 +107,7 @@ function CountryPageReader({
       enlarge: "Enlarge and review fullscreen",
       open: "Open PDF",
       download: "Download this page",
-      quality: "High-resolution English original",
+      quality: "270 PPI English technical sheet",
       swipe: "Swipe the page or use the arrows to move through the country file.",
       pages: "Source pages",
       select: "Select page",
@@ -219,7 +228,7 @@ function CountryPageReader({
               step(1);
             }
           }}
-          aria-label={`${copy.enlarge}: ${activeSheet.grade}`}
+          aria-label={`${copy.enlarge}: ${displayGrade(activeSheet, language)}`}
         >
           {mediaReady ? (
             <img
@@ -227,7 +236,7 @@ function CountryPageReader({
               src={activeAssets.preview}
               srcSet={sheetSrcSet(activeAssets)}
               sizes="(max-width: 760px) calc(100vw - 58px), min(62vw, 720px)"
-              alt={`${activeSheet.grade} ${language === "tr" ? "PDF sayfası" : "PDF page"}`}
+              alt={`${displayGrade(activeSheet, language)} ${language === "tr" ? "PDF sayfası" : "PDF page"}`}
               width="1080"
               height="1620"
               decoding="async"
@@ -259,7 +268,7 @@ function CountryPageReader({
             <span>{translateCoffeeValue(activeSheet.type, language)}</span>
             <span>{translateCoffeeValue(activeSheet.process, language)}</span>
           </p>
-          <h4>{activeSheet.grade}</h4>
+          <h4>{displayGrade(activeSheet, language)}</h4>
           <small>{translateCoffeeValue(activeSheet.flavor, language)}</small>
           <small>
             <i className="origin-ui-icon" aria-hidden="true">◇</i>
@@ -303,7 +312,7 @@ function CountryPageReader({
             className={index === pageIndex ? "is-active" : ""}
             type="button"
             onClick={() => setPageIndex(index)}
-            aria-label={`${copy.select} ${index + 1}: ${sheet.grade}`}
+            aria-label={`${copy.select} ${index + 1}: ${displayGrade(sheet, language)}`}
             aria-current={index === pageIndex ? "true" : undefined}
           >
             {mediaReady ? (
@@ -319,7 +328,7 @@ function CountryPageReader({
               <span style={thumbnailPlaceholderStyle} aria-hidden="true" />
             )}
             <span>{String(index + 1).padStart(2, "0")}</span>
-            <strong>{sheet.grade}</strong>
+            <strong>{displayGrade(sheet, language)}</strong>
           </button>
           );
         })}
@@ -335,13 +344,13 @@ function SheetCard({ sheet, index, language, onOpen }) {
       sheet: "Kaynak sayfası",
       view: "Ön izleme",
       download: "PDF’yi indir",
-      language: "Türkçe bilgi föyü",
+      language: "Üretilmiş Türkçe teknik föy",
     }
     : {
       sheet: "Reference sheet",
       view: "Preview",
       download: "Download PDF",
-      language: "English original",
+      language: "Generated English technical sheet",
     };
 
   return (
@@ -350,7 +359,7 @@ function SheetCard({ sheet, index, language, onOpen }) {
         className="origin-sheet-card__preview"
         type="button"
         onClick={(event) => onOpen(sheet.id, event.currentTarget)}
-        aria-label={`${copy.view}: ${sheet.grade}`}
+        aria-label={`${copy.view}: ${displayGrade(sheet, language)}`}
       >
         <img
           src={assets.thumbnail}
@@ -373,7 +382,7 @@ function SheetCard({ sheet, index, language, onOpen }) {
           <span>{translateCoffeeValue(sheet.type, language)}</span>
           <span>{copy.language}</span>
         </div>
-        <h3>{sheet.grade}</h3>
+        <h3>{displayGrade(sheet, language)}</h3>
         <p>{translateCoffeeValue(sheet.flavor, language)}</p>
         <dl className="origin-sheet-card__facts">
           <div>
@@ -438,17 +447,18 @@ function SheetViewer({
       fullscreen: "Tam ekran okuma",
       open: "Türkçe PDF’yi yeni sekmede aç",
       download: "Türkçe PDF’yi indir",
-      alternate: "İngilizce orijinali aç",
+      alternate: "İngilizce teknik föyü aç",
+      sourceOriginal: "İngilizce kaynak orijinalini aç",
       specs: "Kaynak sayfa özellikleri",
       source: "Kaynak",
       page: "Sayfa",
       revision: "Sürüm",
       language: "Görüntülenen belge",
-      documentLanguage: "Türkçe bilgi föyü",
+      documentLanguage: "Üretilmiş Türkçe teknik föy",
       sourceLanguage: "Kaynak dili",
       english: "İngilizce orijinal",
       fidelity: "Görüntü kalitesi",
-      highResolution: "2160 px yüksek çözünürlük",
+      highResolution: "2160 × 3240 px • 270 PPI ön izleme",
       unavailable: "Tam ekran bu tarayıcıda kullanılamıyor. Tam pencere görüntüleyici açık kalır.",
       swipe: "Sayfalar arasında geçmek için sola veya sağa kaydırın.",
       loadingPage: "Belge sayfası yükleniyor",
@@ -480,17 +490,18 @@ function SheetViewer({
       fullscreen: "Fullscreen reading",
       open: "Open PDF in a new tab",
       download: "Download PDF",
-      alternate: "Open Turkish companion",
+      alternate: "Open Turkish technical sheet",
+      sourceOriginal: "Open English source original",
       specs: "Sheet specifications",
       source: "Source",
       page: "Page",
       revision: "Revision",
       language: "Displayed document",
-      documentLanguage: "English original",
+      documentLanguage: "Generated English technical sheet",
       sourceLanguage: "Source language",
       english: "English",
       fidelity: "Preview quality",
-      highResolution: "2160 px high resolution",
+      highResolution: "2160 × 3240 px • 270 PPI preview",
       unavailable: "Fullscreen is unavailable in this browser. The full-window viewer remains open.",
       swipe: "Swipe left or right to move through this country’s pages.",
       loadingPage: "Loading document page",
@@ -579,7 +590,7 @@ function SheetViewer({
 
   const specifications = [
     ["type", activeSheet.type],
-    ["grade", activeSheet.grade],
+    ["grade", displayGrade(activeSheet, language)],
     ["defects", activeSheet.defects],
     ["flavor", activeSheet.flavor],
     ["aroma", activeSheet.aroma],
@@ -630,7 +641,7 @@ function SheetViewer({
         <header className="origin-document-dialog__header">
           <div>
             <p>{local(country, language)} · {activeSheet.type}</p>
-            <h2 id={titleId}>{activeSheet.grade}</h2>
+            <h2 id={titleId}>{displayGrade(activeSheet, language)}</h2>
             <span id={descriptionId}>
               {String(activeIndex + 1).padStart(2, "0")} / {String(sheets.length).padStart(2, "0")}
             </span>
@@ -694,6 +705,17 @@ function SheetViewer({
               <i className="origin-ui-icon" aria-hidden="true">{language === "tr" ? "EN" : "TR"}</i>
               <span>{copy.alternate}</span>
             </a>
+            {activeSheet.sourcePdfUrl && (
+              <a
+                href={activeSheet.sourcePdfUrl}
+                target="_blank"
+                rel="noreferrer"
+                aria-label={copy.sourceOriginal}
+              >
+                <i className="origin-ui-icon" aria-hidden="true">SRC</i>
+                <span>{copy.sourceOriginal}</span>
+              </a>
+            )}
           </div>
         </div>
 
@@ -748,7 +770,7 @@ function SheetViewer({
               sizes={fit === "custom"
                 ? `${Math.round(1080 * Math.min(zoom, 2))}px`
                 : "(max-width: 820px) calc(100vw - 20px), min(1060px, calc(100vw - 410px))"}
-              alt={`${activeSheet.grade} ${language === "tr" ? "referans föyü" : "reference sheet"}`}
+              alt={`${displayGrade(activeSheet, language)} ${language === "tr" ? "referans föyü" : "reference sheet"}`}
               width="2160"
               height="3240"
               decoding="async"
@@ -877,7 +899,8 @@ export default function OriginDocumentLibrary({
       filteredResults: "eşleşen kaynak sayfası",
       reset: "Filtreleri temizle",
       downloadAll: "Türkçe ülke dosyasını indir",
-      alternateBundle: "İngilizce orijinal katalog",
+      alternateBundle: "İngilizce teknik katalog",
+      sourceBundle: "İngilizce kaynak sayfalar",
       emptyTitle: "Bu menşe için yayımlanmış bir kaynak sayfa yok.",
       emptyCopy: "Güncel lot ve belge durumu talep sırasında doğrudan teyit edilir.",
       noMatches: "Bu filtrelerle eşleşen bir kaynak sayfa bulunamadı.",
@@ -903,7 +926,8 @@ export default function OriginDocumentLibrary({
       filteredResults: "matching sheets",
       reset: "Clear filters",
       downloadAll: "Download country catalogue",
-      alternateBundle: "Turkish companion catalogue",
+      alternateBundle: "Turkish technical catalogue",
+      sourceBundle: "Original English source pages",
       emptyTitle: "No reference sheets are published for this origin.",
       emptyCopy: "Current lots and document availability are confirmed directly during an inquiry.",
       noMatches: "No sheets match these filters.",
@@ -926,6 +950,7 @@ export default function OriginDocumentLibrary({
       && (process === "all" || sheet.process === process)
       && (!normalizedQuery || normalizeCoffeeSearch([
         sheet.grade,
+        sheet.gradeTr,
         sheet.type,
         sheet.process,
         sheet.flavor,
@@ -953,6 +978,7 @@ export default function OriginDocumentLibrary({
   const alternateBundleUrl = language === "tr"
     ? profile.bundleUrl
     : profile.turkishBundleUrl;
+  const sourceBundleUrl = profile.sourceBundleUrl;
 
   const setActiveSheet = (sheetId, { replace = false } = {}) => {
     const params = new URLSearchParams(location.search);
@@ -1058,6 +1084,12 @@ export default function OriginDocumentLibrary({
               <a className="button button--outline" href={alternateBundleUrl} target="_blank" rel="noreferrer">
                 <i className="origin-ui-icon" aria-hidden="true">{language === "tr" ? "EN" : "TR"}</i>
                 {copy.alternateBundle}
+              </a>
+            )}
+            {sourceBundleUrl && (
+              <a className="button button--outline" href={sourceBundleUrl} target="_blank" rel="noreferrer">
+                <i className="origin-ui-icon" aria-hidden="true">SRC</i>
+                {copy.sourceBundle}
               </a>
             )}
           </div>

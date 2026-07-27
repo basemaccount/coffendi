@@ -377,6 +377,7 @@ assert(Boolean(firstSheetQuery), "opening a source sheet did not create a reload
 assert(await documentDialog.locator(".origin-document-dialog__specifications dl > div").count() === 11, "source viewer did not expose all 11 parsed specifications");
 assert((await documentDialog.getByRole("link", { name: "Open PDF in a new tab" }).getAttribute("href")).startsWith("/api/catalog-document?path="), "source viewer did not use the protected PDF endpoint");
 assert((await documentDialog.getByRole("link", { name: "Download PDF" }).getAttribute("href")).includes("download=1"), "source viewer download did not request an attachment");
+assert((await documentDialog.getByRole("link", { name: "Open English source original" }).getAttribute("href")).includes("-source.pdf"), "source viewer did not preserve the original English source page");
 const dialogPreview = documentDialog.locator(".origin-document-dialog__preview");
 const dialogPreviewBox = await dialogPreview.boundingBox();
 assert(Boolean(dialogPreviewBox), "fullscreen country PDF preview was not measurable");
@@ -660,8 +661,9 @@ assert((await turkishViewer.locator(".origin-document-dialog__specifications").i
 assert((await turkishViewer.locator(".origin-document-dialog__specifications").innerText()).includes("AMBALAJ"), "Turkish viewer did not localise the packaging field");
 assert((await turkishViewer.locator(".origin-document-dialog__preview img").getAttribute("src")).includes("-tr-1080.webp"), "Turkish viewer did not use the Turkish companion preview");
 assert((await turkishViewer.getByRole("link", { name: "Türkçe PDF’yi yeni sekmede aç" }).getAttribute("href")).includes("-tr.pdf"), "Turkish viewer did not open the Turkish companion PDF");
-assert(!(await turkishViewer.getByRole("link", { name: "İngilizce orijinali aç" }).getAttribute("href")).includes("-tr.pdf"), "Turkish viewer did not preserve the English original");
-assert((await turkishViewer.locator(".origin-document-dialog__provenance").innerText()).includes("Türkçe bilgi föyü"), "Turkish PDF provenance did not identify the displayed companion language");
+assert(!(await turkishViewer.getByRole("link", { name: "İngilizce teknik föyü aç" }).getAttribute("href")).includes("-tr.pdf"), "Turkish viewer did not expose the generated English technical sheet");
+assert((await turkishViewer.getByRole("link", { name: "İngilizce kaynak orijinalini aç" }).getAttribute("href")).includes("-source.pdf"), "Turkish viewer did not preserve the English source original");
+assert((await turkishViewer.locator(".origin-document-dialog__provenance").innerText()).includes("Üretilmiş Türkçe teknik föy"), "Turkish PDF provenance did not identify the displayed generated language");
 await turkishViewer.locator(".origin-document-dialog__close").click();
 await turkishPage.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
 assert((await turkishPage.locator(".origin-filter-panel h2").textContent()).includes("kahve profiline"), "Turkish origin filters retained an unnatural discovery label");

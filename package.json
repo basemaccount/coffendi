@@ -23,6 +23,7 @@
     "test:security": "node scripts/security-check.mjs",
     "test:sourcing": "node scripts/test-sourcing.mjs",
     "test:origins": "node scripts/test-origin-catalog.mjs",
+    "test:documents": "node scripts/test-document-quality.mjs",
     "test:a11y": "node scripts/accessibility-check.mjs",
     "test:bundle": "node scripts/bundle-budget.mjs",
     "test:performance": "node scripts/performance-check.mjs",

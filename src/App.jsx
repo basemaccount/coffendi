@@ -274,6 +274,10 @@ function mergeCatalogCountry(profile, catalog) {
       catalogDataUrl: "",
       bundleUrl: "",
       bundleDownloadUrl: "",
+      sourceBundleUrl: "",
+      sourceBundleDownloadUrl: "",
+      turkishBundleUrl: "",
+      turkishBundleDownloadUrl: "",
     };
   }
 
@@ -292,6 +296,10 @@ function mergeCatalogCountry(profile, catalog) {
     catalogDataUrl: catalogProfile.catalogDataUrl,
     bundleUrl: catalogProfile.bundleUrl,
     bundleDownloadUrl: catalogProfile.bundleDownloadUrl,
+    sourceBundleUrl: catalogProfile.sourceBundleUrl,
+    sourceBundleDownloadUrl: catalogProfile.sourceBundleDownloadUrl,
+    turkishBundleUrl: catalogProfile.turkishBundleUrl,
+    turkishBundleDownloadUrl: catalogProfile.turkishBundleDownloadUrl,
     catalogRevision: originCatalogMeta.revision,
   };
 }

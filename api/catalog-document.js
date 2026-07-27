@@ -1,8 +1,11 @@
 import { Readable } from "node:stream";
 import { get } from "@vercel/blob";
 
-const CATALOG_PREFIX = "coffendi/origins/2026-07-27-full/";
-const SAFE_PATH = /^coffendi\/origins\/2026-07-27-full\/[a-z0-9-]+\/[a-z0-9-]+\.pdf$/;
+const CATALOG_PREFIXES = [
+  "coffendi/origins/2026-07-27-full/",
+  "coffendi/origins/2026-07-27-bilingual-v2/",
+];
+const SAFE_PATH = /^coffendi\/origins\/(?:2026-07-27-full|2026-07-27-bilingual-v2)\/[a-z0-9-]+\/[a-z0-9-]+\.pdf$/;
 
 function requestedPath(req) {
   const raw = Array.isArray(req.query?.path) ? req.query.path[0] : req.query?.path;
@@ -29,7 +32,7 @@ export default async function handler(req, res) {
   }
 
   const pathname = requestedPath(req);
-  if (!pathname.startsWith(CATALOG_PREFIX) || !SAFE_PATH.test(pathname)) {
+  if (!CATALOG_PREFIXES.some((prefix) => pathname.startsWith(prefix)) || !SAFE_PATH.test(pathname)) {
     return sendError(req, res, 404, "Document not found");
   }
 

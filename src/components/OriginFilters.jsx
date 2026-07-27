@@ -36,7 +36,8 @@ function searchableText(profile) {
     local(profile.use, "en"),
     local(profile.use, "tr"),
     ...profile.directions.flatMap((direction) => [
-      direction.name,
+      local(direction.name, "en"),
+      local(direction.name, "tr"),
       local(direction.process, "en"),
       local(direction.process, "tr"),
       local(direction.cup, "en"),

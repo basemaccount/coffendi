@@ -139,8 +139,9 @@ for (const check of checks) {
         await page.locator(".origin-sheet-card__preview").first().click();
         await page.locator(".origin-document-dialog").waitFor({ state: "visible" });
         await page.locator(".origin-document-dialog__preview img[src$='-tr-1080.webp']").evaluate((image) => image.decode());
-        if ((await page.getByRole("link", { name: "İngilizce orijinali aç" }).count()) !== 1) failures.push("desktop-kenya: Turkish reader did not preserve a route to the English original");
-        if (!(await page.locator(".origin-document-dialog__provenance").getByText("Türkçe bilgi föyü", { exact: true }).isVisible())) failures.push("desktop-kenya: Turkish companion provenance was missing");
+        if ((await page.getByRole("link", { name: "İngilizce teknik föyü aç" }).count()) !== 1) failures.push("desktop-kenya: Turkish reader did not expose the generated English sheet");
+        if ((await page.getByRole("link", { name: "İngilizce kaynak orijinalini aç" }).count()) !== 1) failures.push("desktop-kenya: Turkish reader did not preserve the English source original");
+        if (!(await page.locator(".origin-document-dialog__provenance").getByText("Üretilmiş Türkçe teknik föy", { exact: true }).isVisible())) failures.push("desktop-kenya: generated Turkish document provenance was missing");
       }
       await page.screenshot({ path: new URL(`${check.name}-viewer.png`, outputDir).pathname, fullPage: false });
     }

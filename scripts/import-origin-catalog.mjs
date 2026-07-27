@@ -6,10 +6,18 @@ import { createCanvas } from "@napi-rs/canvas";
 import fontkit from "@pdf-lib/fontkit";
 import { put } from "@vercel/blob";
 import { geoNaturalEarth1 } from "d3-geo";
+import {
+  createLocalizedSheetPdf,
+  loadDocumentFonts,
+  prepareDocumentArtwork,
+} from "./lib/origin-document-generator.mjs";
 import { resolveOriginPinLayout } from "./origin-pin-layout.mjs";
 import { PDFDocument, rgb } from "pdf-lib";
 import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
-import { translateCoffeeValue } from "../src/lib/turkishCoffee.js";
+import {
+  translateCoffeeGrade,
+  translateCoffeeValue,
+} from "../src/lib/turkishCoffee.js";
 
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot =
@@ -20,20 +28,27 @@ const previewRoot = path.join(projectRoot, "public", "catalog", "previews");
 const catalogDataRoot = path.join(projectRoot, "public", "catalog", "data");
 const outputDataFile = path.join(projectRoot, "src", "originCatalog.js");
 const fontRoot = path.join(projectRoot, "node_modules", "dejavu-fonts-ttf", "ttf");
+const decorativeArtworkPath = path.join(
+  projectRoot,
+  "public",
+  "images",
+  "catalog",
+  "green-coffee-botanical-v1.png",
+);
 const uploadDocuments = process.env.UPLOAD_ORIGIN_BLOBS === "1";
 const reuseUploadedDocuments = process.env.REUSE_ORIGIN_BLOBS === "1";
-const catalogRevision = "2026-07-27-full";
+const catalogRevision = "2026-07-27-bilingual-v2";
 const catalogRevisionDate = new Date("2026-07-27T00:00:00.000Z");
-const assetRevision = "hd-tr-v1";
+const assetRevision = "uhd-bilingual-v2";
 const previewWidths = {
   thumbnail: 360,
   preview: 1080,
   full: 2160,
 };
 const previewQualities = {
-  thumbnail: 72,
-  preview: 82,
-  full: 84,
+  thumbnail: 80,
+  preview: 90,
+  full: 94,
 };
 
 const pdfColors = {
@@ -1067,9 +1082,16 @@ async function main() {
   await mkdir(workRoot, { recursive: true });
   await mkdir(previewRoot, { recursive: true });
 
-  const [normalFontBytes, boldFontBytes] = await Promise.all([
-    readFile(path.join(fontRoot, "DejaVuSans.ttf")),
-    readFile(path.join(fontRoot, "DejaVuSans-Bold.ttf")),
+  const [
+    { normalFontBytes, boldFontBytes },
+    documentArtwork,
+  ] = await Promise.all([
+    loadDocumentFonts(fontRoot),
+    prepareDocumentArtwork({
+      artworkPath: decorativeArtworkPath,
+      flagRoot: path.join(projectRoot, "public", "images", "flags"),
+      countries,
+    }),
   ]);
   const sourceDocuments = {};
   for (const [key, source] of Object.entries(sources)) {
@@ -1095,15 +1117,16 @@ async function main() {
       })));
     const expectedCountry = country.sourceCountry || country.country;
     const sheets = [];
-    const countryPdf = await PDFDocument.create();
+    const sourceCountryPdf = await PDFDocument.create();
+    const englishCountryPdf = await PDFDocument.create();
     const turkishCountryPdf = await PDFDocument.create();
     for (const reference of pageReferences) {
       const source = sourceDocuments[reference.sourceKey];
-      const [bundlePage] = await countryPdf.copyPages(
+      const [bundlePage] = await sourceCountryPdf.copyPages(
         source.pdfLib,
         [reference.pageNumber - 1],
       );
-      countryPdf.addPage(bundlePage);
+      sourceCountryPdf.addPage(bundlePage);
     }
 
     for (const { sourceKey, pageNumber } of pageReferences) {
@@ -1113,38 +1136,88 @@ async function main() {
       sourcePageKeys.add(sourcePageKey);
 
       const extracted = await extractSheet(source.pdf, pageNumber, expectedCountry);
-      const onePagePdf = await PDFDocument.create();
-      const [copiedPage] = await onePagePdf.copyPages(source.pdfLib, [pageNumber - 1]);
-      onePagePdf.addPage(copiedPage);
-      onePagePdf.setTitle(`${country.country} — ${extracted.specifications.grade}`);
-      onePagePdf.setSubject("Coffendi green coffee reference sheet");
-      onePagePdf.setLanguage("en");
-      onePagePdf.setCreator("Coffendi");
-      onePagePdf.setProducer("Coffendi origin catalog importer");
-      onePagePdf.setCreationDate(catalogRevisionDate);
-      onePagePdf.setModificationDate(catalogRevisionDate);
-      const pdfBytes = Buffer.from(await onePagePdf.save({ useObjectStreams: true }));
-      const hash = createHash("sha256").update(pdfBytes).digest("hex");
-      const turkishPdfBytes = await createTurkishSheetPdf({
+      const sourcePagePdf = await PDFDocument.create();
+      const [copiedPage] = await sourcePagePdf.copyPages(source.pdfLib, [pageNumber - 1]);
+      sourcePagePdf.addPage(copiedPage);
+      sourcePagePdf.setTitle(`${country.country} — ${extracted.specifications.grade} — source original`);
+      sourcePagePdf.setAuthor("Makendi Worldwide");
+      sourcePagePdf.setSubject("Original English green coffee reference sheet");
+      sourcePagePdf.setLanguage("en");
+      sourcePagePdf.setCreator("Coffendi");
+      sourcePagePdf.setProducer("Coffendi source-page extractor");
+      sourcePagePdf.setCreationDate(catalogRevisionDate);
+      sourcePagePdf.setModificationDate(catalogRevisionDate);
+      const sourcePdfBytes = Buffer.from(await sourcePagePdf.save({ useObjectStreams: true }));
+      const sourceHash = createHash("sha256").update(sourcePdfBytes).digest("hex");
+      // pdf-lib/fontkit subsetting mutates internal glyph state; generate languages
+      // sequentially so concurrent documents cannot omit Turkish glyphs.
+      const pdfBytes = await createLocalizedSheetPdf({
         country,
         extracted,
         sourceDocument: source.label,
         sourcePage: pageNumber,
         normalFontBytes,
         boldFontBytes,
+        bannerBytes: documentArtwork.bannerBytes,
+        flagBytes: documentArtwork.flags.get(country.iso),
+        language: "en",
+        catalogRevision,
+        catalogRevisionDate,
       });
+      const turkishPdfBytes = await createLocalizedSheetPdf({
+        country,
+        extracted,
+        sourceDocument: source.label,
+        sourcePage: pageNumber,
+        normalFontBytes,
+        boldFontBytes,
+        bannerBytes: documentArtwork.bannerBytes,
+        flagBytes: documentArtwork.flags.get(country.iso),
+        language: "tr",
+        catalogRevision,
+        catalogRevisionDate,
+      });
+      const hash = createHash("sha256").update(pdfBytes).digest("hex");
       const turkishHash = createHash("sha256").update(turkishPdfBytes).digest("hex");
       const id = `${country.slug}-${slugify(extracted.specifications.grade)}`;
       const versionedName = `${id}-${hash.slice(0, 10)}-${assetRevision}`;
       const countryPreviewRoot = path.join(previewRoot, country.slug);
       await mkdir(countryPreviewRoot, { recursive: true });
 
+      const englishTask = pdfjs.getDocument({
+        data: new Uint8Array(pdfBytes),
+        disableWorker: true,
+      });
       const turkishTask = pdfjs.getDocument({
         data: new Uint8Array(turkishPdfBytes),
         disableWorker: true,
       });
-      const turkishPdf = await turkishTask.promise;
-      const turkishPage = await turkishPdf.getPage(1);
+      const [englishPdf, turkishPdf] = await Promise.all([
+        englishTask.promise,
+        turkishTask.promise,
+      ]);
+      const [englishPage, turkishPage] = await Promise.all([
+        englishPdf.getPage(1),
+        turkishPdf.getPage(1),
+      ]);
+      const [englishTextContent, turkishTextContent] = await Promise.all([
+        englishPage.getTextContent(),
+        turkishPage.getTextContent(),
+      ]);
+      const englishExtractedText = englishTextContent.items.map(({ str }) => str).join(" ");
+      const turkishExtractedText = turkishTextContent.items.map(({ str }) => str).join(" ");
+      if (
+        !englishExtractedText.includes(country.country.toLocaleUpperCase("en"))
+        || !englishExtractedText.includes("TECHNICAL SPECIFICATIONS")
+      ) {
+        throw new Error(`${country.slug}:${pageNumber}: generated English text layer is incomplete`);
+      }
+      if (
+        !turkishExtractedText.includes(country.countryTr.toLocaleUpperCase("tr-TR"))
+        || !turkishExtractedText.includes("TEKNİK ÖZELLİKLER")
+      ) {
+        throw new Error(`${country.slug}:${pageNumber}: generated Turkish text layer is incomplete`);
+      }
       const [
         thumbnail,
         preview,
@@ -1153,14 +1226,14 @@ async function main() {
         turkishPreview,
         turkishFullPreview,
       ] = await Promise.all([
-        renderPage(extracted.page, previewWidths.thumbnail, previewQualities.thumbnail),
-        renderPage(extracted.page, previewWidths.preview, previewQualities.preview),
-        renderPage(extracted.page, previewWidths.full, previewQualities.full),
+        renderPage(englishPage, previewWidths.thumbnail, previewQualities.thumbnail),
+        renderPage(englishPage, previewWidths.preview, previewQualities.preview),
+        renderPage(englishPage, previewWidths.full, previewQualities.full),
         renderPage(turkishPage, previewWidths.thumbnail, previewQualities.thumbnail),
         renderPage(turkishPage, previewWidths.preview, previewQualities.preview),
         renderPage(turkishPage, previewWidths.full, previewQualities.full),
       ]);
-      await turkishTask.destroy();
+      await Promise.all([englishTask.destroy(), turkishTask.destroy()]);
       const thumbnailFile = `${versionedName}-${previewWidths.thumbnail}.webp`;
       const previewFile = `${versionedName}-${previewWidths.preview}.webp`;
       const fullPreviewFile = `${versionedName}-${previewWidths.full}.webp`;
@@ -1176,27 +1249,41 @@ async function main() {
         writeFile(path.join(countryPreviewRoot, turkishFullPreviewFile), turkishFullPreview),
         writeFile(path.join(workRoot, `${versionedName}.pdf`), pdfBytes),
         writeFile(path.join(workRoot, `${versionedName}-tr.pdf`), turkishPdfBytes),
+        writeFile(path.join(workRoot, `${versionedName}-source.pdf`), sourcePdfBytes),
       ]);
 
-      const remote = await uploadPdf(
-        `coffendi/origins/${catalogRevision}/${country.slug}/${versionedName}.pdf`,
-        pdfBytes,
-      );
-      const turkishRemote = await uploadPdf(
-        `coffendi/origins/${catalogRevision}/${country.slug}/${versionedName}-tr.pdf`,
-        turkishPdfBytes,
-      );
+      const [remote, turkishRemote, sourceRemote] = await Promise.all([
+        uploadPdf(
+          `coffendi/origins/${catalogRevision}/${country.slug}/${versionedName}.pdf`,
+          pdfBytes,
+        ),
+        uploadPdf(
+          `coffendi/origins/${catalogRevision}/${country.slug}/${versionedName}-tr.pdf`,
+          turkishPdfBytes,
+        ),
+        uploadPdf(
+          `coffendi/origins/${catalogRevision}/${country.slug}/${versionedName}-source.pdf`,
+          sourcePdfBytes,
+        ),
+      ]);
       const pdfUrl = remote?.url || `/catalog/documents/${country.slug}/${versionedName}.pdf`;
       const downloadUrl = remote?.downloadUrl || `${pdfUrl}?download=1`;
       const turkishPdfUrl = turkishRemote?.url
         || `/catalog/documents/${country.slug}/${versionedName}-tr.pdf`;
       const turkishDownloadUrl = turkishRemote?.downloadUrl || `${turkishPdfUrl}?download=1`;
+      const sourcePdfUrl = sourceRemote?.url
+        || `/catalog/documents/${country.slug}/${versionedName}-source.pdf`;
+      const sourceDownloadUrl = sourceRemote?.downloadUrl || `${sourcePdfUrl}?download=1`;
 
-      const turkishPageDocument = await PDFDocument.load(turkishPdfBytes);
-      const [turkishBundlePage] = await turkishCountryPdf.copyPages(
-        turkishPageDocument,
-        [0],
-      );
+      const [englishPageDocument, turkishPageDocument] = await Promise.all([
+        PDFDocument.load(pdfBytes),
+        PDFDocument.load(turkishPdfBytes),
+      ]);
+      const [[englishBundlePage], [turkishBundlePage]] = await Promise.all([
+        englishCountryPdf.copyPages(englishPageDocument, [0]),
+        turkishCountryPdf.copyPages(turkishPageDocument, [0]),
+      ]);
+      englishCountryPdf.addPage(englishBundlePage);
       turkishCountryPdf.addPage(turkishBundlePage);
 
       sheets.push({
@@ -1205,6 +1292,7 @@ async function main() {
         country: country.country,
         type: extracted.specifications.type,
         grade: extracted.specifications.grade,
+        gradeTr: translateCoffeeGrade(extracted.specifications.grade, "tr"),
         defects: extracted.specifications.defects,
         flavor: extracted.specifications.flavor,
         aroma: extracted.specifications.aroma,
@@ -1226,46 +1314,84 @@ async function main() {
         downloadUrl,
         turkishPdfUrl,
         turkishDownloadUrl,
+        sourcePdfUrl,
+        sourceDownloadUrl,
         sourceDocument: source.label,
         sourcePage: pageNumber,
         revision: catalogRevision,
         assetRevision,
         language: "en",
         checksum: hash,
+        sourceLanguage: "en",
+        sourceChecksum: sourceHash,
         turkishLanguage: "tr-TR",
         turkishChecksum: turkishHash,
+        generation: {
+          engine: "Coffendi bilingual origin document generator",
+          textLayer: "selectable",
+          fonts: "embedded-subset",
+          previewPpi: 270,
+          artwork: "green-coffee-botanical-v1",
+          englishPdfBytes: pdfBytes.length,
+          turkishPdfBytes: turkishPdfBytes.length,
+          sourcePdfBytes: sourcePdfBytes.length,
+          englishTextCharacters: englishExtractedText.replace(/\s+/g, "").length,
+          turkishTextCharacters: turkishExtractedText.replace(/\s+/g, "").length,
+          englishFontResources: new Set(englishTextContent.items.map(({ fontName }) => fontName)).size,
+          turkishFontResources: new Set(turkishTextContent.items.map(({ fontName }) => fontName)).size,
+        },
       });
       process.stdout.write(`Sheet ${sheets.length}/${pageReferences.length}: ${country.country} — ${extracted.specifications.grade}\n`);
     }
 
-    countryPdf.setTitle(`${country.country} — Coffendi green coffee catalogue`);
-    countryPdf.setSubject("Coffendi country reference-sheet collection");
-    countryPdf.setLanguage("en");
-    countryPdf.setCreator("Coffendi");
-    countryPdf.setProducer("Coffendi origin catalog importer");
-    countryPdf.setCreationDate(catalogRevisionDate);
-    countryPdf.setModificationDate(catalogRevisionDate);
-    const bundleBytes = Buffer.from(await countryPdf.save({ useObjectStreams: true }));
+    englishCountryPdf.setTitle(`${country.country} — Coffendi English origin catalogue`);
+    englishCountryPdf.setAuthor("Coffendi");
+    englishCountryPdf.setSubject("Coffendi generated English country technical-sheet collection");
+    englishCountryPdf.setLanguage("en");
+    englishCountryPdf.setCreator("Coffendi");
+    englishCountryPdf.setProducer("Coffendi bilingual origin document generator");
+    englishCountryPdf.setCreationDate(catalogRevisionDate);
+    englishCountryPdf.setModificationDate(catalogRevisionDate);
+    const bundleBytes = Buffer.from(await englishCountryPdf.save({ useObjectStreams: true }));
     const bundleHash = createHash("sha256").update(bundleBytes).digest("hex");
-    const bundleRemote = await uploadPdf(
-      `coffendi/origins/${catalogRevision}/${country.slug}/${country.slug}-catalog-${bundleHash.slice(0, 10)}.pdf`,
-      bundleBytes,
+    sourceCountryPdf.setTitle(`${country.country} — original source-page collection`);
+    sourceCountryPdf.setAuthor("Makendi Worldwide");
+    sourceCountryPdf.setSubject("Original English source pages selected for this Coffendi origin");
+    sourceCountryPdf.setLanguage("en");
+    sourceCountryPdf.setCreator("Coffendi");
+    sourceCountryPdf.setProducer("Coffendi source-page extractor");
+    sourceCountryPdf.setCreationDate(catalogRevisionDate);
+    sourceCountryPdf.setModificationDate(catalogRevisionDate);
+    const sourceBundleBytes = Buffer.from(
+      await sourceCountryPdf.save({ useObjectStreams: true }),
     );
+    const sourceBundleHash = createHash("sha256").update(sourceBundleBytes).digest("hex");
     turkishCountryPdf.setTitle(`${country.countryTr} — Coffendi Türkçe menşe kataloğu`);
     turkishCountryPdf.setSubject("Coffendi Türkçe ülke bilgi föyü koleksiyonu");
     turkishCountryPdf.setLanguage("tr-TR");
+    turkishCountryPdf.setAuthor("Coffendi");
     turkishCountryPdf.setCreator("Coffendi");
-    turkishCountryPdf.setProducer("Coffendi origin catalog importer");
+    turkishCountryPdf.setProducer("Coffendi bilingual origin document generator");
     turkishCountryPdf.setCreationDate(catalogRevisionDate);
     turkishCountryPdf.setModificationDate(catalogRevisionDate);
     const turkishBundleBytes = Buffer.from(
       await turkishCountryPdf.save({ useObjectStreams: true }),
     );
     const turkishBundleHash = createHash("sha256").update(turkishBundleBytes).digest("hex");
-    const turkishBundleRemote = await uploadPdf(
-      `coffendi/origins/${catalogRevision}/${country.slug}/${country.slug}-catalog-tr-${turkishBundleHash.slice(0, 10)}.pdf`,
-      turkishBundleBytes,
-    );
+    const [bundleRemote, sourceBundleRemote, turkishBundleRemote] = await Promise.all([
+      uploadPdf(
+        `coffendi/origins/${catalogRevision}/${country.slug}/${country.slug}-catalog-${bundleHash.slice(0, 10)}.pdf`,
+        bundleBytes,
+      ),
+      uploadPdf(
+        `coffendi/origins/${catalogRevision}/${country.slug}/${country.slug}-source-${sourceBundleHash.slice(0, 10)}.pdf`,
+        sourceBundleBytes,
+      ),
+      uploadPdf(
+        `coffendi/origins/${catalogRevision}/${country.slug}/${country.slug}-catalog-tr-${turkishBundleHash.slice(0, 10)}.pdf`,
+        turkishBundleBytes,
+      ),
+    ]);
     const [projectedX, projectedY] = projection(country.coordinates);
     const map = {
       x: Number((projectedX / 10).toFixed(1)),
@@ -1294,6 +1420,9 @@ async function main() {
       bundleUrl: bundleRemote?.url || "",
       bundleDownloadUrl: bundleRemote?.downloadUrl || "",
       bundleChecksum: bundleHash,
+      sourceBundleUrl: sourceBundleRemote?.url || "",
+      sourceBundleDownloadUrl: sourceBundleRemote?.downloadUrl || "",
+      sourceBundleChecksum: sourceBundleHash,
       turkishBundleUrl: turkishBundleRemote?.url || "",
       turkishBundleDownloadUrl: turkishBundleRemote?.downloadUrl || "",
       turkishBundleChecksum: turkishBundleHash,
@@ -1321,8 +1450,8 @@ async function main() {
     await writeFile(path.join(catalogDataRoot, dataFilename), payload);
 
     const firstSheet = country.sheets[0];
-    const directions = country.sheets.map(({ id, grade, process, flavor }) => ({
-      name: grade,
+    const directions = country.sheets.map(({ id, grade, gradeTr, process, flavor }) => ({
+      name: { en: grade, tr: gradeTr },
       process: { en: process, tr: process },
       cup: { en: flavor, tr: flavor },
       sheetId: id,
@@ -1380,6 +1509,8 @@ async function main() {
       catalogDataUrl: `/catalog/data/${dataFilename}`,
       bundleUrl: country.bundleUrl,
       bundleDownloadUrl: country.bundleDownloadUrl,
+      sourceBundleUrl: country.sourceBundleUrl,
+      sourceBundleDownloadUrl: country.sourceBundleDownloadUrl,
       turkishBundleUrl: country.turkishBundleUrl,
       turkishBundleDownloadUrl: country.turkishBundleDownloadUrl,
       catalogRevision,
@@ -1392,6 +1523,7 @@ async function main() {
       firstSheet: {
         id: firstSheet.id,
         grade: firstSheet.grade,
+        gradeTr: firstSheet.gradeTr,
         thumbnail: firstSheet.thumbnail,
         preview: firstSheet.preview,
         fullPreview: firstSheet.fullPreview,
@@ -1402,7 +1534,10 @@ async function main() {
         downloadUrl: firstSheet.downloadUrl,
         turkishPdfUrl: firstSheet.turkishPdfUrl,
         turkishDownloadUrl: firstSheet.turkishDownloadUrl,
+        sourcePdfUrl: firstSheet.sourcePdfUrl,
+        sourceDownloadUrl: firstSheet.sourceDownloadUrl,
         checksum: firstSheet.checksum,
+        sourceChecksum: firstSheet.sourceChecksum,
         turkishChecksum: firstSheet.turkishChecksum,
       },
       dataUrl: `/catalog/data/${dataFilename}`,
@@ -1433,6 +1568,12 @@ async function main() {
         exportedPageCount: 117,
         sheetCount: 117,
         countryCount: 38,
+        generatedLanguageCount: 2,
+        generatedDocumentCount: 234,
+        previewPpi: 270,
+        sourceOriginalCount: 117,
+        documentGenerator: "Coffendi bilingual origin document generator",
+        decorativeArtwork: "green-coffee-botanical-v1",
         canonicalSources: [
           { document: sources.p1.label, pages: "1–56" },
           { document: sources.p2India.label, pages: "1" },
@@ -1458,7 +1599,7 @@ async function main() {
   await rm(workRoot, { recursive: true, force: true });
 
   const previewCount = generatedCountries.reduce((total, country) => total + country.sheets.length * 6, 0);
-  console.log(`Generated ${generatedCountries.length} countries, 117 sheets and ${previewCount} previews.`);
+  console.log(`Generated ${generatedCountries.length} countries, 117 English sheets, 117 Turkish sheets, 117 source originals and ${previewCount} previews.`);
   console.log(`Document delivery: ${uploadDocuments ? "uploaded to Vercel Blob" : reuseUploadedDocuments ? "reused existing Vercel Blob paths" : "local fallback paths"}.`);
 }
 

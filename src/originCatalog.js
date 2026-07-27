@@ -3,11 +3,17 @@
 // Alternate and repeated pages are retained only as audited duplicate references.
 
 export const originCatalogMeta = {
-  "revision": "2026-07-27-full",
-  "assetRevision": "hd-tr-v1",
+  "revision": "2026-07-27-bilingual-v2",
+  "assetRevision": "uhd-bilingual-v2",
   "exportedPageCount": 117,
   "sheetCount": 117,
   "countryCount": 38,
+  "generatedLanguageCount": 2,
+  "generatedDocumentCount": 234,
+  "previewPpi": 270,
+  "sourceOriginalCount": 117,
+  "documentGenerator": "Coffendi bilingual origin document generator",
+  "decorativeArtwork": "green-coffee-botanical-v1",
   "canonicalSources": [
     {
       "document": "v5 p1.pdf",
@@ -45,4 +51,4 @@ export const originCatalogMeta = {
   ]
 };
 
-export const originCatalogIndexUrl = "/catalog/data/origin-index-5aa7eee3fe.json";
+export const originCatalogIndexUrl = "/catalog/data/origin-index-14f648d956.json";

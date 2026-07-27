@@ -106,6 +106,7 @@ const requiredFields = [
   "country",
   "type",
   "grade",
+  "gradeTr",
   "defects",
   "flavor",
   "aroma",
@@ -125,14 +126,19 @@ const requiredFields = [
   "downloadUrl",
   "turkishPdfUrl",
   "turkishDownloadUrl",
+  "sourcePdfUrl",
+  "sourceDownloadUrl",
   "sourceDocument",
   "sourcePage",
   "revision",
   "assetRevision",
   "language",
   "checksum",
+  "sourceLanguage",
+  "sourceChecksum",
   "turkishLanguage",
   "turkishChecksum",
+  "generation",
 ];
 
 function assert(condition, message) {
@@ -161,7 +167,11 @@ async function readWebpDimensions(filename) {
 assert(originCatalogMeta.sheetCount === 117, "Catalog metadata must declare 117 sheets");
 assert(originCatalogMeta.countryCount === 38, "Catalog metadata must declare 38 PDF countries");
 assert(originCatalogMeta.exportedPageCount === 117, "Catalog metadata must account for all 117 unique pages");
-assert(originCatalogMeta.assetRevision === "hd-tr-v1", "Catalog metadata must identify the current high-definition asset revision");
+assert(originCatalogMeta.assetRevision === "uhd-bilingual-v2", "Catalog metadata must identify the current bilingual UHD asset revision");
+assert(originCatalogMeta.generatedLanguageCount === 2, "Catalog metadata must identify both generated languages");
+assert(originCatalogMeta.generatedDocumentCount === 234, "Catalog metadata must account for 234 generated bilingual PDFs");
+assert(originCatalogMeta.sourceOriginalCount === 117, "Catalog metadata must retain all 117 source originals");
+assert(originCatalogMeta.previewPpi === 270, "Catalog metadata must declare the 270 PPI preview density");
 assert(originCatalogCountries.length === 38, "Generated catalog must contain 38 PDF countries");
 const countryCatalogs = await Promise.all(originCatalogCountries.map(async (country) => {
   assert(country.dataUrl.startsWith("/catalog/data/"), `${country.slug}: invalid deferred catalog URL`);
@@ -198,6 +208,10 @@ for (const { country, sheets } of countryCatalogs) {
     `${country.slug}: source pages are missing, mixed, or out of order`,
   );
   assert(country.websiteProfile.directions.length === sheets.length, `${country.slug}: deferred profile directions are incomplete`);
+  assert(
+    country.websiteProfile.directions.every(({ name }) => name?.en && name?.tr),
+    `${country.slug}: bilingual direction names are incomplete`,
+  );
   assert(country.websiteProfile.catalogDataUrl === country.dataUrl, `${country.slug}: website profile catalog relationship mismatch`);
   assert(
     country.websiteProfile.pin.x === country.pin.x && country.websiteProfile.pin.y === country.pin.y,
@@ -209,6 +223,9 @@ for (const { country, sheets } of countryCatalogs) {
   assert(country.firstSheet.id === sheets[0].id, `${country.slug}: lightweight hero sheet mismatch`);
   assert(country.bundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: bundle must use private delivery endpoint`);
   assert(country.bundleDownloadUrl.includes("download=1"), `${country.slug}: bundle download URL missing`);
+  assert(country.sourceBundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: source bundle must use private delivery endpoint`);
+  assert(country.sourceBundleDownloadUrl.includes("download=1"), `${country.slug}: source bundle download URL missing`);
+  assert(/^[a-f0-9]{64}$/.test(country.sourceBundleChecksum), `${country.slug}: invalid source bundle checksum`);
   assert(country.turkishBundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: Turkish bundle must use private delivery endpoint`);
   assert(country.turkishBundleDownloadUrl.includes("download=1"), `${country.slug}: Turkish bundle download URL missing`);
   assert(/^[a-f0-9]{64}$/.test(country.turkishBundleChecksum), `${country.slug}: invalid Turkish bundle checksum`);
@@ -224,11 +241,29 @@ for (const { country, sheets } of countryCatalogs) {
     assert(sheet.downloadUrl.includes("download=1"), `${sheet.id}: download URL missing`);
     assert(sheet.turkishPdfUrl.startsWith("/api/catalog-document?path="), `${sheet.id}: Turkish PDF must use private delivery endpoint`);
     assert(sheet.turkishDownloadUrl.includes("download=1"), `${sheet.id}: Turkish download URL missing`);
+    assert(sheet.sourcePdfUrl.startsWith("/api/catalog-document?path="), `${sheet.id}: source original must use private delivery endpoint`);
+    assert(sheet.sourceDownloadUrl.includes("download=1"), `${sheet.id}: source-original download URL missing`);
     assert(sheet.language === "en", `${sheet.id}: unreviewed translation entered source documents`);
+    assert(sheet.sourceLanguage === "en", `${sheet.id}: source-original language metadata is missing`);
     assert(sheet.turkishLanguage === "tr-TR", `${sheet.id}: Turkish companion language metadata is missing`);
     assert(sheet.assetRevision === originCatalogMeta.assetRevision, `${sheet.id}: stale preview asset revision`);
     assert(/^[a-f0-9]{64}$/.test(sheet.checksum), `${sheet.id}: invalid checksum`);
+    assert(/^[a-f0-9]{64}$/.test(sheet.sourceChecksum), `${sheet.id}: invalid source-original checksum`);
     assert(/^[a-f0-9]{64}$/.test(sheet.turkishChecksum), `${sheet.id}: invalid Turkish checksum`);
+    assert(sheet.checksum !== sheet.turkishChecksum, `${sheet.id}: bilingual PDFs must have distinct checksums`);
+    assert(sheet.sourceChecksum !== sheet.checksum, `${sheet.id}: generated English PDF must differ from its source original`);
+    assert(sheet.generation.engine === originCatalogMeta.documentGenerator, `${sheet.id}: document generator metadata mismatch`);
+    assert(sheet.generation.textLayer === "selectable", `${sheet.id}: generated documents must retain selectable text`);
+    assert(sheet.generation.fonts === "embedded-subset", `${sheet.id}: generated documents must use embedded subset fonts`);
+    assert(sheet.generation.previewPpi === 270, `${sheet.id}: preview density metadata mismatch`);
+    assert(sheet.generation.artwork === originCatalogMeta.decorativeArtwork, `${sheet.id}: decorative artwork provenance mismatch`);
+    assert(sheet.generation.englishPdfBytes >= 100_000 && sheet.generation.englishPdfBytes <= 1_500_000, `${sheet.id}: generated English PDF byte size is outside the quality budget`);
+    assert(sheet.generation.turkishPdfBytes >= 100_000 && sheet.generation.turkishPdfBytes <= 1_500_000, `${sheet.id}: generated Turkish PDF byte size is outside the quality budget`);
+    assert(sheet.generation.sourcePdfBytes >= 10_000, `${sheet.id}: preserved source-original PDF is unexpectedly small`);
+    assert(sheet.generation.englishTextCharacters >= 350, `${sheet.id}: generated English text layer is incomplete`);
+    assert(sheet.generation.turkishTextCharacters >= 350, `${sheet.id}: generated Turkish text layer is incomplete`);
+    assert(sheet.generation.englishFontResources >= 2, `${sheet.id}: generated English PDF is missing embedded font resources`);
+    assert(sheet.generation.turkishFontResources >= 2, `${sheet.id}: generated Turkish PDF is missing embedded font resources`);
 
     const sourcePage = `${sheet.sourceDocument}:${sheet.sourcePage}`;
     assert(!sourcePages.has(sourcePage), `${sheet.id}: duplicate canonical source page ${sourcePage}`);
@@ -269,4 +304,4 @@ for (const iso of allOriginIsos) {
 
 assert(sourcePages.size === 117, "Canonical source-page coverage must equal 117");
 assert(totalPreviewBytes <= 150 * 1024 * 1024, `Responsive previews exceed the 150 MiB catalog budget (${totalPreviewBytes} bytes)`);
-console.log("Origin catalog verification passed: 38 origins, 117 canonical sheets, 117 Turkish companion PDFs, 702 responsive previews, 76 country bundles, and 38 verified local flags.");
+console.log("Origin catalog verification passed: 38 origins, 117 generated English sheets, 117 generated Turkish sheets, 117 preserved source originals, 702 responsive previews, 114 country bundles, and 38 verified local flags.");

@@ -156,9 +156,9 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
               <div><strong>{language === "tr" ? "Temsili kahveler" : "Representative coffees"}</strong><small>{language === "tr" ? "Stok bilgisi değildir" : "Not live inventory"}</small></div>
               <ul>
                 {active.directions.slice(0, 3).map((direction, index) => (
-                  <li key={direction.name}>
+                  <li key={direction.sheetId || local(direction.name, "en")}>
                     <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
-                    <div><strong>{direction.name}</strong><small>{local(direction.process, language)} · {local(direction.cup, language)}</small></div>
+                    <div><strong>{local(direction.name, language)}</strong><small>{local(direction.process, language)} · {local(direction.cup, language)}</small></div>
                   </li>
                 ))}
               </ul>
