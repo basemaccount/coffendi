@@ -142,4 +142,4 @@ const turkishPreview = await fetch(`${baseUrl}${representativeSheet.turkishFullP
 assert.equal(turkishPreview.ok, true, `Turkish high-resolution preview returned ${turkishPreview.status}`);
 assert.match(turkishPreview.headers.get("cache-control") || "", /immutable/);
 
-console.log(`Production smoke checks passed for ${routes.length} informational routes, all ${originRoutes.length} origin profiles, generated English and Turkish documents, preserved source originals, all three country bundles, high-resolution previews, security headers, sitemap and robots at ${baseUrl}.`);
+console.log(`Production smoke checks passed for ${routes.length} informational routes, all ${originRoutes.length} origin profiles, generated English and Turkish documents, preserved source originals, hidden unavailable bundle controls, high-resolution previews, security headers, sitemap and robots at ${baseUrl}.`);
