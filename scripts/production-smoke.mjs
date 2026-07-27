@@ -62,6 +62,7 @@ assert.equal(inlineDocument.ok, true, `Published PDF returned ${inlineDocument.s
 assert.match(inlineDocument.headers.get("content-type") || "", /^application\/pdf/);
 assert.ok(inlineDocument.headers.get("etag"), "Published PDF did not publish an ETag");
 assert.ok(Number(inlineDocument.headers.get("content-length")) > 0, "Published PDF did not publish its byte length");
+assert.match(inlineDocument.headers.get("cache-control") || "", /immutable/);
 
 const downloadDocument = await fetch(`${baseUrl}${representativeSheet.downloadUrl}`, {
   method: "HEAD",
@@ -80,6 +81,7 @@ assert.equal(turkishDocument.ok, true, `Published Turkish PDF returned ${turkish
 assert.match(turkishDocument.headers.get("content-type") || "", /^application\/pdf/);
 assert.ok(turkishDocument.headers.get("etag"), "Published Turkish PDF did not publish an ETag");
 assert.ok(Number(turkishDocument.headers.get("content-length")) > 0, "Published Turkish PDF did not publish its byte length");
+assert.match(turkishDocument.headers.get("cache-control") || "", /immutable/);
 
 const sourceDocument = await fetch(`${baseUrl}${representativeSheet.sourcePdfUrl}`, {
   method: "HEAD",
@@ -90,6 +92,7 @@ assert.equal(sourceDocument.ok, true, `Published source-original PDF returned ${
 assert.match(sourceDocument.headers.get("content-type") || "", /^application\/pdf/);
 assert.ok(sourceDocument.headers.get("etag"), "Published source-original PDF did not publish an ETag");
 assert.ok(Number(sourceDocument.headers.get("content-length")) > 0, "Published source-original PDF did not publish its byte length");
+assert.match(sourceDocument.headers.get("cache-control") || "", /immutable/);
 
 const representativeCountry = originCatalogCountries[0];
 assert.equal(representativeCountry.bundleUrl, "", "Unavailable English Blob bundle remained exposed");
