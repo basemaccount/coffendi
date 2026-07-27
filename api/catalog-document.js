@@ -14,15 +14,23 @@ function safeFilename(pathname) {
   return filename.replace(/[^a-zA-Z0-9._-]/g, "-");
 }
 
+function sendError(req, res, statusCode, message) {
+  res.statusCode = statusCode;
+  res.setHeader("Content-Type", "application/json; charset=utf-8");
+  res.setHeader("Cache-Control", "private, no-store");
+  res.setHeader("X-Content-Type-Options", "nosniff");
+  return res.end(req.method === "HEAD" ? "" : JSON.stringify({ error: message }));
+}
+
 export default async function handler(req, res) {
   if (req.method !== "GET" && req.method !== "HEAD") {
     res.setHeader("Allow", "GET, HEAD");
-    return res.status(405).json({ error: "Method not allowed" });
+    return sendError(req, res, 405, "Method not allowed");
   }
 
   const pathname = requestedPath(req);
   if (!pathname.startsWith(CATALOG_PREFIX) || !SAFE_PATH.test(pathname)) {
-    return res.status(404).json({ error: "Document not found" });
+    return sendError(req, res, 404, "Document not found");
   }
 
   try {
@@ -33,8 +41,11 @@ export default async function handler(req, res) {
         : undefined,
     });
 
-    if (!result) return res.status(404).json({ error: "Document not found" });
-    if (result.statusCode === 304) return res.status(304).end();
+    if (!result) return sendError(req, res, 404, "Document not found");
+    if (result.statusCode === 304) {
+      res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
+      return res.status(304).end();
+    }
 
     const download = req.query?.download === "1";
     const filename = safeFilename(pathname);
@@ -49,8 +60,9 @@ export default async function handler(req, res) {
     if (Number.isFinite(result.blob.size)) {
       res.setHeader("Content-Length", String(result.blob.size));
     }
-    if (result.blob.uploadedAt) {
-      res.setHeader("Last-Modified", new Date(result.blob.uploadedAt).toUTCString());
+    const uploadedAt = result.blob.uploadedAt && new Date(result.blob.uploadedAt);
+    if (uploadedAt && !Number.isNaN(uploadedAt.valueOf())) {
+      res.setHeader("Last-Modified", uploadedAt.toUTCString());
     }
     res.setHeader("X-Content-Type-Options", "nosniff");
 
@@ -68,6 +80,6 @@ export default async function handler(req, res) {
       message: error?.message,
       pathname,
     });
-    return res.status(502).json({ error: "Document temporarily unavailable" });
+    return sendError(req, res, 502, "Document temporarily unavailable");
   }
 }

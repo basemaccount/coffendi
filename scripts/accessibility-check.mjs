@@ -18,6 +18,9 @@ const routes = [
 const checks = routes.flatMap((path) => [
   { name: `desktop-${path === "/" ? "home" : path.split("/").filter(Boolean).join("-")}`, path, width: 1440, height: 1000 },
   { name: `mobile-${path === "/" ? "home" : path.split("/").filter(Boolean).join("-")}`, path, width: 390, height: 844 },
+]).concat([
+  { name: "mobile-origins-world", path: "/origins", width: 390, height: 844, world: ".coffee-map__scale" },
+  { name: "mobile-origin-profile-world", path: "/origins/ethiopia", width: 390, height: 844, world: ".origin-constellation__view-controls" },
 ]);
 
 const browser = await chromium.launch();
@@ -26,6 +29,10 @@ for (const check of checks) {
   const context = await browser.newContext({ viewport: { width: check.width, height: check.height } });
   const page = await context.newPage();
   await page.goto(`${baseUrl}${check.path}`, { waitUntil: "networkidle" });
+  if (check.world) {
+    await page.locator(check.world).getByRole("button", { name: "World" }).click();
+    await page.waitForTimeout(460);
+  }
   await page.evaluate(() => document.fonts.ready);
   const results = await new AxeBuilder({ page })
     .withTags(["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa"])

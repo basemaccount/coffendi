@@ -89,6 +89,21 @@ for (const route of routes) {
 }
 console.log(`Interaction progress: ${routes.length} direct routes and reloads checked.`);
 
+const hydrationContext = await browser.newContext({ viewport: { width: 1440, height: 1000 } });
+const hydrationPage = await hydrationContext.newPage();
+let releaseCatalog;
+await hydrationPage.route("**/catalog/data/origin-index-*.json", async (route) => {
+  await new Promise((resolve) => { releaseCatalog = resolve; });
+  await route.continue();
+});
+await hydrationPage.goto(`${baseUrl}/origins/ethiopia`, { waitUntil: "domcontentloaded" });
+await hydrationPage.locator(".site-header").waitFor({ timeout: 1_500 });
+await hydrationPage.locator('.catalog-route-status[aria-busy="true"]').waitFor({ timeout: 1_500 });
+assert(typeof releaseCatalog === "function", "direct origin route did not begin its bounded catalog request");
+releaseCatalog?.();
+await hydrationPage.getByRole("heading", { level: 1, name: "Ethiopia" }).waitFor();
+await hydrationContext.close();
+
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 assert(await page.locator('.language-switcher[role="group"]').count() === 1, "language controls did not expose grouped semantics");
 const keyboardLink = page.locator('.desktop-nav a[href="/coffees"]');
@@ -220,6 +235,12 @@ assert(await mapPins.locator('.origin-flag[data-flag-source="local-svg"] img').c
 assert(await flagFilters.count() === 39, "origin filters did not expose all 38 flags plus the all-origins control");
 assert(await page.locator(".coffee-map__lenses button").count() === 3, "origin map did not expose its three information lenses");
 assert(await page.locator(".origin-explorer__country-index button").count() === 38, "origin explorer did not expose all 38 country passports");
+assert(await page.locator('.coffee-map__pin[tabindex="0"]').count() === 1, "origin map exposed more than one entry in the page tab sequence");
+const initialMapKeyboardPin = page.locator('.coffee-map__pin[tabindex="0"]');
+await initialMapKeyboardPin.focus();
+await page.keyboard.press("ArrowRight");
+assert(await mapPins.evaluateAll((pins) => pins.filter((pin) => pin.tabIndex === 0).length === 1), "origin map arrow navigation created multiple tab stops");
+assert(await mapPins.evaluateAll((pins) => pins.includes(document.activeElement) && document.activeElement !== pins[0]), "origin map arrow navigation did not move focus");
 await page.locator(".coffee-map__lenses button").filter({ hasText: "Process" }).click();
 assert((await page.locator(".coffee-map__pin.is-active small").textContent()).includes("Washed"), "process lens did not replace the geographic map labels");
 const kenyaPin = await mapPins.filter({ has: page.locator('.origin-flag[data-country="KE"]') }).boundingBox();
@@ -282,6 +303,13 @@ assert(await page.locator('.origin-constellation__pin .origin-flag[data-flag-sou
 assert(await page.locator(".origin-constellation__rail a").count() === 38, "profile page did not expose 38 conventional origin links");
 assert(await page.locator('.origin-constellation__rail[role="group"]').count() === 1, "profile origin rail did not expose grouped semantics");
 assert(await page.locator(".origin-constellation__pin.is-active").count() === 1, "profile constellation did not identify the active country");
+assert(await page.locator('.origin-constellation__pin[tabindex="0"]').count() === 1, "profile constellation exposed a repetitive map tab sequence");
+const initialProfileMapPin = page.locator('.origin-constellation__pin[tabindex="0"]');
+await initialProfileMapPin.focus();
+await page.keyboard.press("ArrowRight");
+assert(await page.locator(".origin-constellation__pin").evaluateAll((pins) => pins.filter((pin) => pin.tabIndex === 0).length === 1 && pins.includes(document.activeElement)), "profile constellation arrow navigation did not preserve one focused map control");
+await page.waitForTimeout(120);
+assert(!await page.locator(".chapter-navigator.is-visible,.back-to-top.is-visible,.origin-pdf-launcher.is-visible").count(), "floating controls covered the desktop origin constellation");
 const navigationEntriesBeforeMapClick = await page.evaluate(() => performance.getEntriesByType("navigation").length);
 await page.locator(".origin-constellation__pin").filter({ has: page.locator('.origin-flag[data-country="KE"]') }).click();
 await page.waitForURL((url) => url.pathname === "/origins/kenya");
@@ -527,9 +555,12 @@ await mobileMapViewButtons.filter({ hasText: "World" }).click();
 await mobile.waitForTimeout(460);
 assert(await mobile.locator('.coffee-map__canvas[data-map-view="overview"]').count() === 1, "mobile origin map did not enter its World view");
 assert(await mobile.locator(".coffee-map__viewport").evaluate((element) => Math.abs(element.scrollWidth - element.clientWidth) <= 1), "mobile origin World view did not fit the full map in its viewport");
+assert(await mobile.locator(".coffee-map__pin").evaluateAll((pins) => pins.filter((pin) => getComputedStyle(pin).visibility !== "hidden").length === 1), "mobile origin World view retained overlapping country flags");
+assert(await mobile.locator('.coffee-map__pin[aria-hidden="true"]').count() === 38, "mobile origin World view left duplicate map controls in the accessibility tree");
 await mobileMapViewButtons.filter({ hasText: "Focus" }).click();
 await mobile.waitForTimeout(460);
 assert(await mobile.locator(".coffee-map__viewport").evaluate((element) => element.scrollWidth > element.clientWidth), "mobile origin Focus view did not restore detailed map scale");
+assert(await mobile.locator(".coffee-map__pin").evaluateAll((pins) => pins.every((pin) => getComputedStyle(pin).visibility === "visible")), "mobile origin Focus view did not restore its country flags");
 const mobileMapRail = mobile.locator(".coffee-map__country-rail > button");
 assert(await mobileMapRail.count() === 38, "mobile origin map did not expose its 38-country flag rail");
 assert(await mobileMapRail.locator('.origin-flag[data-flag-source="local-svg"] img').count() === 38, "mobile origin map rail did not use 38 real local flags");
@@ -568,9 +599,12 @@ assert(mobileConstellationVisibility, "mobile profile constellation did not cent
 await mobileConstellationViews.filter({ hasText: "World" }).click();
 await mobile.waitForTimeout(460);
 assert(await mobile.locator(".origin-constellation__viewport").evaluate((element) => Math.abs(element.scrollWidth - element.clientWidth) <= 1), "mobile profile World view did not fit the coffee belt");
+assert(await mobile.locator(".origin-constellation__pin").evaluateAll((pins) => pins.filter((pin) => getComputedStyle(pin).visibility !== "hidden").length === 1), "mobile profile World view retained overlapping country flags");
+assert(await mobile.locator('.origin-constellation__pin[aria-hidden="true"]').count() === 38, "mobile profile World view left duplicate map controls in the accessibility tree");
 await mobileConstellationViews.filter({ hasText: "Focus" }).click();
 await mobile.waitForTimeout(460);
 assert(await mobile.locator(".origin-constellation__viewport").evaluate((element) => element.scrollWidth > element.clientWidth), "mobile profile Focus view did not restore detail");
+assert(await mobile.locator(".origin-constellation__pin").evaluateAll((pins) => pins.every((pin) => getComputedStyle(pin).visibility === "visible")), "mobile profile Focus view did not restore its country flags");
 assert(await mobile.locator(".origin-constellation__rail").evaluate((element) => element.scrollWidth > element.clientWidth), "mobile profile origin list did not become a swipeable rail");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile profile constellation created page overflow");
 await mobile.locator(".origin-page-reader").scrollIntoViewIfNeeded();

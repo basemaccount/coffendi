@@ -93,6 +93,25 @@ const rejectedDocument = await fetch(`${baseUrl}/api/catalog-document?path=${enc
   signal: AbortSignal.timeout(12_000),
 });
 assert.equal(rejectedDocument.status, 404, "Protected PDF endpoint accepted a path outside the catalog allowlist");
+assert.match(rejectedDocument.headers.get("content-type") || "", /^application\/json/);
+assert.equal(rejectedDocument.headers.get("cache-control"), "private, no-store");
+assert.equal(rejectedDocument.headers.get("x-content-type-options"), "nosniff");
+
+const rejectedDocumentHead = await fetch(`${baseUrl}/api/catalog-document?path=outside-allowlist.pdf`, {
+  method: "HEAD",
+  signal: AbortSignal.timeout(12_000),
+});
+assert.equal(rejectedDocumentHead.status, 404, "Protected PDF HEAD accepted a path outside the catalog allowlist");
+assert.equal(await rejectedDocumentHead.text(), "", "Protected PDF HEAD returned a response body");
+assert.equal(rejectedDocumentHead.headers.get("cache-control"), "private, no-store");
+
+const rejectedDocumentMethod = await fetch(`${baseUrl}/api/catalog-document`, {
+  method: "POST",
+  signal: AbortSignal.timeout(12_000),
+});
+assert.equal(rejectedDocumentMethod.status, 405, "Protected PDF endpoint accepted an unsupported method");
+assert.equal(rejectedDocumentMethod.headers.get("allow"), "GET, HEAD");
+assert.equal(rejectedDocumentMethod.headers.get("cache-control"), "private, no-store");
 
 const preview = await fetch(`${baseUrl}${representativeSheet.thumbnail}`, {
   method: "HEAD",

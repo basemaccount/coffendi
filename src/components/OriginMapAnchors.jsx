@@ -1,6 +1,21 @@
 export const originPinPosition = (profile) => profile.pin || profile.map;
 
-export default function OriginMapAnchors({ profiles }) {
+export function handleMapArrowNavigation(event) {
+  const offset = ["ArrowLeft", "ArrowUp"].includes(event.key)
+    ? -1
+    : ["ArrowRight", "ArrowDown"].includes(event.key) ? 1 : 0;
+  if (!offset) return;
+  const controls = [...event.currentTarget.querySelectorAll('button:not(:disabled):not([aria-hidden="true"])')];
+  if (controls.length < 2) return;
+  const current = Math.max(0, controls.indexOf(document.activeElement));
+  const next = controls[(current + offset + controls.length) % controls.length];
+  event.preventDefault();
+  controls[current].tabIndex = -1;
+  next.tabIndex = 0;
+  next.focus();
+}
+
+export default function OriginMapAnchors({ profiles, showLeaders = true }) {
   return (
     <g data-origin-anchors="" aria-hidden="true">
       {profiles.map((profile) => {
@@ -11,7 +26,7 @@ export default function OriginMapAnchors({ profiles }) {
 
         return (
           <g key={profile.id} data-origin-anchor={profile.iso}>
-            {offset && (
+            {showLeaders && offset && (
               <line
                 x1={anchorX}
                 y1={anchorY}

@@ -3,7 +3,7 @@ import { GitCompareArrows, Globe2, LocateFixed, Map, Orbit } from "lucide-react"
 import { useNavigate } from "react-router";
 import { useCompactOriginLayout } from "./OriginFilters";
 import OriginFlag from "./OriginFlag";
-import OriginMapAnchors, { originPinPosition } from "./OriginMapAnchors";
+import OriginMapAnchors, { handleMapArrowNavigation, originPinPosition } from "./OriginMapAnchors";
 
 const local = (value, language) => typeof value === "object" && value !== null ? value[language] : value;
 
@@ -22,7 +22,6 @@ const styles = {
   map: { position: "relative", minWidth: "min(700px,167vw)", aspectRatio: "1000/520", overflow: "hidden" },
   art: { position: "absolute", inset: 0, width: "100%", height: "100%", color: "#dce8e1" },
   equator: { fill: "none", stroke: "rgba(239,201,121,.35)", strokeDasharray: "6 9", vectorEffect: "non-scaling-stroke" },
-  thread: { fill: "none", stroke: "rgba(239,201,121,.34)", strokeWidth: 1.5, strokeDasharray: "5 9", vectorEffect: "non-scaling-stroke", animation: "origin-thread-flow 10s linear infinite" },
   pin: { position: "absolute", width: 44, height: 44, display: "grid", justifyItems: "center", gap: 1, padding: 2, border: 0, borderRadius: 10, textDecoration: "none", transform: "translate(-50%,-50%)", transition: "scale 240ms var(--ease),background-color 180ms ease,opacity 180ms ease" },
   pinCode: { fontSize: 6, fontWeight: 800, letterSpacing: ".08em" },
   rail: { display: "grid", gridTemplateColumns: "repeat(auto-fit,minmax(150px,1fr))", gap: 1, background: "rgba(255,255,255,.12)" },
@@ -40,10 +39,7 @@ const styles = {
   viewIcon: { width: 15 },
 };
 
-function MapArt({ profiles }) {
-  const points = profiles.map(({ map }) => `${map.x * 10},${map.y * 5.2}`).join(" ");
-  const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-
+function MapArt({ profiles, overview }) {
   return (
     <svg className="origin-constellation__art" style={styles.art} viewBox="0 0 1000 520" aria-hidden="true" preserveAspectRatio="none">
       <defs>
@@ -53,8 +49,7 @@ function MapArt({ profiles }) {
       </defs>
       <rect width="1000" height="520" fill="url(#constellation-grid)" />
       <path className="origin-constellation__equator" style={styles.equator} d="M0 260H1000" />
-      <OriginMapAnchors profiles={profiles} />
-      {profiles.length > 1 && <polyline className="origin-constellation__thread" style={{ ...styles.thread, display: "none", animation: "none" }} points={points} />}
+      <OriginMapAnchors profiles={profiles} showLeaders={!overview} />
     </svg>
   );
 }
@@ -177,15 +172,17 @@ export default function OriginConstellation({
             </div>
           )}
           <div ref={viewport} className="origin-constellation__viewport" style={{ ...styles.viewport, scrollbarWidth: compact ? "none" : undefined, overscrollBehaviorInline: compact ? "contain" : undefined, touchAction: compact ? "manipulation" : undefined }} tabIndex="0" role="region" aria-label={language === "tr" ? "Yatay kaydırılabilen menşe haritası" : "Horizontally scrollable origin map"}>
-            <div className="origin-constellation__map" data-map-view={overview ? "overview" : "focus"} style={{ ...styles.map, minWidth: compact ? overview ? "100%" : "min(700px,167vw)" : styles.map.minWidth, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" }}>
+            <div className="origin-constellation__map" data-map-view={overview ? "overview" : "focus"} style={{ ...styles.map, minWidth: compact ? overview ? "100%" : "min(700px,167vw)" : styles.map.minWidth, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" }} onKeyDown={handleMapArrowNavigation}>
               <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
-              <MapArt profiles={profiles} />
+              <MapArt profiles={profiles} overview={overview} />
               {profiles.map((profile, index) => {
               const isSelected = selected.has(profile.id);
               const unavailable = comparing && comparisonFull && !isSelected;
               const pin = originPinPosition(profile);
               const shared = {
                 className: `origin-constellation__pin ${isSelected ? "is-active" : ""} ${unavailable ? "is-unavailable" : ""}`.trim(),
+                tabIndex: overview ? -1 : profile.id === focusId ? 0 : -1,
+                "aria-hidden": overview ? "true" : undefined,
                 style: {
                   ...styles.pin,
                   left: `${pin.x}%`,
@@ -195,6 +192,7 @@ export default function OriginConstellation({
                   color: isSelected ? "var(--green)" : "#9db5a9",
                   boxShadow: isSelected ? "0 0 0 5px rgba(239,201,121,.14),0 14px 30px rgba(0,0,0,.25)" : "none",
                   opacity: unavailable ? .4 : 1,
+                  visibility: overview && !isSelected ? "hidden" : undefined,
                   "--constellation-index": index,
                 },
               };
@@ -214,7 +212,7 @@ export default function OriginConstellation({
                     onClick={() => onToggle(profile.id)}
                     aria-label={accessibleLabel}
                     aria-pressed={isSelected}
-                    disabled={unavailable}
+                    disabled={unavailable || (overview && !isSelected)}
                   >
                     {pinContent}
                   </button>
@@ -223,6 +221,7 @@ export default function OriginConstellation({
                     key={profile.id}
                     {...shared}
                     type="button"
+                    disabled={overview && !isSelected}
                     onClick={() => {
                       if (isSelected) return;
                       document.documentElement.classList.add("route-pending");

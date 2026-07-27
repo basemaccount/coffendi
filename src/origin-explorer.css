@@ -385,9 +385,7 @@
 .coffee-map__pin.is-active strong { color: var(--green); }
 .coffee-map__pin.is-active small { color: #173d31; }
 .coffee-map__pin:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 4px; border-radius: 14px; }
-.origin-constellation__pin:hover { scale: 1.08; }
 .origin-constellation__pin:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 4px; }
-.origin-constellation__pin:disabled { cursor: not-allowed; scale: 1; }
 
 .profile-detail__descriptor {
   max-width: 620px;

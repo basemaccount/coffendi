@@ -846,7 +846,9 @@ export default function OriginDocumentLibrary({
       const catalog = document.querySelector("#catalog");
       const bounds = catalog?.getBoundingClientRect();
       const catalogIsActive = Boolean(bounds && bounds.top <= 160 && bounds.bottom > 68);
-      setLauncherVisible(window.scrollY > 120 && !catalogIsActive);
+      const constellation = document.querySelector(".origin-constellation__board")?.getBoundingClientRect();
+      const constellationIsActive = Boolean(constellation && constellation.top < window.innerHeight - 72 && constellation.bottom > 68);
+      setLauncherVisible(window.scrollY > 120 && !catalogIsActive && !constellationIsActive);
     };
     const queueLauncherUpdate = () => {
       if (!frame) frame = window.requestAnimationFrame(updateLauncher);

@@ -3,7 +3,7 @@ import { ArrowRight, ChevronLeft, ChevronRight, Crosshair, Globe2, Layers3, Loca
 import { useLocation, useNavigate } from "react-router";
 import OriginFilters, { useCompactOriginLayout, useOriginProfileFilters } from "./OriginFilters";
 import OriginFlag from "./OriginFlag";
-import OriginMapAnchors, { originPinPosition } from "./OriginMapAnchors";
+import OriginMapAnchors, { handleMapArrowNavigation, originPinPosition } from "./OriginMapAnchors";
 
 const local = (value, language) => typeof value === "object" && value !== null ? value[language] : value;
 
@@ -12,7 +12,6 @@ const styles = {
   metric: { paddingTop: 10, borderTop: "1px solid var(--line)" },
   metricValue: { color: "var(--green)", fontFamily: "var(--serif)", fontSize: 25, lineHeight: 1 },
   metricLabel: { marginTop: 5, color: "var(--muted)", fontSize: 7, fontWeight: 800, letterSpacing: ".08em", textTransform: "uppercase" },
-  thread: { fill: "none", stroke: "rgba(239,201,121,.42)", strokeWidth: 1.5, strokeDasharray: "5 10", vectorEffect: "non-scaling-stroke", animation: "origin-thread-flow 9s linear infinite" },
   lenses: { display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 12, padding: "0 8px 10px" },
   lensLabel: { display: "flex", alignItems: "center", gap: 7, color: "#aabfb5", fontSize: 7, fontWeight: 800, letterSpacing: ".1em", textTransform: "uppercase" },
   lensIcon: { width: 15, color: "var(--gold-light)" },
@@ -64,7 +63,6 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
   const viewport = useRef(null);
   const countryRail = useRef(null);
   const [viewMode, setViewMode] = useState("focus");
-  const constellationPoints = profiles.map(({ map }) => `${map.x * 10},${map.y * 5.2}`).join(" ");
   const reduceMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   const active = profiles.find(({ id }) => id === activeId) || profiles[0];
   const overview = compact && viewMode === "overview";
@@ -158,6 +156,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           className={`coffee-map__canvas ${overview ? "is-overview" : "is-focus"}`}
           data-map-view={overview ? "overview" : "focus"}
           style={compact ? { minWidth: overview ? "100%" : 700, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" } : undefined}
+          onKeyDown={handleMapArrowNavigation}
         >
         <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
         <svg className="coffee-map__art" viewBox="0 0 1000 520" aria-hidden="true" preserveAspectRatio="none">
@@ -174,8 +173,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           <rect width="1000" height="520" fill="url(#map-grid)" />
           <rect className="coffee-map__belt" x="0" y="190" width="1000" height="140" rx="28" fill="url(#coffee-belt-fill)" />
           <path className="coffee-map__equator" d="M0 260H1000" />
-          <OriginMapAnchors profiles={profiles} />
-          {profiles.length > 1 && <polyline className="coffee-map__thread" style={{ ...styles.thread, display: "none", animation: "none" }} points={constellationPoints} />}
+          <OriginMapAnchors profiles={profiles} showLeaders={!overview} />
         </svg>
 
         {profiles.map((profile) => {
@@ -185,15 +183,17 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
             key={profile.id}
             type="button"
             className={`coffee-map__pin ${selected ? "is-active" : ""}`}
-            style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+            style={{ left: `${pin.x}%`, top: `${pin.y}%`, visibility: overview && !selected ? "hidden" : undefined }}
             data-origin-pin={profile.id}
+            disabled={overview && !selected}
             onClick={(event) => {
               event.stopPropagation();
               onSelect(profile.id);
             }}
             aria-label={`${local(profile.country, language)} · ${lensValue(profile, lens, language)}`}
             aria-pressed={selected}
-            tabIndex={selected ? 0 : -1}
+            aria-hidden={overview ? "true" : undefined}
+            tabIndex={overview ? -1 : selected ? 0 : -1}
           >
             <OriginFlag profile={profile} size={overview ? selected ? "small" : "tiny" : compact && !selected ? "small" : "map"} style={compact && !selected ? { opacity: overview ? 0.72 : 0.84 } : undefined} />
             {selected ? <span className="coffee-map__pin-label"><strong>{local(profile.country, language)}</strong><small>{lensValue(profile, lens, language)}</small></span> : <span className="coffee-map__pin-code" aria-hidden="true">{profile.iso}</span>}

@@ -1050,6 +1050,14 @@ function CatalogStatusPage({ language, path, error, onRetry }) {
     ? language === "tr" ? `Bağlantınızı kontrol edin ve ${originCatalogMeta.countryCount} ülkelik kataloğu yeniden deneyin.` : `Check your connection and retry the ${originCatalogMeta.countryCount}-country catalogue.`
     : language === "tr" ? `${originCatalogMeta.countryCount} ülke ve ${originCatalogMeta.sheetCount} doğrulanmış kaynak sayfa yükleniyor.` : `Loading ${originCatalogMeta.countryCount} countries and ${originCatalogMeta.sheetCount} verified source sheets.`;
   usePageMeta(`${title} — Coffendi`, description, path, language, { indexable: !error });
+  if (!error) {
+    return (
+      <section className="boot-shell catalog-route-status" aria-live="polite" aria-busy="true">
+        <h1 className="visually-hidden">{title}</h1>
+        <div className="catalog-note"><Globe2 aria-hidden="true" /><p>{description}</p></div>
+      </section>
+    );
+  }
   return (
     <>
       <PageHero
@@ -1058,25 +1066,23 @@ function CatalogStatusPage({ language, path, error, onRetry }) {
         copy={description}
         marker={error ? "!" : String(originCatalogMeta.countryCount)}
       />
-      <section className="section shell catalog-route-status" aria-live="polite" aria-busy={!error}>
+      <section className="section shell catalog-route-status" aria-live="polite">
         <Globe2 aria-hidden="true" />
         <p>{description}</p>
-        {error && (
-          <button className="button button--dark" type="button" onClick={onRetry}>
-            {language === "tr" ? "Kataloğu yeniden dene" : "Retry the catalogue"}
-          </button>
-        )}
+        <button className="button button--dark" type="button" onClick={onRetry}>
+          {language === "tr" ? "Kataloğu yeniden dene" : "Retry the catalogue"}
+        </button>
       </section>
     </>
   );
 }
 
-export default function App({ initialOriginCatalog = null }) {
+export default function App() {
   const location = useLocation();
   const [storedLanguage, setLanguage] = usePersistentState("coffendi-language", "en");
   const [selected, setSelected] = usePersistentState("coffendi-green-comparison", ["ethiopia-washed", "brazil-classic"]);
   const [catalogAttempt, setCatalogAttempt] = useState(0);
-  const [catalogState, setCatalogState] = useState(() => initialOriginCatalog || { status: "idle", countries: [] });
+  const [catalogState, setCatalogState] = useState({ status: "idle", countries: [] });
   const language = storedLanguage === "tr" ? "tr" : "en";
   const copy = messages[language] || messages.en;
   const catalogRequired = location.pathname === "/compare"
