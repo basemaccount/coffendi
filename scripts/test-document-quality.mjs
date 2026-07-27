@@ -31,6 +31,23 @@ function firstTitleGlyphIsVisible(image, label) {
   assert(brightPixels >= 8, `${label}: the first rendered country-title glyph is missing`);
 }
 
+function logoTileIsAbsent(image, label) {
+  context.fillStyle = "#12372d";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+  context.drawImage(image, 0, 0, canvas.width, canvas.height);
+  const formerTileCorners = [
+    [16, 14],
+    [45, 14],
+    [16, 42],
+    [45, 42],
+  ];
+  const creamCorners = formerTileCorners.filter(([x, y]) => {
+    const [red, green, blue] = context.getImageData(x, y, 1, 1).data;
+    return red > 220 && green > 210 && blue > 180;
+  });
+  assert(creamCorners.length <= 1, `${label}: an opaque logo backing tile returned`);
+}
+
 assert(originCatalogMeta.documentGenerator === "Coffendi branded bilingual origin document generator", "Unexpected branded bilingual document generator");
 assert(originCatalogMeta.generatedDocumentCount === 234, "Bilingual document count must equal 234");
 assert(originCatalogMeta.previewPpi === 270, "Full previews must declare 270 PPI");
@@ -50,6 +67,16 @@ for (const artworkName of [
 }
 const logo = await loadImage(path.join(projectRoot, "public", "coffendi-logo.png"));
 assert(logo.width >= 1500 && logo.height >= 1400, "The embedded Coffendi logo source is below its resolution floor");
+const logoCanvas = createCanvas(logo.width, logo.height);
+const logoContext = logoCanvas.getContext("2d");
+logoContext.drawImage(logo, 0, 0);
+const transparentLogoCorners = [
+  [0, 0],
+  [logo.width - 1, 0],
+  [0, logo.height - 1],
+  [logo.width - 1, logo.height - 1],
+].filter(([x, y]) => logoContext.getImageData(x, y, 1, 1).data[3] < 16);
+assert(transparentLogoCorners.length === 4, "The Coffendi source logo has an opaque background");
 
 let generatedPdfBytes = 0;
 let sourcePdfBytes = 0;
@@ -71,7 +98,10 @@ for (const country of catalogIndex.countries) {
     assert(quality.englishFontResources >= 2, `${sheet.id}: English embedded-font set is incomplete`);
     assert(quality.turkishFontResources >= 2, `${sheet.id}: Turkish embedded-font set is incomplete`);
     assert(quality.previewPpi === 270, `${sheet.id}: preview density is stale`);
-    assert(quality.logo === "coffendi-logo", `${sheet.id}: authentic Coffendi logo metadata is missing`);
+    assert(quality.logo === "coffendi-logo-transparent", `${sheet.id}: transparent Coffendi logo metadata is missing`);
+    assert(quality.logoBackground === "transparent", `${sheet.id}: logo transparency metadata is missing`);
+    assert(quality.artwork === "source-visible-context-plus-process-v2", `${sheet.id}: source-visible artwork metadata is stale`);
+    assert(quality.originVisualPlacement === "visible-right-panel", `${sheet.id}: source context is not visible in the hero panel`);
     assert(quality.originVisualRole === "source-provided contextual image", `${sheet.id}: source visual provenance is missing`);
     assert(quality.processVisualRole === "illustrative non-country-specific process image", `${sheet.id}: process visual provenance is missing`);
     assert(sheet.gradeTr, `${sheet.id}: Turkish commercial-grade label is missing`);
@@ -95,6 +125,7 @@ for (const country of catalogIndex.countries) {
       assert(image.width === 360 && image.height === 540, `${sheet.id}: ${language} thumbnail dimensions are invalid`);
       assert(file.size >= 8_000, `${sheet.id}: ${language} thumbnail is unexpectedly small`);
       firstTitleGlyphIsVisible(image, `${sheet.id}: ${language}`);
+      logoTileIsAbsent(image, `${sheet.id}: ${language}`);
       previewBytes += file.size;
       checkedPreviews += 1;
     }

@@ -10,6 +10,19 @@ const local = (value, language) =>
   typeof value === "object" && value !== null ? value[language] : value;
 
 const clamp = (value, minimum, maximum) => Math.min(maximum, Math.max(minimum, value));
+const SPECIFICATION_FIELDS = [
+  "type",
+  "grade",
+  "defects",
+  "flavor",
+  "aroma",
+  "body",
+  "acidity",
+  "process",
+  "screen",
+  "moisture",
+  "packing",
+];
 
 const displayGrade = (sheet, language) => (
   language === "tr"
@@ -481,11 +494,11 @@ function SheetViewer({
       fitWidth: "Genişliğe sığdır",
       fitPageShort: "Sayfa",
       fitWidthShort: "Genişlik",
-      fullscreen: "Tam ekran okuma",
-      open: "Türkçe PDF’yi yeni sekmede aç",
-      download: "Türkçe PDF’yi indir",
-      alternate: "İngilizce teknik föyü aç",
-      sourceOriginal: "İngilizce kaynak orijinalini aç",
+      fullscreen: "Tam ekran",
+      open: "PDF’yi aç",
+      download: "İndir",
+      alternate: "İngilizce",
+      sourceOriginal: "Kaynak orijinali",
       specs: "Kaynak sayfa özellikleri",
       source: "Kaynak",
       page: "Sayfa",
@@ -495,12 +508,12 @@ function SheetViewer({
       sourceLanguage: "Kaynak dili",
       english: "İngilizce orijinal",
       fidelity: "Görüntü kalitesi",
-      highResolution: "2160 × 3240 px • 270 PPI ön izleme",
+      highResolution: "2160×3240 px • 270 PPI",
       nextShort: "Sonraki",
-      unavailable: "Tam ekran bu tarayıcıda kullanılamıyor. Tam pencere görüntüleyici açık kalır.",
-      swipe: "Sayfalar arasında geçmek için sola veya sağa kaydırın.",
-      loadingPage: "Belge sayfası yükleniyor",
-      previewError: "Sayfa ön izlemesi yüklenemedi. PDF'yi yeni sekmede açabilirsiniz.",
+      unavailable: "Tam ekran kullanılamıyor.",
+      swipe: "Föy değiştirmek için kaydırın.",
+      loadingPage: "Föy yükleniyor",
+      previewError: "Ön izleme açılamadı.",
       fields: {
         type: "Tür",
         grade: "Ürün sınıfı",
@@ -525,11 +538,11 @@ function SheetViewer({
       fitWidth: "Fit width",
       fitPageShort: "Page",
       fitWidthShort: "Width",
-      fullscreen: "Fullscreen reading",
-      open: "Open PDF in a new tab",
-      download: "Download PDF",
-      alternate: "Open Turkish technical sheet",
-      sourceOriginal: "Open English source original",
+      fullscreen: "Fullscreen",
+      open: "Open PDF",
+      download: "Download",
+      alternate: "Turkish",
+      sourceOriginal: "Source original",
       specs: "Sheet specifications",
       source: "Source",
       page: "Page",
@@ -539,12 +552,12 @@ function SheetViewer({
       sourceLanguage: "Source language",
       english: "English",
       fidelity: "Preview quality",
-      highResolution: "2160 × 3240 px • 270 PPI preview",
+      highResolution: "2160×3240 px • 270 PPI",
       nextShort: "Next",
-      unavailable: "Fullscreen is unavailable in this browser. The full-window viewer remains open.",
-      swipe: "Swipe left or right to move through this country’s pages.",
-      loadingPage: "Loading document page",
-      previewError: "The page preview could not load. You can open the PDF in a new tab.",
+      unavailable: "Fullscreen unavailable.",
+      swipe: "Swipe to change sheets.",
+      loadingPage: "Loading sheet",
+      previewError: "Preview unavailable.",
       fields: {
         type: "Type",
         grade: "Grade",
@@ -627,19 +640,10 @@ function SheetViewer({
     }
   };
 
-  const specifications = [
-    ["type", activeSheet.type],
-    ["grade", displayGrade(activeSheet, language)],
-    ["defects", activeSheet.defects],
-    ["flavor", activeSheet.flavor],
-    ["aroma", activeSheet.aroma],
-    ["body", activeSheet.body],
-    ["acidity", activeSheet.acidity],
-    ["process", activeSheet.process],
-    ["screen", activeSheet.screen],
-    ["moisture", activeSheet.moisture],
-    ["packing", activeSheet.packing],
-  ];
+  const specifications = SPECIFICATION_FIELDS.map((field) => [
+    field,
+    field === "grade" ? displayGrade(activeSheet, language) : activeSheet[field],
+  ]);
 
   const startSwipe = (event) => {
     if (fit !== "page" || zoom !== 1 || sheets.length < 2) return;
@@ -751,7 +755,7 @@ function SheetViewer({
                 rel="noreferrer"
                 aria-label={copy.sourceOriginal}
               >
-                <i className="origin-ui-icon" aria-hidden="true">SRC</i>
+                <i className="origin-ui-icon" aria-hidden="true">SR</i>
                 <span>{copy.sourceOriginal}</span>
               </a>
             )}
@@ -760,13 +764,13 @@ function SheetViewer({
 
         {fullscreenMessage && <p className="origin-document-dialog__status" role="status">{fullscreenMessage}</p>}
 
-        <div className="origin-document-dialog__content" tabIndex="0" aria-label={language === "tr" ? "Kaydırılabilir belge ve özellikler" : "Scrollable document and specifications"}>
+        <div className="origin-document-dialog__content" tabIndex="0" aria-label={language === "tr" ? "Belge ve özellikler" : "Document and specifications"}>
           <div
             ref={previewViewport}
             className={`origin-document-dialog__preview origin-document-dialog__preview--${fit}${fit === "page" && zoom === 1 && sheets.length > 1 ? " is-swipeable" : ""}`}
             tabIndex="0"
             aria-busy={previewStatus === "loading"}
-            aria-label={`${language === "tr" ? "Kaydırılabilir belge ön izlemesi" : "Scrollable document preview"}. ${copy.swipe}`}
+            aria-label={`${language === "tr" ? "Belge ön izlemesi" : "Document preview"}. ${copy.swipe}`}
             onPointerDown={startSwipe}
             onPointerUp={finishSwipe}
             onPointerCancel={() => {
@@ -820,7 +824,7 @@ function SheetViewer({
               style={fit === "custom" ? { width: `${zoom * 100}%` } : undefined}
             />
           </div>
-          <aside className="origin-document-dialog__specifications" aria-labelledby={`${titleId}-specs`}>
+          <aside className="origin-document-dialog__specifications" aria-labelledby={`${titleId}-specs`} tabIndex="0">
             <div className="origin-document-dialog__spec-heading">
               <i className="origin-ui-icon" aria-hidden="true">▤</i>
               <h3 id={`${titleId}-specs`}>{copy.specs}</h3>

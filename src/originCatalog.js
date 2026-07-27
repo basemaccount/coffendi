@@ -3,8 +3,8 @@
 // Alternate and repeated pages are retained only as audited duplicate references.
 
 export const originCatalogMeta = {
-  "revision": "2026-07-27-branded-v3",
-  "assetRevision": "branded-visual-v3",
+  "revision": "2026-07-27-branded-v4",
+  "assetRevision": "brand-integrated-v4",
   "exportedPageCount": 117,
   "sheetCount": 117,
   "countryCount": 38,
@@ -13,7 +13,7 @@ export const originCatalogMeta = {
   "previewPpi": 270,
   "sourceOriginalCount": 117,
   "documentGenerator": "Coffendi branded bilingual origin document generator",
-  "decorativeArtwork": "source-origin-context-plus-process-v1",
+  "decorativeArtwork": "source-visible-context-plus-process-v2",
   "distinctHeroVisualCount": 117,
   "distinctSourceVisualCount": 32,
   "processArtworkFamilies": [
@@ -21,7 +21,7 @@ export const originCatalogMeta = {
     "natural",
     "washed"
   ],
-  "visualProvenance": "Source-provided context plus non-country-specific process illustration",
+  "visualProvenance": "Visibly dominant source-provided context plus non-country-specific process illustration",
   "canonicalSources": [
     {
       "document": "v5 p1.pdf",
@@ -59,4 +59,4 @@ export const originCatalogMeta = {
   ]
 };
 
-export const originCatalogIndexUrl = "/catalog/data/origin-index-3363fd369a.json";
+export const originCatalogIndexUrl = "/catalog/data/origin-index-0319af91e5.json";

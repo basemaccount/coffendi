@@ -375,9 +375,37 @@ await documentDialog.waitFor({ state: "visible" });
 const firstSheetQuery = new URL(page.url()).searchParams.get("sheet");
 assert(Boolean(firstSheetQuery), "opening a source sheet did not create a reload-safe sheet URL");
 assert(await documentDialog.locator(".origin-document-dialog__specifications dl > div").count() === 11, "source viewer did not expose all 11 parsed specifications");
-assert((await documentDialog.getByRole("link", { name: "Open PDF in a new tab" }).getAttribute("href")).startsWith("/api/catalog-document?path="), "source viewer did not use the protected PDF endpoint");
-assert((await documentDialog.getByRole("link", { name: "Download PDF" }).getAttribute("href")).includes("download=1"), "source viewer download did not request an attachment");
-assert((await documentDialog.getByRole("link", { name: "Open English source original" }).getAttribute("href")).includes("-source.pdf"), "source viewer did not preserve the original English source page");
+const desktopDocumentToolbar = documentDialog.locator(".origin-document-dialog__toolbar");
+assert(await desktopDocumentToolbar.evaluate((element) => element.scrollWidth === element.clientWidth), "desktop document toolbar overflowed or clipped its action groups");
+assert(
+  await desktopDocumentToolbar.locator("button, a").evaluateAll((controls) => (
+    controls.every((control) => Number.parseFloat(getComputedStyle(control).fontSize) >= 11)
+  )),
+  "desktop document controls regressed to tiny text",
+);
+const desktopViewerColumns = await documentDialog.locator(".origin-document-dialog__content").evaluate((element) => {
+  const [preview, specifications] = element.children;
+  return {
+    preview: preview.getBoundingClientRect().width,
+    specifications: specifications.getBoundingClientRect().width,
+  };
+});
+assert(desktopViewerColumns.preview >= desktopViewerColumns.specifications * 2, "specification sidebar competes with the document canvas");
+assert(
+  await documentDialog.locator(".origin-document-dialog__specifications dl > div").first().evaluate((element) => (
+    Number.parseFloat(getComputedStyle(element).borderRadius) >= 10
+  )),
+  "specification details did not use the refined card treatment",
+);
+assert(
+  await documentDialog.locator(".origin-document-dialog__preview").evaluate((element) => (
+    getComputedStyle(element, "::-webkit-scrollbar-button").display === "none"
+  )),
+  "native document-scrollbar arrow buttons are still visible",
+);
+assert((await documentDialog.getByRole("link", { name: "Open PDF" }).getAttribute("href")).startsWith("/api/catalog-document?path="), "source viewer did not use the protected PDF endpoint");
+assert((await documentDialog.getByRole("link", { name: "Download" }).first().getAttribute("href")).includes("download=1"), "source viewer download did not request an attachment");
+assert((await documentDialog.getByRole("link", { name: "Source original" }).getAttribute("href")).includes("-source.pdf"), "source viewer did not preserve the original English source page");
 const dialogPreview = documentDialog.locator(".origin-document-dialog__preview");
 const dialogPreviewBox = await dialogPreview.boundingBox();
 assert(Boolean(dialogPreviewBox), "fullscreen country PDF preview was not measurable");
@@ -624,6 +652,12 @@ const mobileToolbar = mobileDocumentDialog.locator(".origin-document-dialog__too
 assert(await mobileToolbar.evaluate((element) => element.scrollWidth === element.clientWidth), "mobile document toolbar overflowed or clipped its control groups");
 const mobileViewerTargets = await mobileToolbar.locator("button, a").evaluateAll((controls) => controls.map(({ offsetWidth: width, offsetHeight: height }) => ({ width, height })));
 assert(mobileViewerTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile document viewer has a control below 44px");
+assert(
+  await mobileDocumentDialog.locator(".origin-document-dialog__specifications dl").evaluate((element) => (
+    [...element.children].every((card) => card.offsetWidth >= element.clientWidth - 24)
+  )),
+  "mobile specification cards did not collapse to a readable single column",
+);
 const mobileDocumentDock = mobileDocumentDialog.locator(".origin-document-dialog__mobile-actions");
 const mobileDocumentDockBounds = await mobileDocumentDock.boundingBox();
 assert(mobileDocumentDockBounds && mobileDocumentDockBounds.y + mobileDocumentDockBounds.height <= 844, "mobile document action dock was pushed below the viewport");
@@ -668,9 +702,10 @@ assert(await turkishViewer.getByRole("heading", { name: "Kaynak sayfa özellikle
 assert((await turkishViewer.locator(".origin-document-dialog__specifications").innerText()).includes("İŞLEME YÖNTEMİ"), "Turkish viewer did not localise the process field");
 assert((await turkishViewer.locator(".origin-document-dialog__specifications").innerText()).includes("AMBALAJ"), "Turkish viewer did not localise the packaging field");
 assert((await turkishViewer.locator(".origin-document-dialog__preview img").getAttribute("src")).includes("-tr-1080.webp"), "Turkish viewer did not use the Turkish companion preview");
-assert((await turkishViewer.getByRole("link", { name: "Türkçe PDF’yi yeni sekmede aç" }).getAttribute("href")).includes("-tr.pdf"), "Turkish viewer did not open the Turkish companion PDF");
-assert(!(await turkishViewer.getByRole("link", { name: "İngilizce teknik föyü aç" }).getAttribute("href")).includes("-tr.pdf"), "Turkish viewer did not expose the generated English technical sheet");
-assert((await turkishViewer.getByRole("link", { name: "İngilizce kaynak orijinalini aç" }).getAttribute("href")).includes("-source.pdf"), "Turkish viewer did not preserve the English source original");
+const turkishToolbar = turkishViewer.locator(".origin-document-dialog__toolbar");
+assert((await turkishToolbar.getByRole("link", { name: "PDF’yi aç" }).getAttribute("href")).includes("-tr.pdf"), "Turkish viewer did not open the Turkish companion PDF");
+assert(!(await turkishToolbar.getByRole("link", { name: "İngilizce" }).getAttribute("href")).includes("-tr.pdf"), "Turkish viewer did not expose the generated English technical sheet");
+assert((await turkishToolbar.getByRole("link", { name: "Kaynak orijinali" }).getAttribute("href")).includes("-source.pdf"), "Turkish viewer did not preserve the English source original");
 assert((await turkishViewer.locator(".origin-document-dialog__provenance").innerText()).includes("Üretilmiş Türkçe teknik föy"), "Turkish PDF provenance did not identify the displayed generated language");
 await turkishViewer.locator(".origin-document-dialog__close").click();
 await turkishPage.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });

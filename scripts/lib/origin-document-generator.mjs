@@ -10,13 +10,15 @@ import {
 } from "../../src/lib/turkishCoffee.js";
 
 const colors = {
-  cream: rgb(0.98, 0.96, 0.91),
-  paper: rgb(1, 0.992, 0.965),
-  green: rgb(0.07, 0.22, 0.18),
-  greenSoft: rgb(0.12, 0.31, 0.25),
-  gold: rgb(0.76, 0.52, 0.2),
-  muted: rgb(0.34, 0.39, 0.36),
-  line: rgb(0.83, 0.79, 0.7),
+  cream: rgb(0.978, 0.956, 0.91),
+  paper: rgb(1, 0.994, 0.976),
+  green: rgb(0.055, 0.205, 0.165),
+  greenDeep: rgb(0.035, 0.145, 0.118),
+  greenSoft: rgb(0.105, 0.29, 0.235),
+  gold: rgb(0.77, 0.515, 0.19),
+  goldSoft: rgb(0.94, 0.88, 0.76),
+  muted: rgb(0.32, 0.37, 0.345),
+  line: rgb(0.84, 0.80, 0.71),
   white: rgb(1, 1, 1),
 };
 
@@ -24,6 +26,7 @@ const copyByLanguage = {
   en: {
     languageTag: "en",
     documentLabel: "ENGLISH ORIGIN SHEET",
+    brandLine: "COFFENDI  /  GREEN COFFEE",
     subject: "Coffendi source-backed green coffee technical sheet",
     type: "TYPE",
     process: "PROCESS",
@@ -45,6 +48,7 @@ const copyByLanguage = {
     sourcePage: "Source page",
     originalGrade: "Commercial grade",
     status: "DOCUMENT QUALITY",
+    structure: "CUP STRUCTURE",
     quality: "Selectable text  •  Embedded fonts  •  270 PPI preview",
     visualProvenance: "Visuals: source-provided origin context + an illustrative, non-country-specific process image.",
     footer: "Source-backed technical sheet",
@@ -54,6 +58,7 @@ const copyByLanguage = {
   tr: {
     languageTag: "tr-TR",
     documentLabel: "TÜRKÇE MENŞE FÖYÜ",
+    brandLine: "COFFENDI  /  YEŞİL KAHVE",
     subject: "Coffendi menşe kataloğu Türkçe teknik bilgi föyü",
     type: "TÜR",
     process: "İŞLEME",
@@ -75,6 +80,7 @@ const copyByLanguage = {
     sourcePage: "Kaynak sayfa",
     originalGrade: "Özgün ticari sınıf",
     status: "BELGE NİTELİĞİ",
+    structure: "FİNCAN YAPISI",
     quality: "Seçilebilir metin  •  Gömülü yazı tipi  •  270 PPI ön izleme",
     visualProvenance: "Görseller: kaynakta sunulan menşe bağlamı + ülkeye özgü olmayan temsili işleme görseli.",
     footer: "Kaynağa dayalı teknik föy",
@@ -222,34 +228,44 @@ export async function createSheetHeroArtwork({
   context.fillRect(0, 0, canvas.width, canvas.height);
 
   const gutter = 20;
-  const sourceWidth = 930;
+  const processWidth = 570;
   drawCover(
     context,
-    sourceImage,
+    processImage,
     0,
     0,
-    sourceWidth,
+    processWidth,
     canvas.height,
     seededFocus(seed, 1),
     seededFocus(seed, 2),
   );
   drawCover(
     context,
-    processImage,
-    sourceWidth + gutter,
+    sourceImage,
+    processWidth + gutter,
     0,
-    canvas.width - sourceWidth - gutter,
+    canvas.width - processWidth - gutter,
     canvas.height,
     seededFocus(seed, 3),
     seededFocus(seed, 4),
   );
 
-  const sourceShade = context.createLinearGradient(0, 0, sourceWidth, 0);
-  sourceShade.addColorStop(0, "rgba(8,36,29,.22)");
-  sourceShade.addColorStop(0.68, "rgba(8,36,29,0)");
-  sourceShade.addColorStop(1, "rgba(8,36,29,.14)");
+  const sourceShade = context.createLinearGradient(
+    processWidth + gutter,
+    0,
+    canvas.width,
+    0,
+  );
+  sourceShade.addColorStop(0, "rgba(8,36,29,.2)");
+  sourceShade.addColorStop(0.22, "rgba(8,36,29,0)");
+  sourceShade.addColorStop(1, "rgba(8,36,29,.08)");
   context.fillStyle = sourceShade;
-  context.fillRect(0, 0, sourceWidth, canvas.height);
+  context.fillRect(
+    processWidth + gutter,
+    0,
+    canvas.width - processWidth - gutter,
+    canvas.height,
+  );
 
   const lowerShade = context.createLinearGradient(0, 390, 0, canvas.height);
   lowerShade.addColorStop(0, "rgba(8,36,29,0)");
@@ -258,7 +274,7 @@ export async function createSheetHeroArtwork({
   context.fillRect(0, 390, canvas.width, canvas.height - 390);
 
   context.fillStyle = "#c78634";
-  context.fillRect(sourceWidth + 6, 0, 8, canvas.height);
+  context.fillRect(processWidth + 6, 0, 8, canvas.height);
   const bytes = await canvas.encode("jpeg", 92);
   return {
     bytes,
@@ -273,7 +289,7 @@ export async function prepareDocumentArtwork({
   countries,
 }) {
   const logoSource = await loadImage(logoPath);
-  const logoCanvas = createCanvas(420, 400);
+  const logoCanvas = createCanvas(900, 855);
   const logoContext = logoCanvas.getContext("2d");
   logoContext.clearRect(0, 0, logoCanvas.width, logoCanvas.height);
   const logoScale = Math.min(
@@ -386,87 +402,96 @@ export async function createLocalizedSheetPdf({
   });
   page.drawImage(hero, {
     x: 0,
-    y: 614,
+    y: 600,
     width,
-    height: 250,
+    height: 264,
   });
   page.drawRectangle({
     x: 0,
-    y: 614,
-    width: 382,
-    height: 250,
+    y: 600,
+    width: 346,
+    height: 264,
     color: colors.green,
-    opacity: 0.91,
+    opacity: 0.94,
+  });
+  page.drawRectangle({
+    x: 346,
+    y: 600,
+    width: 2,
+    height: 264,
+    color: colors.gold,
+    opacity: 0.88,
   });
   page.drawRectangle({
     x: 0,
-    y: 856,
+    y: 857,
     width,
-    height: 8,
+    height: 7,
     color: colors.gold,
   });
-  page.drawRectangle({
-    x: 24,
-    y: 794,
-    width: 52,
-    height: 50,
-    color: colors.cream,
-    opacity: 0.97,
-  });
+
+  // Keep the authentic transparent mark integrated with the brand field.
+  // An opaque backing tile makes the logo look like a pasted thumbnail.
   page.drawImage(logo, {
-    x: 28,
-    y: 798,
-    width: 44,
-    height: 42,
+    x: 29,
+    y: 803,
+    width: 57,
+    height: 54,
   });
   page.drawText(copy.documentLabel, {
-    x: 88,
-    y: 828,
-    size: 7.8,
+    x: 99,
+    y: 835,
+    size: 7.5,
     font: bold,
     color: colors.gold,
   });
+  page.drawText(copy.brandLine, {
+    x: 99,
+    y: 817,
+    size: 5.3,
+    font: bold,
+    color: rgb(0.76, 0.83, 0.79),
+  });
   page.drawRectangle({
-    x: 504,
-    y: 806,
-    width: 44,
-    height: 30,
-    color: colors.white,
-    opacity: 0.96,
+    x: 500,
+    y: 805,
+    width: 52,
+    height: 38,
+    color: colors.paper,
     borderColor: colors.gold,
-    borderWidth: 0.7,
+    borderWidth: 1,
   });
   page.drawImage(flag, {
-    x: 508,
-    y: 809,
-    width: 36,
-    height: 24,
+    x: 506,
+    y: 812,
+    width: 40,
+    height: 26,
   });
   page.drawText(countryName.toLocaleUpperCase(language === "tr" ? "tr-TR" : "en"), {
     x: 32,
-    y: 778,
-    size: 22,
+    y: 774,
+    size: 21.5,
     font: bold,
     color: colors.white,
   });
   drawFittedText(page, localizedGrade, {
     font: bold,
-    size: 16.5,
+    size: 16,
     minimumSize: 10.5,
     x: 32,
-    y: 742,
-    maximumWidth: 322,
+    y: 736,
+    maximumWidth: 292,
     color: colors.white,
     lineHeightRatio: 1.22,
     maximumLines: 3,
   });
   page.drawRectangle({
     x: 32,
-    y: 630,
-    width: 326,
-    height: 44,
+    y: 616,
+    width: 290,
+    height: 42,
     color: colors.greenSoft,
-    borderColor: rgb(0.24, 0.43, 0.36),
+    borderColor: rgb(0.27, 0.48, 0.39),
     borderWidth: 0.8,
   });
   drawFittedText(
@@ -474,9 +499,9 @@ export async function createLocalizedSheetPdf({
     `${localize(specifications.type, language)}  •  ${localize(specifications.process, language)}`,
     {
       x: 44,
-      y: 648,
-      maximumWidth: 302,
-      size: 9,
+      y: 642,
+      maximumWidth: 266,
+      size: 8.7,
       minimumSize: 7,
       font: bold,
       color: colors.white,
@@ -493,25 +518,25 @@ export async function createLocalizedSheetPdf({
     const x = 32 + (index * 174);
     page.drawRectangle({
       x,
-      y: 557,
+      y: 536,
       width: index === 2 ? 164 : 158,
-      height: 42,
-      color: index === 1 ? rgb(0.94, 0.9, 0.82) : colors.paper,
+      height: 46,
+      color: index === 1 ? colors.goldSoft : colors.paper,
       borderColor: colors.line,
       borderWidth: 0.7,
     });
     page.drawText(label, {
       x: x + 10,
-      y: 584,
-      size: 5.7,
+      y: 567,
+      size: 5.5,
       font: bold,
       color: colors.gold,
     });
     drawFittedText(page, value, {
       x: x + 10,
-      y: 570,
+      y: 551,
       maximumWidth: index === 2 ? 144 : 138,
-      size: 8.2,
+      size: 8,
       minimumSize: 6.5,
       maximumLines: 2,
       font: bold,
@@ -522,215 +547,253 @@ export async function createLocalizedSheetPdf({
 
   page.drawRectangle({
     x: 32,
-    y: 94,
+    y: 300,
     width: 248,
-    height: 440,
+    height: 218,
     color: colors.paper,
     borderColor: colors.line,
     borderWidth: 0.8,
   });
   page.drawRectangle({
     x: 296,
-    y: 94,
+    y: 300,
     width: 248,
-    height: 440,
+    height: 218,
     color: colors.paper,
     borderColor: colors.line,
     borderWidth: 0.8,
   });
   page.drawText(copy.technical, {
     x: 46,
-    y: 510,
-    size: 9,
+    y: 494,
+    size: 8.5,
     font: bold,
     color: colors.green,
   });
   page.drawText(copy.sensory, {
     x: 310,
-    y: 510,
-    size: 8.2,
+    y: 494,
+    size: 7.7,
     font: bold,
     color: colors.green,
   });
   page.drawLine({
-    start: { x: 46, y: 499 },
-    end: { x: 266, y: 499 },
-    thickness: 1.3,
+    start: { x: 46, y: 484 },
+    end: { x: 266, y: 484 },
+    thickness: 1.1,
     color: colors.gold,
   });
   page.drawLine({
-    start: { x: 310, y: 499 },
-    end: { x: 530, y: 499 },
-    thickness: 1.3,
+    start: { x: 310, y: 484 },
+    end: { x: 530, y: 484 },
+    thickness: 1.1,
     color: colors.gold,
   });
 
-  const fields = [
-    "defects",
-    "aroma",
-    "body",
-    "acidity",
-    "screen",
-    "moisture",
-    "packing",
+  const compactFields = [
+    ["defects", 46, 458, 102],
+    ["aroma", 160, 458, 106],
+    ["body", 46, 414, 102],
+    ["acidity", 160, 414, 106],
+    ["screen", 46, 370, 102],
+    ["moisture", 160, 370, 106],
+    ["packing", 46, 326, 220],
   ];
-  let fieldY = 479;
-  for (const field of fields) {
+  for (const [field, x, fieldY, maximumWidth] of compactFields) {
     page.drawText(copy.fields[field].toLocaleUpperCase(language === "tr" ? "tr-TR" : "en"), {
-      x: 46,
+      x,
       y: fieldY,
-      size: 5.8,
+      size: 5.3,
       font: bold,
       color: colors.gold,
     });
-    const result = drawFittedText(page, localize(specifications[field], language), {
+    drawFittedText(page, localize(specifications[field], language), {
       font: normal,
-      size: 8.5,
-      minimumSize: 6.8,
-      x: 46,
-      y: fieldY - 12,
-      maximumWidth: 220,
+      size: 7.7,
+      minimumSize: 6.2,
+      x,
+      y: fieldY - 13,
+      maximumWidth,
       color: colors.green,
-      lineHeightRatio: 1.2,
+      lineHeightRatio: 1.16,
       maximumLines: 2,
     });
-    fieldY = result.bottom - 7;
+  }
+  for (const y of [433, 389, 345]) {
     page.drawLine({
-      start: { x: 46, y: fieldY + 2 },
-      end: { x: 266, y: fieldY + 2 },
+      start: { x: 46, y },
+      end: { x: 266, y },
       thickness: 0.5,
       color: colors.line,
     });
   }
+  page.drawLine({
+    start: { x: 152, y: 345 },
+    end: { x: 152, y: 472 },
+    thickness: 0.5,
+    color: colors.line,
+  });
 
-  let rightY = 479;
-  const drawListSection = (title, values) => {
+  const drawListSection = (title, values, x, maximumWidth) => {
     page.drawText(title, {
-      x: 310,
-      y: rightY,
-      size: 6.3,
+      x,
+      y: 458,
+      size: 5.6,
       font: bold,
       color: colors.gold,
     });
-    rightY -= 16;
+    let listY = 438;
     for (const value of values.slice(0, 5)) {
       page.drawCircle({
-        x: 314,
-        y: rightY + 3,
-        size: 2.1,
+        x: x + 3,
+        y: listY + 3,
+        size: 1.8,
         color: colors.gold,
       });
       const result = drawFittedText(page, localize(value, language), {
         font: normal,
-        size: 8.4,
-        minimumSize: 6.8,
-        x: 324,
-        y: rightY,
-        maximumWidth: 202,
+        size: 7.5,
+        minimumSize: 6,
+        x: x + 12,
+        y: listY,
+        maximumWidth: maximumWidth - 12,
         color: colors.green,
-        lineHeightRatio: 1.18,
+        lineHeightRatio: 1.16,
         maximumLines: 2,
       });
-      rightY = result.bottom - 2;
+      listY = result.bottom - 2;
     }
-    rightY -= 7;
   };
 
   drawListSection(
     copy.tasting,
     extracted.tastingNotes.length ? extracted.tastingNotes : [specifications.flavor],
+    310,
+    98,
   );
   drawListSection(
     copy.use,
     extracted.perfectFor.length ? extracted.perfectFor : [copy.fallbackUse],
+    422,
+    108,
   );
-
-  page.drawText(copy.source, {
+  page.drawLine({
+    start: { x: 416, y: 368 },
+    end: { x: 416, y: 470 },
+    thickness: 0.5,
+    color: colors.line,
+  });
+  page.drawRectangle({
     x: 310,
-    y: rightY,
-    size: 6.3,
+    y: 316,
+    width: 220,
+    height: 42,
+    color: colors.goldSoft,
+    borderColor: colors.line,
+    borderWidth: 0.6,
+  });
+  page.drawText(copy.structure, {
+    x: 321,
+    y: 343,
+    size: 5.4,
     font: bold,
     color: colors.gold,
   });
-  rightY -= 16;
-  const sourceResult = drawFittedText(
+  drawFittedText(
     page,
-    `${copy.sourcePage}: ${sourceDocument} • ${sourcePage}`,
+    `${copy.fields.body}: ${localize(specifications.body, language)}  •  ${copy.fields.acidity}: ${localize(specifications.acidity, language)}`,
     {
-      font: normal,
-      size: 7.8,
-      minimumSize: 6.5,
-      x: 310,
-      y: rightY,
-      maximumWidth: 220,
-      color: colors.green,
-      maximumLines: 2,
+    x: 321,
+    y: 329,
+    maximumWidth: 198,
+    size: 5.9,
+    minimumSize: 5.1,
+    maximumLines: 2,
+    font: normal,
+    color: colors.green,
     },
   );
-  rightY = sourceResult.bottom - 4;
-  const gradeResult = drawFittedText(
-    page,
-    `${copy.originalGrade}: ${specifications.grade}`,
-    {
-      font: normal,
-      size: 7.2,
-      minimumSize: 5.8,
-      x: 310,
-      y: rightY,
-      maximumWidth: 220,
-      color: colors.green,
-      maximumLines: 3,
-    },
-  );
-  rightY = gradeResult.bottom - 5;
+
+  page.drawRectangle({
+    x: 32,
+    y: 94,
+    width: 512,
+    height: 184,
+    color: colors.greenDeep,
+    borderColor: colors.greenSoft,
+    borderWidth: 0.8,
+  });
+  page.drawText(copy.source, {
+    x: 48,
+    y: 250,
+    size: 6.2,
+    font: bold,
+    color: colors.gold,
+  });
+  drawFittedText(page, `${copy.sourcePage}: ${sourceDocument} • ${sourcePage}`, {
+    font: bold,
+    size: 8.2,
+    minimumSize: 6.5,
+    x: 48,
+    y: 231,
+    maximumWidth: 236,
+    color: colors.white,
+    maximumLines: 2,
+  });
+  drawFittedText(page, `${copy.originalGrade}: ${specifications.grade}`, {
+    font: normal,
+    size: 7.1,
+    minimumSize: 5.8,
+    x: 48,
+    y: 207,
+    maximumWidth: 236,
+    color: rgb(0.79, 0.84, 0.81),
+    maximumLines: 3,
+  });
   drawFittedText(page, copy.provenance, {
     font: normal,
-    size: 6.8,
-    minimumSize: 5.8,
-    x: 310,
-    y: rightY,
-    maximumWidth: 220,
-    color: colors.muted,
+    size: 6.3,
+    minimumSize: 5.5,
+    x: 48,
+    y: 163,
+    maximumWidth: 236,
+    color: rgb(0.68, 0.75, 0.71),
     lineHeightRatio: 1.22,
     maximumLines: 5,
   });
-  drawFittedText(page, copy.visualProvenance, {
-    font: normal,
-    size: 6.2,
-    minimumSize: 5.5,
-    x: 310,
-    y: 214,
-    maximumWidth: 220,
-    color: colors.muted,
-    lineHeightRatio: 1.2,
-    maximumLines: 4,
-  });
-
-  page.drawRectangle({
-    x: 310,
-    y: 112,
-    width: 220,
-    height: 54,
-    color: rgb(0.94, 0.9, 0.82),
-    borderColor: colors.line,
-    borderWidth: 0.8,
+  page.drawLine({
+    start: { x: 310, y: 112 },
+    end: { x: 310, y: 260 },
+    thickness: 0.55,
+    color: rgb(0.22, 0.39, 0.33),
   });
   page.drawText(copy.status, {
-    x: 322,
-    y: 145,
-    size: 5.8,
+    x: 330,
+    y: 250,
+    size: 6.2,
     font: bold,
     color: colors.gold,
   });
   drawFittedText(page, copy.quality, {
-    x: 322,
-    y: 130,
-    maximumWidth: 196,
-    size: 6.3,
-    minimumSize: 5.5,
-    maximumLines: 2,
+    x: 330,
+    y: 231,
+    maximumWidth: 190,
+    size: 6.8,
+    minimumSize: 5.7,
+    maximumLines: 3,
+    font: bold,
+    color: colors.white,
+  });
+  drawFittedText(page, copy.visualProvenance, {
     font: normal,
-    color: colors.green,
+    size: 6.25,
+    minimumSize: 5.4,
+    x: 330,
+    y: 186,
+    maximumWidth: 190,
+    color: rgb(0.68, 0.75, 0.71),
+    lineHeightRatio: 1.22,
+    maximumLines: 5,
   });
 
   page.drawRectangle({
@@ -755,17 +818,17 @@ export async function createLocalizedSheetPdf({
     color: colors.white,
   });
   page.drawText("coffendi.com", {
-    x: 424,
+    x: 426,
     y: 32,
     size: 7,
     font: bold,
     color: colors.white,
   });
   page.drawImage(logo, {
-    x: 492,
-    y: 15,
-    width: 34,
-    height: 32,
+    x: 500,
+    y: 13,
+    width: 38,
+    height: 36,
   });
 
   return Buffer.from(await document.save({

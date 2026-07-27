@@ -167,7 +167,7 @@ async function readWebpDimensions(filename) {
 assert(originCatalogMeta.sheetCount === 117, "Catalog metadata must declare 117 sheets");
 assert(originCatalogMeta.countryCount === 38, "Catalog metadata must declare 38 PDF countries");
 assert(originCatalogMeta.exportedPageCount === 117, "Catalog metadata must account for all 117 unique pages");
-assert(originCatalogMeta.assetRevision === "branded-visual-v3", "Catalog metadata must identify the current branded visual asset revision");
+assert(originCatalogMeta.assetRevision === "brand-integrated-v4", "Catalog metadata must identify the current brand-integrated visual asset revision");
 assert(originCatalogMeta.generatedLanguageCount === 2, "Catalog metadata must identify both generated languages");
 assert(originCatalogMeta.generatedDocumentCount === 234, "Catalog metadata must account for 234 generated bilingual PDFs");
 assert(originCatalogMeta.sourceOriginalCount === 117, "Catalog metadata must retain all 117 source originals");
@@ -263,7 +263,10 @@ for (const { country, sheets } of countryCatalogs) {
     assert(sheet.generation.fonts === "embedded-subset", `${sheet.id}: generated documents must use embedded subset fonts`);
     assert(sheet.generation.previewPpi === 270, `${sheet.id}: preview density metadata mismatch`);
     assert(sheet.generation.artwork === originCatalogMeta.decorativeArtwork, `${sheet.id}: decorative artwork provenance mismatch`);
-    assert(sheet.generation.logo === "coffendi-logo", `${sheet.id}: Coffendi logo provenance mismatch`);
+    assert(sheet.generation.logo === "coffendi-logo-transparent", `${sheet.id}: transparent Coffendi logo provenance mismatch`);
+    assert(sheet.generation.logoBackground === "transparent", `${sheet.id}: Coffendi logo background must remain transparent`);
+    assert(sheet.generation.artwork === "source-visible-context-plus-process-v2", `${sheet.id}: visible source-artwork revision mismatch`);
+    assert(sheet.generation.originVisualPlacement === "visible-right-panel", `${sheet.id}: source image is not assigned to the visible hero panel`);
     assert(sheet.generation.originVisualRole === "source-provided contextual image", `${sheet.id}: source visual role mismatch`);
     assert(sheet.generation.processVisualRole === "illustrative non-country-specific process image", `${sheet.id}: process visual role mismatch`);
     assert(sheet.generation.englishPdfBytes >= 100_000 && sheet.generation.englishPdfBytes <= 1_500_000, `${sheet.id}: generated English PDF byte size is outside the quality budget`);

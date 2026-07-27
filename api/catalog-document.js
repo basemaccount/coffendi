@@ -2,11 +2,10 @@ import { Readable } from "node:stream";
 import { get } from "@vercel/blob";
 
 const CATALOG_PREFIXES = [
-  "coffendi/origins/2026-07-27-full/",
-  "coffendi/origins/2026-07-27-bilingual-v2/",
   "coffendi/origins/2026-07-27-branded-v3/",
+  "coffendi/origins/2026-07-27-branded-v4/",
 ];
-const SAFE_PATH = /^coffendi\/origins\/(?:2026-07-27-full|2026-07-27-bilingual-v2|2026-07-27-branded-v3)\/[a-z0-9-]+\/[a-z0-9-]+\.pdf$/;
+const SAFE_PATH = /^coffendi\/origins\/(?:2026-07-27-branded-v3|2026-07-27-branded-v4)\/[a-z0-9-]+\/[a-z0-9-]+\.pdf$/;
 const TURKISH_DOCUMENT = /-tr(?:-[a-f0-9]{10})?\.pdf$/;
 
 function requestedPath(req) {

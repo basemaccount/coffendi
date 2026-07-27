@@ -44,9 +44,9 @@ const processArtworkPaths = {
 };
 const uploadDocuments = process.env.UPLOAD_ORIGIN_BLOBS === "1";
 const reuseUploadedDocuments = process.env.REUSE_ORIGIN_BLOBS === "1";
-const catalogRevision = "2026-07-27-branded-v3";
+const catalogRevision = "2026-07-27-branded-v4";
 const catalogRevisionDate = new Date("2026-07-27T00:00:00.000Z");
-const assetRevision = "branded-visual-v3";
+const assetRevision = "brand-integrated-v4";
 const previewWidths = {
   thumbnail: 360,
   preview: 1080,
@@ -1449,12 +1449,14 @@ async function main() {
           textLayer: "selectable",
           fonts: "embedded-subset",
           previewPpi: 270,
-          artwork: "source-origin-context-plus-process-v1",
-          logo: "coffendi-logo",
+          artwork: "source-visible-context-plus-process-v2",
+          logo: "coffendi-logo-transparent",
+          logoBackground: "transparent",
           heroChecksum: heroArtwork.checksum,
           originVisualChecksum: originVisual.checksum,
           originVisualDimensions: `${originVisual.width}x${originVisual.height}`,
           originVisualRole: "source-provided contextual image",
+          originVisualPlacement: "visible-right-panel",
           processArtwork: processArtworkKey,
           processVisualRole: "illustrative non-country-specific process image",
           englishPdfBytes: pdfBytes.length,
@@ -1709,11 +1711,11 @@ async function main() {
         previewPpi: 270,
         sourceOriginalCount: 117,
         documentGenerator: "Coffendi branded bilingual origin document generator",
-        decorativeArtwork: "source-origin-context-plus-process-v1",
+        decorativeArtwork: "source-visible-context-plus-process-v2",
         distinctHeroVisualCount: heroVisualChecksums.size,
         distinctSourceVisualCount: originVisualChecksums.size,
         processArtworkFamilies: [...processArtworkKeys].sort(),
-        visualProvenance: "Source-provided context plus non-country-specific process illustration",
+        visualProvenance: "Visibly dominant source-provided context plus non-country-specific process illustration",
         canonicalSources: [
           { document: sources.p1.label, pages: "1–56" },
           { document: sources.p2India.label, pages: "1" },
