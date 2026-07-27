@@ -403,8 +403,9 @@ assert(
   )),
   "native document-scrollbar arrow buttons are still visible",
 );
-assert((await documentDialog.getByRole("link", { name: "Open PDF" }).getAttribute("href")).startsWith("/api/catalog-document?path="), "source viewer did not use the protected PDF endpoint");
+assert((await documentDialog.getByRole("link", { name: "Open PDF" }).getAttribute("href")).startsWith("/catalog/documents/"), "source viewer did not use resilient same-origin PDF delivery");
 assert((await documentDialog.getByRole("link", { name: "Download" }).first().getAttribute("href")).includes("download=1"), "source viewer download did not request an attachment");
+assert(await documentDialog.getByRole("link", { name: "Download" }).first().getAttribute("download") !== null, "source viewer download did not use the native same-origin download contract");
 assert((await documentDialog.getByRole("link", { name: "Source original" }).getAttribute("href")).includes("-source.pdf"), "source viewer did not preserve the original English source page");
 const dialogPreview = documentDialog.locator(".origin-document-dialog__preview");
 const dialogPreviewBox = await dialogPreview.boundingBox();

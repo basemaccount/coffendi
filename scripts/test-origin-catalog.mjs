@@ -227,13 +227,13 @@ for (const { country, sheets } of countryCatalogs) {
   assert(country.websiteProfile.cardImageTr === sheets[0].turkishThumbnail, `${country.slug}: Turkish card preview mismatch`);
   assert(country.websiteProfile.srcSetTr.includes(sheets[0].turkishFullPreview), `${country.slug}: Turkish hero srcset is missing its high-resolution source`);
   assert(country.firstSheet.id === sheets[0].id, `${country.slug}: lightweight hero sheet mismatch`);
-  assert(country.bundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: bundle must use private delivery endpoint`);
-  assert(country.bundleDownloadUrl.includes("download=1"), `${country.slug}: bundle download URL missing`);
-  assert(country.sourceBundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: source bundle must use private delivery endpoint`);
-  assert(country.sourceBundleDownloadUrl.includes("download=1"), `${country.slug}: source bundle download URL missing`);
+  assert(country.bundleUrl === "", `${country.slug}: unavailable Blob bundle must not be exposed`);
+  assert(country.bundleDownloadUrl === "", `${country.slug}: unavailable Blob bundle download must not be exposed`);
+  assert(country.sourceBundleUrl === "", `${country.slug}: unavailable source bundle must not be exposed`);
+  assert(country.sourceBundleDownloadUrl === "", `${country.slug}: unavailable source bundle download must not be exposed`);
   assert(/^[a-f0-9]{64}$/.test(country.sourceBundleChecksum), `${country.slug}: invalid source bundle checksum`);
-  assert(country.turkishBundleUrl.startsWith("/api/catalog-document?path="), `${country.slug}: Turkish bundle must use private delivery endpoint`);
-  assert(country.turkishBundleDownloadUrl.includes("download=1"), `${country.slug}: Turkish bundle download URL missing`);
+  assert(country.turkishBundleUrl === "", `${country.slug}: unavailable Turkish bundle must not be exposed`);
+  assert(country.turkishBundleDownloadUrl === "", `${country.slug}: unavailable Turkish bundle download must not be exposed`);
   assert(/^[a-f0-9]{64}$/.test(country.turkishBundleChecksum), `${country.slug}: invalid Turkish bundle checksum`);
   assert(country.map.x >= 0 && country.map.x <= 100, `${country.slug}: projected x is outside map`);
   assert(country.map.y >= 0 && country.map.y <= 100, `${country.slug}: projected y is outside map`);
@@ -243,11 +243,11 @@ for (const { country, sheets } of countryCatalogs) {
       assert(sheet[field] !== undefined && sheet[field] !== "", `${sheet.id}: missing ${field}`);
     }
     assert(sheet.countrySlug === country.slug, `${sheet.id}: country relationship mismatch`);
-    assert(sheet.pdfUrl.startsWith("/api/catalog-document?path="), `${sheet.id}: PDF must use private delivery endpoint`);
+    assert(sheet.pdfUrl.startsWith(`/catalog/documents/${country.slug}/`), `${sheet.id}: PDF must use same-origin static delivery`);
     assert(sheet.downloadUrl.includes("download=1"), `${sheet.id}: download URL missing`);
-    assert(sheet.turkishPdfUrl.startsWith("/api/catalog-document?path="), `${sheet.id}: Turkish PDF must use private delivery endpoint`);
+    assert(sheet.turkishPdfUrl.startsWith(`/catalog/documents/${country.slug}/`), `${sheet.id}: Turkish PDF must use same-origin static delivery`);
     assert(sheet.turkishDownloadUrl.includes("download=1"), `${sheet.id}: Turkish download URL missing`);
-    assert(sheet.sourcePdfUrl.startsWith("/api/catalog-document?path="), `${sheet.id}: source original must use private delivery endpoint`);
+    assert(sheet.sourcePdfUrl.startsWith(`/catalog/documents/${country.slug}/`), `${sheet.id}: source original must use same-origin static delivery`);
     assert(sheet.sourceDownloadUrl.includes("download=1"), `${sheet.id}: source-original download URL missing`);
     assert(sheet.language === "en", `${sheet.id}: unreviewed translation entered source documents`);
     assert(sheet.sourceLanguage === "en", `${sheet.id}: source-original language metadata is missing`);

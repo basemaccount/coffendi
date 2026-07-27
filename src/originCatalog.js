@@ -59,4 +59,4 @@ export const originCatalogMeta = {
   ]
 };
 
-export const originCatalogIndexUrl = "/catalog/data/origin-index-0319af91e5.json";
+export const originCatalogIndexUrl = "/catalog/data/origin-index-8386fcd12f.json";

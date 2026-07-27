@@ -338,7 +338,7 @@ function CountryPageReader({
             <i className="origin-ui-icon" aria-hidden="true">↗</i>
             {copy.open}
           </a>
-          <a className="button button--outline button--small" href={activeAssets.downloadUrl}>
+          <a className="button button--outline button--small" href={activeAssets.downloadUrl} download>
             <i className="origin-ui-icon" aria-hidden="true">↓</i>
             {copy.download}
           </a>
@@ -453,7 +453,7 @@ function SheetCard({ sheet, index, language, onOpen }) {
             <i className="origin-ui-icon" aria-hidden="true">▤</i>
             {copy.view}
           </button>
-          <a className="button button--outline button--small" href={assets.downloadUrl}>
+          <a className="button button--outline button--small" href={assets.downloadUrl} download>
             <i className="origin-ui-icon" aria-hidden="true">↓</i>
             {copy.download}
           </a>
@@ -733,7 +733,7 @@ function SheetViewer({
               <i className="origin-ui-icon" aria-hidden="true">↗</i>
               <span>{copy.open}</span>
             </a>
-            <a href={activeAssets.downloadUrl} aria-label={copy.download}>
+            <a href={activeAssets.downloadUrl} aria-label={copy.download} download>
               <i className="origin-ui-icon" aria-hidden="true">↓</i>
               <span>{copy.download}</span>
             </a>
@@ -855,7 +855,7 @@ function SheetViewer({
             <i className="origin-ui-icon" aria-hidden="true">↗</i>
             {language === "tr" ? "PDF’yi aç" : "Open PDF"}
           </a>
-          <a href={activeAssets.downloadUrl}>
+          <a href={activeAssets.downloadUrl} download>
             <i className="origin-ui-icon" aria-hidden="true">↓</i>
             {language === "tr" ? "İndir" : "Download"}
           </a>

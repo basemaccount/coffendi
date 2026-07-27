@@ -58,68 +58,43 @@ const inlineDocument = await fetch(`${baseUrl}${representativeSheet.pdfUrl}`, {
   redirect: "follow",
   signal: AbortSignal.timeout(12_000),
 });
-assert.equal(inlineDocument.ok, true, `Protected PDF endpoint returned ${inlineDocument.status}`);
+assert.equal(inlineDocument.ok, true, `Published PDF returned ${inlineDocument.status}`);
 assert.match(inlineDocument.headers.get("content-type") || "", /^application\/pdf/);
-assert.match(inlineDocument.headers.get("content-disposition") || "", /^inline;/);
-assert.ok(inlineDocument.headers.get("etag"), "Protected PDF endpoint did not publish an ETag");
-assert.equal(inlineDocument.headers.get("content-language"), "en");
-assert.ok(Number(inlineDocument.headers.get("content-length")) > 0, "Protected PDF endpoint did not publish its byte length");
-assert.ok(inlineDocument.headers.get("last-modified"), "Protected PDF endpoint did not publish its modification time");
-assert.equal(inlineDocument.headers.get("x-content-type-options"), "nosniff");
+assert.ok(inlineDocument.headers.get("etag"), "Published PDF did not publish an ETag");
+assert.ok(Number(inlineDocument.headers.get("content-length")) > 0, "Published PDF did not publish its byte length");
 
 const downloadDocument = await fetch(`${baseUrl}${representativeSheet.downloadUrl}`, {
   method: "HEAD",
   redirect: "follow",
   signal: AbortSignal.timeout(12_000),
 });
-assert.equal(downloadDocument.ok, true, `Protected PDF download returned ${downloadDocument.status}`);
-assert.match(downloadDocument.headers.get("content-disposition") || "", /^attachment;/);
+assert.equal(downloadDocument.ok, true, `Published PDF download returned ${downloadDocument.status}`);
+assert.match(downloadDocument.headers.get("content-type") || "", /^application\/pdf/);
 
 const turkishDocument = await fetch(`${baseUrl}${representativeSheet.turkishPdfUrl}`, {
   method: "HEAD",
   redirect: "follow",
   signal: AbortSignal.timeout(12_000),
 });
-assert.equal(turkishDocument.ok, true, `Protected Turkish PDF endpoint returned ${turkishDocument.status}`);
+assert.equal(turkishDocument.ok, true, `Published Turkish PDF returned ${turkishDocument.status}`);
 assert.match(turkishDocument.headers.get("content-type") || "", /^application\/pdf/);
-assert.match(turkishDocument.headers.get("content-disposition") || "", /^inline;/);
-assert.ok(turkishDocument.headers.get("etag"), "Protected Turkish PDF endpoint did not publish an ETag");
-assert.equal(turkishDocument.headers.get("content-language"), "tr");
-assert.ok(Number(turkishDocument.headers.get("content-length")) > 0, "Protected Turkish PDF endpoint did not publish its byte length");
-assert.ok(turkishDocument.headers.get("last-modified"), "Protected Turkish PDF endpoint did not publish its modification time");
+assert.ok(turkishDocument.headers.get("etag"), "Published Turkish PDF did not publish an ETag");
+assert.ok(Number(turkishDocument.headers.get("content-length")) > 0, "Published Turkish PDF did not publish its byte length");
 
 const sourceDocument = await fetch(`${baseUrl}${representativeSheet.sourcePdfUrl}`, {
   method: "HEAD",
   redirect: "follow",
   signal: AbortSignal.timeout(12_000),
 });
-assert.equal(sourceDocument.ok, true, `Protected source-original PDF endpoint returned ${sourceDocument.status}`);
+assert.equal(sourceDocument.ok, true, `Published source-original PDF returned ${sourceDocument.status}`);
 assert.match(sourceDocument.headers.get("content-type") || "", /^application\/pdf/);
-assert.match(sourceDocument.headers.get("content-disposition") || "", /^inline;/);
-assert.ok(sourceDocument.headers.get("etag"), "Protected source-original PDF endpoint did not publish an ETag");
-assert.equal(sourceDocument.headers.get("content-language"), "en");
-assert.ok(Number(sourceDocument.headers.get("content-length")) > 0, "Protected source-original PDF endpoint did not publish its byte length");
-assert.ok(sourceDocument.headers.get("last-modified"), "Protected source-original PDF endpoint did not publish its modification time");
-assert.equal(sourceDocument.headers.get("x-content-type-options"), "nosniff");
+assert.ok(sourceDocument.headers.get("etag"), "Published source-original PDF did not publish an ETag");
+assert.ok(Number(sourceDocument.headers.get("content-length")) > 0, "Published source-original PDF did not publish its byte length");
 
 const representativeCountry = originCatalogCountries[0];
-for (const [label, documentUrl, language] of [
-  ["generated English country bundle", representativeCountry.bundleUrl, "en"],
-  ["generated Turkish country bundle", representativeCountry.turkishBundleUrl, "tr"],
-  ["source-original country bundle", representativeCountry.sourceBundleUrl, "en"],
-]) {
-  const bundle = await fetch(`${baseUrl}${documentUrl}`, {
-    method: "HEAD",
-    redirect: "follow",
-    signal: AbortSignal.timeout(12_000),
-  });
-  assert.equal(bundle.ok, true, `Protected ${label} returned ${bundle.status}`);
-  assert.match(bundle.headers.get("content-type") || "", /^application\/pdf/);
-  assert.match(bundle.headers.get("content-disposition") || "", /^inline;/);
-  assert.equal(bundle.headers.get("content-language"), language);
-  assert.ok(Number(bundle.headers.get("content-length")) > 0, `Protected ${label} did not publish its byte length`);
-  assert.equal(bundle.headers.get("x-content-type-options"), "nosniff");
-}
+assert.equal(representativeCountry.bundleUrl, "", "Unavailable English Blob bundle remained exposed");
+assert.equal(representativeCountry.turkishBundleUrl, "", "Unavailable Turkish Blob bundle remained exposed");
+assert.equal(representativeCountry.sourceBundleUrl, "", "Unavailable source Blob bundle remained exposed");
 
 const rejectedDocument = await fetch(`${baseUrl}/api/catalog-document?path=${encodeURIComponent("coffendi/origins/2026-07-27-full/../../secret.pdf")}`, {
   redirect: "manual",

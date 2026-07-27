@@ -679,28 +679,28 @@ function OriginLocalNavigation({ profile, language }) {
   const [activeSection, setActiveSection] = useState("overview");
 
   useEffect(() => {
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => entry.isIntersecting && setActiveSection(entry.target.id));
-    }, { rootMargin: "-140px 0px -60%" });
-    const observedSections = new Set();
-    const observeCurrentSections = () => {
-      ["overview", "catalog", "origin-network"]
-        .map((id) => document.getElementById(id))
-        .filter((section) => section && !observedSections.has(section))
-        .forEach((section) => {
-          observedSections.add(section);
-          observer.observe(section);
+    let frame;
+    const syncActiveSection = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        const sections = ["overview", "catalog", "origin-network"]
+          .map((id) => document.getElementById(id))
+          .filter(Boolean);
+        let current = sections[0];
+        sections.forEach((section) => {
+          if (section.getBoundingClientRect().top <= 180) current = section;
         });
+        if (current) setActiveSection(current.id);
+      });
     };
-    observeCurrentSections();
-    const replacements = new MutationObserver(observeCurrentSections);
-    replacements.observe(document.getElementById("main-content"), {
-      childList: true,
-      subtree: true,
-    });
+    syncActiveSection();
+    window.addEventListener("scroll", syncActiveSection, { passive: true });
+    window.addEventListener("resize", syncActiveSection, { passive: true });
     return () => {
-      replacements.disconnect();
-      observer.disconnect();
+      cancelAnimationFrame(frame);
+      window.removeEventListener("scroll", syncActiveSection);
+      window.removeEventListener("resize", syncActiveSection);
     };
   }, []);
 

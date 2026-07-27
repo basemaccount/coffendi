@@ -27,6 +27,7 @@ const sourceRoot =
   "/mnt/c/Users/progr/Downloads";
 const workRoot = path.join(projectRoot, ".catalog-work");
 const previewRoot = path.join(projectRoot, "public", "catalog", "previews");
+const documentRoot = path.join(projectRoot, "public", "catalog", "documents");
 const catalogDataRoot = path.join(projectRoot, "public", "catalog", "data");
 const outputDataFile = path.join(projectRoot, "src", "originCatalog.js");
 const fontRoot = path.join(projectRoot, "node_modules", "dejavu-fonts-ttf", "ttf");
@@ -1174,8 +1175,10 @@ async function main() {
 
   await rm(workRoot, { recursive: true, force: true });
   await rm(previewRoot, { recursive: true, force: true });
+  await rm(documentRoot, { recursive: true, force: true });
   await mkdir(workRoot, { recursive: true });
   await mkdir(previewRoot, { recursive: true });
+  await mkdir(documentRoot, { recursive: true });
 
   const [
     { normalFontBytes, boldFontBytes },
@@ -1209,6 +1212,8 @@ async function main() {
   const processArtworkKeys = new Set();
 
   for (const country of countries) {
+    const countryDocumentRoot = path.join(documentRoot, country.slug);
+    await mkdir(countryDocumentRoot, { recursive: true });
     const pageReferences = (country.segments || [{ source: country.source, pages: country.pages }])
       .flatMap((segment) => segment.pages.map((pageNumber) => ({
         sourceKey: segment.source,
@@ -1368,6 +1373,9 @@ async function main() {
         writeFile(path.join(workRoot, `${versionedName}.pdf`), pdfBytes),
         writeFile(path.join(workRoot, `${versionedName}-tr.pdf`), turkishPdfBytes),
         writeFile(path.join(workRoot, `${versionedName}-source.pdf`), sourcePdfBytes),
+        writeFile(path.join(countryDocumentRoot, `${versionedName}.pdf`), pdfBytes),
+        writeFile(path.join(countryDocumentRoot, `${versionedName}-tr.pdf`), turkishPdfBytes),
+        writeFile(path.join(countryDocumentRoot, `${versionedName}-source.pdf`), sourcePdfBytes),
       ]);
 
       const [remote, turkishRemote, sourceRemote] = await Promise.all([
