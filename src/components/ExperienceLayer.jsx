@@ -121,7 +121,7 @@ export default function ExperienceLayer({ language }) {
   useEffect(() => {
     const main = document.querySelector("#main-content");
     if (!main || !("IntersectionObserver" in window)) return undefined;
-    const selector = ".coffee-map, .origin-page-reader, .compare-workbench, .inquiry-form";
+    const selector = ".coffee-map,.origin-filter-panel,.origin-page-reader,.compare-workbench,.inquiry-form";
     const visibility = new Map();
     const updateSuppression = () => {
       const next = [...visibility.values()].some(Boolean);

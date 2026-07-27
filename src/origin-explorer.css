@@ -229,6 +229,15 @@
 
 .origin-filter-panel__reset svg { width: 15px; }
 .origin-filter-panel__reset:disabled { cursor: default; opacity: 0.45; }
+.origin-filter-panel__active {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 14px;
+}
+.origin-filter-panel__active > span { flex: 0 0 auto; }
+.origin-filter-panel__active > div { display: flex; flex-wrap: wrap; gap: 6px; }
+.origin-filter-panel__active button svg { width: 14px; height: 14px; }
 .origin-filter-panel--compact { margin-top: 18px; }
 .origin-filter-panel--compact .origin-filter-panel__heading h2 { font-size: clamp(23px, 2.1vw, 30px); }
 
@@ -314,7 +323,7 @@
 
 .coffee-map__art { position: absolute; inset: 0; width: 100%; height: 100%; color: #dce8e1; }
 .coffee-map__equator { fill: none; stroke: rgba(239, 201, 121, 0.46); stroke-width: 1; stroke-dasharray: 7 8; vector-effect: non-scaling-stroke; }
-.coffee-map__belt { transform-origin: center; animation: coffee-belt-breathe 5.5s ease-in-out infinite alternate; }
+.coffee-map__belt { transform-origin: center; }
 
 
 .coffee-map__pin {
@@ -330,7 +339,7 @@
   background: transparent;
   color: var(--white);
   transform: translate(-50%, -50%);
-  animation: map-pin-arrive 580ms calc(var(--pin-index) * 65ms) var(--ease) both;
+  animation: map-pin-arrive 420ms var(--ease) both;
 }
 
 .coffee-map__pin .origin-flag { transition: border-color 180ms ease, box-shadow 260ms ease, filter 260ms ease, transform 300ms var(--ease); }
@@ -342,6 +351,7 @@
   border-radius: 9px;
   background: rgba(15, 48, 39, 0.88);
   backdrop-filter: blur(9px);
+  pointer-events: none;
   transition: color 180ms ease, background-color 180ms ease, transform 260ms var(--ease);
 }
 .coffee-map__pin strong {
@@ -369,15 +379,30 @@
   box-shadow: 0 4px 12px rgba(0, 0, 0, .22);
 }
 
-.coffee-map__pin:hover .origin-flag { border-color: var(--gold-light); box-shadow: 0 0 0 5px rgba(239, 201, 121, 0.14), 0 12px 28px rgba(0, 0, 0, 0.26); filter: saturate(1.1); transform: translateY(-4px) rotate(-3deg) scale(1.07); }
-.coffee-map__pin:hover .coffee-map__pin-label { background: var(--paper); transform: translateY(-2px); }
-.coffee-map__pin:hover strong { color: var(--green); }
 .coffee-map__pin.is-active { z-index: 6; }
 .coffee-map__pin.is-active .origin-flag { border-color: var(--gold-light); box-shadow: 0 0 0 5px rgba(239, 201, 121, 0.18), 0 15px 34px rgba(0, 0, 0, 0.3); transform: translateY(-3px) scale(1.1); }
 .coffee-map__pin.is-active .coffee-map__pin-label { background: var(--gold-light); transform: translateY(-2px); }
 .coffee-map__pin.is-active strong { color: var(--green); }
 .coffee-map__pin.is-active small { color: #173d31; }
 .coffee-map__pin:focus-visible { outline: 3px solid var(--gold-light); outline-offset: 4px; border-radius: 14px; }
+
+.profile-detail__descriptor {
+  max-width: 620px;
+  margin-top: 13px;
+  color: var(--green-2);
+  font-family: var(--serif);
+  font-size: clamp(22px, 2vw, 30px);
+  line-height: 1.15;
+}
+
+#overview,
+#catalog,
+#origin-network { scroll-margin-top: 154px; }
+
+.origin-local-nav a[aria-current="location"] {
+  background: var(--green);
+  color: var(--white);
+}
 
 
 .coffee-map__note {
@@ -407,7 +432,6 @@
     var(--green);
   box-shadow: 0 28px 76px rgba(23, 61, 49, 0.16);
   color: var(--white);
-  animation: origin-readout-arrive 540ms var(--ease) both;
 }
 
 .origin-explorer__identity { position: relative; z-index: 1; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 13px; margin-bottom: 30px; padding-bottom: 22px; border-bottom: 1px solid rgba(255, 255, 255, 0.16); }
@@ -434,18 +458,6 @@
   to { filter: saturate(1); transform: translate(-50%, -50%) scale(1); }
 }
 
-@keyframes coffee-belt-breathe {
-  from { transform: scaleY(0.92); }
-  to { transform: scaleY(1.04); }
-}
-
-@keyframes origin-readout-arrive {
-  from { filter: saturate(0.74); transform: translateX(18px) scale(0.98); }
-  to { filter: saturate(1); transform: none; }
-}
-
-@keyframes origin-thread-flow { to { stroke-dashoffset: -120; } }
-
 @media (max-width: 1050px) {
   .origin-filter-panel__fields { grid-template-columns: 1fr 0.7fr; }
   .origin-zone-filter { grid-column: 1 / -1; }
@@ -466,9 +478,12 @@
   .origin-zone-filter button { min-height: 44px; padding-inline: 5px; }
   .origin-flag-filter { grid-template-columns: 1fr; }
   .origin-filter-panel__reset { grid-column: 1; grid-row: 1; justify-self: end; margin-top: -8px; }
+  .origin-filter-panel__active { display: grid; gap: 7px; }
+  .origin-filter-panel__active > div { flex-wrap: nowrap; margin-inline: -17px; padding: 1px 17px 7px; overflow-x: auto; scroll-padding-inline: 17px; }
+  .origin-filter-panel__active button { flex: 0 0 auto; scroll-snap-align: start; }
   .origin-flag-filter > div { margin-inline: -17px; padding-inline: 17px; scroll-padding-inline: 17px; }
   .origin-flag-filter > div > button { min-width: 125px; flex-basis: 125px; }
-  .origin-explorer { padding-block: 68px; }
+  .origin-explorer { padding-block: 54px 68px; }
   .origin-explorer__heading { grid-template-columns: 1fr; gap: 18px; }
   .origin-explorer__heading h2 { font-size: clamp(43px, 13vw, 56px); }
   .origin-explorer__workspace { gap: 12px; }
@@ -484,15 +499,19 @@
   .origin-explorer__directions b,
   .origin-explorer__directions small { white-space: normal; }
   .origin-explorer__readout .button { width: 100%; margin-top: 25px; }
+  .profile-detail .profile-detail__intro h1 { overflow-wrap: anywhere; font-size: clamp(42px, 13vw, 54px); }
+  .profile-detail__descriptor { margin-top: 9px; font-size: clamp(22px, 7vw, 28px); }
+  .profile-detail__lede { margin-top: 13px; }
+  #overview,
+  #catalog,
+  #origin-network { scroll-margin-top: 132px; }
   .profile-detail__media > .profile-detail__origin-badge { right: 8px; bottom: 8px; }
   .compare-picker__country { padding-right: 0; }
   .compare-table__origin { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .coffee-map__belt,
-  .coffee-map__pin,
-  .origin-explorer__readout { animation: none !important; }
+  .coffee-map__pin { animation: none !important; }
   .origin-flag-filter > div > button,
   .coffee-map__pin .origin-flag,
   .coffee-map__pin strong { transition: none !important; }

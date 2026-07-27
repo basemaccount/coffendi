@@ -105,6 +105,16 @@ export function translateCoffeeList(values = [], language = "tr") {
   return values.map((value) => translateCoffeeValue(value, language));
 }
 
+export function normalizeCoffeeSearch(value) {
+  return String(value || "")
+    .trim()
+    .toLocaleLowerCase("tr-TR")
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
+    .replace(/ı/g, "i")
+    .replace(/[’']/g, "");
+}
+
 export function localizeCatalogWebsiteProfile(catalog) {
   const profile = catalog.websiteProfile;
   const country = catalog.country.tr;
@@ -115,7 +125,6 @@ export function localizeCatalogWebsiteProfile(catalog) {
     style: "long",
     type: "conjunction",
   }).format(types);
-  const sheetLabel = sheetCount === 1 ? "teknik föy" : "teknik föy";
   const flavorSummary = flavors.length
     ? ` Öne çıkan fincan notaları: ${flavors.join(" · ")}.`
     : "";
@@ -124,7 +133,7 @@ export function localizeCatalogWebsiteProfile(catalog) {
     ...profile,
     name: {
       ...profile.name,
-      tr: `${country} yeşil kahve portföyü`,
+      tr: `${typeSummary} menşe portföyü`,
     },
     process: {
       ...profile.process,
@@ -132,7 +141,7 @@ export function localizeCatalogWebsiteProfile(catalog) {
     },
     profile: {
       ...profile.profile,
-      tr: `${typeSummary} kategorisinde kaynağı belgelenmiş ${sheetCount} ${sheetLabel}.${flavorSummary}`,
+      tr: `Bu ülkenin kaynak arşivinde ${typeSummary} kategorisinde ${sheetCount} teknik föy bulunur.${flavorSummary}`,
     },
     use: {
       ...profile.use,

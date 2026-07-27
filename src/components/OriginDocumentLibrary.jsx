@@ -1,6 +1,6 @@
 import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router";
-import { translateCoffeeValue } from "../lib/turkishCoffee";
+import { normalizeCoffeeSearch, translateCoffeeValue } from "../lib/turkishCoffee";
 import "../origin-documents.css";
 
 const local = (value, language) =>
@@ -53,16 +53,16 @@ function CountryPageReader({
   const countryName = local(country, language);
   const copy = language === "tr"
     ? {
-      eyebrow: "Ülkeye özel belge okuyucu",
+      eyebrow: "Etkileşimli ülke dosyası",
       title: `${countryName} kaynak sayfaları`,
-      verified: `Bu okuyucudaki ${pageCount} sayfanın tamamı yalnızca ${countryName} menşesine aittir.`,
+      verified: `Bu okuyucuda yalnızca ${countryName} menşesiyle eşleştirilmiş ${pageCount} kaynak sayfası yer alır.`,
       page: "Sayfa",
       previous: "Önceki sayfa",
       next: "Sonraki sayfa",
-      enlarge: "Tam ekranda incele",
-      open: "PDF’yi yeni sekmede aç",
-      download: "Bu sayfayı indir",
-      swipe: "Sayfalar arasında geçmek için kaydırın veya ok düğmelerini kullanın.",
+      enlarge: "Tam ekran görüntüle",
+      open: "PDF’yi aç",
+      download: "PDF sayfasını indir",
+      swipe: "Sayfalar arasında kaydırın, küçük görsellerden seçim yapın veya ok düğmelerini kullanın.",
       pages: "Kaynak sayfalar",
       select: "Sayfayı seç",
     }
@@ -301,10 +301,10 @@ function CountryPageReader({
 function SheetCard({ sheet, index, language, onOpen }) {
   const copy = language === "tr"
     ? {
-      sheet: "Teknik föy",
-      view: "İncele",
-      download: "PDF indir",
-      english: "İngilizce belge",
+      sheet: "Kaynak sayfası",
+      view: "Ön izleme",
+      download: "PDF’yi indir",
+      english: "İngilizce kaynak",
     }
     : {
       sheet: "Reference sheet",
@@ -396,8 +396,8 @@ function SheetViewer({
   const copy = language === "tr"
     ? {
       close: "Belge görüntüleyiciyi kapat",
-      previous: "Önceki föy",
-      next: "Sonraki föy",
+      previous: "Önceki sayfa",
+      next: "Sonraki sayfa",
       zoomOut: "Uzaklaştır",
       zoomIn: "Yakınlaştır",
       fitPage: "Sayfaya sığdır",
@@ -407,7 +407,7 @@ function SheetViewer({
       fullscreen: "Tam ekran okuma",
       open: "PDF'yi yeni sekmede aç",
       download: "PDF indir",
-      specs: "Teknik özellikler",
+      specs: "Kaynak sayfa özellikleri",
       source: "Kaynak",
       page: "Sayfa",
       revision: "Sürüm",
@@ -419,7 +419,7 @@ function SheetViewer({
       previewError: "Sayfa ön izlemesi yüklenemedi. PDF'yi yeni sekmede açabilirsiniz.",
       fields: {
         type: "Tür",
-        grade: "Sınıf",
+        grade: "Ürün sınıfı",
         defects: "Kusurlar",
         flavor: "Lezzet notaları",
         aroma: "Aroma",
@@ -779,29 +779,29 @@ export default function OriginDocumentLibrary({
 
   const copy = language === "tr"
     ? {
-      eyebrow: "Ülkeye özel belge arşivi",
-      title: `${local(profile.country, language)} için ${expectedSheetCount} kaynak sayfa`,
-      intro: "Bu menşeye ait kaynak sayfaları okuyun, büyütün, yeni sekmede açın veya PDF olarak indirin.",
-      search: "Kaynak sayfalarda ara",
-      placeholder: "Sınıf, tür, işleme veya lezzet notası",
+      eyebrow: "Ülkeye özel kaynak arşivi",
+      title: `${local(profile.country, language)}: ${expectedSheetCount} kaynak sayfası`,
+      intro: "Bu ülkeyle eşleştirilmiş sayfaları okuyucuda gezinin; ayrıntıları büyütün, PDF’yi açın veya indirin.",
+      search: "Kaynak arşivinde ara",
+      placeholder: "Ürün sınıfı, tür, işleme yöntemi veya lezzet",
       type: "Tür",
       process: "İşleme yöntemi",
       all: "Tümü",
-      results: `${sheets.length} kaynak sayfa`,
-      filteredResults: "eşleşen sayfa",
+      results: `${sheets.length} kaynak sayfası`,
+      filteredResults: "eşleşen kaynak sayfası",
       reset: "Filtreleri temizle",
-      downloadAll: "Ülke kataloğunu PDF olarak indir",
+      downloadAll: "Ülke dosyasının tamamını indir",
       emptyTitle: "Bu menşe için yayımlanmış bir kaynak sayfa yok.",
       emptyCopy: "Güncel lot ve belge durumu talep sırasında doğrudan teyit edilir.",
       noMatches: "Bu filtrelerle eşleşen bir kaynak sayfa bulunamadı.",
-      loading: "Ülkeye ait kaynak sayfalar hazırlanıyor.",
-      loadingCopy: "Doğrulanmış katalog verileri güvenli kaynaktan yükleniyor.",
+      loading: "Ülkeye ait kaynak sayfaları hazırlanıyor.",
+      loadingCopy: "Ülkeyle eşleştirilmiş katalog verileri güvenli kaynaktan yükleniyor.",
       error: "Kaynak sayfalar şu anda yüklenemedi.",
       errorCopy: "Bağlantınızı kontrol edip bu ülkenin kataloğunu yeniden deneyin.",
       retry: "Yeniden dene",
-      floatingFile: "Ülke belge arşivi",
+      floatingFile: "Ülke kaynak arşivi",
       floatingOpen: "Belge okuyucuyu aç",
-      floatingPages: "sayfa",
+      floatingPages: "kaynak sayfası",
     }
     : {
       eyebrow: "Country catalogue",
@@ -832,21 +832,27 @@ export default function OriginDocumentLibrary({
   const types = useMemo(() => [...new Set(sheets.map((sheet) => sheet.type))].sort(), [sheets]);
   const processes = useMemo(() => [...new Set(sheets.map((sheet) => sheet.process))].sort(), [sheets]);
   const filteredSheets = useMemo(() => {
-    const normalizedQuery = query.trim().toLocaleLowerCase(language === "tr" ? "tr-TR" : "en");
+    const normalizedQuery = normalizeCoffeeSearch(query);
     return sheets.filter((sheet) => (
       (type === "all" || sheet.type === type)
       && (process === "all" || sheet.process === process)
-      && (!normalizedQuery || [
+      && (!normalizedQuery || normalizeCoffeeSearch([
         sheet.grade,
         sheet.type,
         sheet.process,
         sheet.flavor,
+        sheet.aroma,
+        sheet.body,
+        sheet.acidity,
         sheet.screen,
         translateCoffeeValue(sheet.type, language),
         translateCoffeeValue(sheet.process, language),
         translateCoffeeValue(sheet.flavor, language),
+        translateCoffeeValue(sheet.aroma, language),
+        translateCoffeeValue(sheet.body, language),
+        translateCoffeeValue(sheet.acidity, language),
         translateCoffeeValue(sheet.screen, language),
-      ].join(" ").toLocaleLowerCase(language === "tr" ? "tr-TR" : "en").includes(normalizedQuery))
+      ].join(" ")).includes(normalizedQuery))
     ));
   }, [language, process, query, sheets, type]);
 

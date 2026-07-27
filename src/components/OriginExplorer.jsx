@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ArrowRight, ChevronLeft, ChevronRight, Crosshair, Globe2, Layers3, LocateFixed, Map, MapPin, Radar, Sprout } from "lucide-react";
+import { useLocation, useNavigate } from "react-router";
 import OriginFilters, { useCompactOriginLayout, useOriginProfileFilters } from "./OriginFilters";
 import OriginFlag from "./OriginFlag";
 import OriginMapAnchors, { originPinPosition } from "./OriginMapAnchors";
@@ -97,6 +98,24 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
     rail.scrollTo({ left, behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
   }, [activeId]);
 
+  const selectNearestPin = (event) => {
+    if (!event.detail) return;
+    const box = event.currentTarget.getBoundingClientRect();
+    const x = ((event.clientX - box.left) / box.width) * 100;
+    const y = ((event.clientY - box.top) / box.height) * 100;
+    let nearest = profiles[0];
+    let shortest = Infinity;
+    profiles.forEach((profile) => {
+      const pin = originPinPosition(profile);
+      const distance = Math.hypot(pin.x - x, pin.y - y);
+      if (distance < shortest) {
+        nearest = profile;
+        shortest = distance;
+      }
+    });
+    onSelect(nearest.id);
+  };
+
   return (
     <>
       {compact && (
@@ -157,6 +176,7 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           className={`coffee-map__canvas ${overview ? "is-overview" : "is-focus"}`}
           data-map-view={overview ? "overview" : "focus"}
           style={compact ? { minWidth: overview ? "100%" : 700, transition: reduceMotion ? "none" : "min-width 420ms var(--ease)" } : undefined}
+          onClick={selectNearestPin}
         >
         <img className="origin-map-artwork" data-map-geometry="natural-earth-110m" src="/images/maps/coffee-world.svg" alt="" width="1000" height="520" loading="lazy" decoding="async" draggable="false" style={{ position: "absolute", inset: 0, width: "100%", height: "100%", pointerEvents: "none" }} />
         <svg className="coffee-map__art" viewBox="0 0 1000 520" aria-hidden="true" preserveAspectRatio="none">
@@ -177,18 +197,21 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
           {profiles.length > 1 && <polyline className="coffee-map__thread" style={{ ...styles.thread, display: "none", animation: "none" }} points={constellationPoints} />}
         </svg>
 
-        {profiles.map((profile, index) => {
+        {profiles.map((profile) => {
           const pin = originPinPosition(profile);
           const selected = profile.id === activeId;
-          return <span
+          return <button
             key={profile.id}
+            type="button"
             className={`coffee-map__pin ${selected ? "is-active" : ""}`}
-            style={{ left: `${pin.x}%`, top: `${pin.y}%`, "--pin-index": index, pointerEvents: "none" }}
-            aria-hidden="true"
+            style={{ left: `${pin.x}%`, top: `${pin.y}%` }}
+            onClick={({ detail }) => detail || onSelect(profile.id)}
+            aria-label={`${local(profile.country, language)} · ${lensValue(profile, lens, language)}`}
+            aria-pressed={selected}
           >
             <OriginFlag profile={profile} size={overview ? selected ? "small" : "tiny" : compact && !selected ? "small" : "map"} style={compact && !selected ? { opacity: overview ? 0.72 : 0.84 } : undefined} />
             {selected ? <span className="coffee-map__pin-label"><strong>{local(profile.country, language)}</strong><small>{lensValue(profile, lens, language)}</small></span> : <span className="coffee-map__pin-code" aria-hidden="true">{profile.iso}</span>}
-          </span>;
+          </button>;
         })}
       </div>
     </div>
@@ -198,10 +221,15 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
 
 export default function OriginExplorer({ profiles, language, LinkComponent }) {
   const compactLayout = useCompactOriginLayout();
+  const location = useLocation();
+  const navigate = useNavigate();
   const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(profiles, language);
   const originCount = profiles.length;
   const sourceSheetCount = profiles.reduce((total, profile) => total + (profile.sheetCount || 0), 0);
-  const [activeId, setActiveId] = useState(profiles[0]?.id || "");
+  const requestedFocus = new URLSearchParams(location.search).get("focus");
+  const [activeId, setActiveIdState] = useState(() => (
+    profiles.some(({ id }) => id === requestedFocus) ? requestedFocus : profiles[0]?.id || ""
+  ));
   const [lens, setLens] = useState("geography");
   const readout = useRef(null);
   const countryIndex = useRef(null);
@@ -214,40 +242,40 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
   const copy = language === "tr"
     ? {
       eyebrow: "Etkileşimli menşe haritası",
-      title: `Kahve kuşağında ${originCount} belgelenmiş menşe.`,
-      intro: `Ülke dizinini, mobil bayrak şeridini veya ileri–geri kontrollerini kullanın. ${originCount} ülkeyi bölgeye, işleme yöntemine, fincan profiline ve ${sourceSheetCount} kaynak sayfaya göre filtreleyebilirsiniz.`,
+      title: `${originCount} kahve menşesini tek atlas üzerinde keşfedin.`,
+      intro: `Harita, dizin veya bayrak şeridinden seçim yapın; ${originCount} ülkeyi bölge, işleme yöntemi, fincan profili ve ${sourceSheetCount} kaynak sayfasına göre daraltın.`,
       mapLabel: "Temsili Coffendi kahve menşeleri haritası",
-      orientation: "Bu harita yönlendirme amaçlıdır. Okunabilirlik için bayraklar coğrafi konumlarından bir miktar kaydırılabilir; canlı stok, lojistik kapsam veya tedarik garantisi göstermez.",
+      orientation: "Keşif amaçlıdır; bayraklar okunabilirlik için hafifçe kaydırılabilir. Canlı stok veya lojistik kapsam göstermez.",
       directions: "Temsili kahve seçenekleri",
-      profile: "Temsili profili aç",
+      profile: "Ülke profilini aç",
       empty: "Bu filtrelerle eşleşen menşe bulunamadı.",
-      emptyCopy: "Farklı bir ülke, bölge veya işleme yöntemi seçin.",
-      mobileCue: "Dünya görünümü genel bağlamı, Odak görünümü seçili ülkenin ayrıntısını gösterir. Haritayı yatay kaydırabilirsiniz.",
-      lenses: "Harita katmanı",
+      emptyCopy: "Arama ifadenizi değiştirin veya etkin filtrelerden birini kaldırın.",
+      mobileCue: "Dünya görünümü genel bağlamı, Odak görünümü seçili ülkeyi gösterir. Ayrıntılı haritayı yatay kaydırabilirsiniz.",
+      lenses: "Bilgi katmanı",
       geography: "Coğrafya",
-      processLens: "İşleme",
-      profileLens: "Profil",
+      processLens: "İşleme yöntemi",
+      profileLens: "Kahve profili",
       previous: "Önceki menşe",
       next: "Sonraki menşe",
       previousShort: "Önceki",
       nextShort: "Sonraki",
       passport: "Menşe özeti",
-      regionNodes: "Bölge sayısı",
+      regionNodes: "Bölge odağı",
       signals: "Fincan notaları",
-      countries: "ülke",
-      regions: "bölgesel küme",
+      countries: "menşe ülke",
+      regions: "coğrafi bölge",
       directionsCount: "kahve seçeneği",
       countryIndex: "Filtrelenmiş menşe listesi",
       continueTitle: "Diğer menşeleri keşfedin",
       continueCue: "Listeyi kaydırın; ayrıntısını görmek istediğiniz ülkeye dokunun.",
-      inquiry: "Bu menşeyi sorun",
+      inquiry: "Bu menşe için bilgi alın",
     }
     : {
       eyebrow: "Interactive origin map",
       title: `${originCount} traceable origins across the coffee belt.`,
-      intro: `Use the country index, mobile flag rail, or step controls. Filters narrow ${originCount} countries by region, process, cup direction, and ${sourceSheetCount} source-backed reference sheets.`,
+      intro: `Choose from the map, index, or flag rail. Narrow ${originCount} countries by region, process, cup direction, and ${sourceSheetCount} source sheets.`,
       mapLabel: "Map of representative Coffendi coffee origins",
-      orientation: "Orientation map only; flags may be offset from geographic dots for legibility. Not live stock, logistics coverage or a sourcing guarantee.",
+      orientation: "For discovery only; flags may be offset for legibility. Not live stock or logistics coverage.",
       directions: "Representative coffee directions",
       profile: "Open representative profile",
       empty: "No origins match these filters.",
@@ -273,15 +301,37 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       inquiry: "Ask about this origin",
     };
   const lenses = [["geography", copy.geography], ["process", copy.processLens], ["profile", copy.profileLens]];
+  const selectOrigin = (id) => {
+    setActiveIdState(id);
+    const params = new URLSearchParams(location.search);
+    if (params.get("focus") === id) return;
+    params.set("focus", id);
+    navigate(
+      { pathname: location.pathname, search: `?${params}` },
+      { replace: true, preventScrollReset: true },
+    );
+  };
   const stepOrigin = (offset) => {
     if (!filteredProfiles.length) return;
     const nextIndex = (activeIndex + offset + filteredProfiles.length) % filteredProfiles.length;
-    setActiveId(filteredProfiles[nextIndex].id);
+    selectOrigin(filteredProfiles[nextIndex].id);
   };
 
   useEffect(() => {
-    if (filteredProfiles.length && !filteredProfiles.some(({ id }) => id === activeId)) setActiveId(filteredProfiles[0].id);
-  }, [activeId, filteredProfiles]);
+    if (filteredProfiles.length && !filteredProfiles.some(({ id }) => id === activeId)) setActiveIdState(filteredProfiles[0].id);
+    // Keep a URL-selected map focus synchronized with browser Back/Forward.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, filteredProfiles, requestedFocus]);
+
+  useEffect(() => {
+    if (
+      requestedFocus
+      && requestedFocus !== activeId
+      && filteredProfiles.some(({ id }) => id === requestedFocus)
+    ) setActiveIdState(requestedFocus);
+    // location.search is the external source of truth for focus restoration.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [activeId, filteredProfiles, requestedFocus]);
 
   useEffect(() => {
     const rail = countryIndex.current;
@@ -298,7 +348,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
 
   const selectFromCountryIndex = (id) => {
     revealCountry.current = compactLayout;
-    setActiveId(id);
+    selectOrigin(id);
   };
 
   return (
@@ -325,7 +375,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
                   return <button key={value} type="button" className={activeLens ? "is-active" : ""} style={{ ...styles.lensButton, background: activeLens ? "var(--gold-light)" : "transparent", color: activeLens ? "var(--green)" : "#b8cbc1", boxShadow: activeLens ? "0 7px 18px rgba(0,0,0,.18)" : "none" }} onClick={() => setLens(value)} aria-pressed={activeLens}>{label}</button>;
                 })}</div>
               </div>
-              <CoffeeBeltMap profiles={filteredProfiles} activeId={active.id} onSelect={setActiveId} language={language} lens={lens} compact={compactLayout} />
+              <CoffeeBeltMap profiles={filteredProfiles} activeId={active.id} onSelect={selectOrigin} language={language} lens={lens} compact={compactLayout} />
               <div className="coffee-map__stepper" style={styles.stepper}>
                 <button type="button" style={styles.stepButton} onClick={() => stepOrigin(-1)} aria-label={copy.previous}><ChevronLeft style={styles.stepIcon} aria-hidden="true" /><span>{compactLayout ? copy.previousShort : copy.previous}</span></button>
                 <strong style={styles.stepCount}><span style={styles.stepCurrent}>{String(activeIndex + 1).padStart(2, "0")}</span> / {String(filteredProfiles.length).padStart(2, "0")}</strong>
@@ -350,7 +400,7 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
                 <strong>{copy.directions}</strong>
                 <ol>{active.directions.map((direction, index) => <li key={direction.name}><span>{String(index + 1).padStart(2, "0")}</span><div><b>{direction.name}</b><small>{local(direction.process, language)} · {local(direction.cup, language)}</small></div></li>)}</ol>
               </div>
-              <div className="origin-explorer__actions" style={styles.actions}><LinkComponent className="button button--gold" to={`/origins/${active.slug}`}>{copy.profile}<ArrowRight aria-hidden="true" /></LinkComponent><LinkComponent className="button button--glass" to="/contact">{copy.inquiry}</LinkComponent></div>
+              <div className="origin-explorer__actions" style={styles.actions}><LinkComponent className="button button--gold" to={`/origins/${active.slug}`} state={{ originSearch: location.search }}>{copy.profile}<ArrowRight aria-hidden="true" /></LinkComponent><LinkComponent className="button button--glass" to="/contact">{copy.inquiry}</LinkComponent></div>
             </article>
           </div>
         ) : (

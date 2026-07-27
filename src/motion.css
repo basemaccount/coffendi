@@ -476,6 +476,7 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
   .profile-card__image:active,
   .compare-picker button:active,
   .origin-atlas__controls button:active,
+  .coffee-map__pin:active,
   .mobile-navigation nav a:active { scale: 0.97; filter: brightness(0.96); }
 }
 

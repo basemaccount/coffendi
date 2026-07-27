@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Globe2, RotateCcw, Search, SlidersHorizontal } from "lucide-react";
+import { Globe2, RotateCcw, Search, SlidersHorizontal, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router";
+import { normalizeCoffeeSearch } from "../lib/turkishCoffee";
 import OriginFlag from "./OriginFlag";
 
 const EMPTY_FILTERS = { query: "", zone: "all", process: "all", country: "all", sort: "atlas" };
@@ -21,25 +22,36 @@ export function useCompactOriginLayout() {
   return compact;
 }
 
-function searchableText(profile, language) {
+function searchableText(profile) {
   return [
-    local(profile.country, language),
-    local(profile.name, language),
+    local(profile.country, "en"),
+    local(profile.country, "tr"),
+    local(profile.name, "en"),
+    local(profile.name, "tr"),
     profile.region,
-    local(profile.process, language),
-    local(profile.profile, language),
-    local(profile.use, language),
-    ...profile.directions.flatMap((direction) => [direction.name, local(direction.process, language), local(direction.cup, language)]),
-  ].join(" ").toLocaleLowerCase(language === "tr" ? "tr-TR" : "en");
+    local(profile.process, "en"),
+    local(profile.process, "tr"),
+    local(profile.profile, "en"),
+    local(profile.profile, "tr"),
+    local(profile.use, "en"),
+    local(profile.use, "tr"),
+    ...profile.directions.flatMap((direction) => [
+      direction.name,
+      local(direction.process, "en"),
+      local(direction.process, "tr"),
+      local(direction.cup, "en"),
+      local(direction.cup, "tr"),
+    ]),
+  ].join(" ");
 }
 
 export function filterOriginProfiles(profiles, filters, language) {
-  const query = filters.query.trim().toLocaleLowerCase(language === "tr" ? "tr-TR" : "en");
+  const query = normalizeCoffeeSearch(filters.query);
   const results = profiles.filter((profile) => (
     (filters.zone === "all" || profile.zone === filters.zone)
     && (filters.process === "all" || profile.processFamily === filters.process)
     && (filters.country === "all" || profile.id === filters.country)
-    && (!query || searchableText(profile, language).includes(query))
+    && (!query || normalizeCoffeeSearch(searchableText(profile)).includes(query))
   ));
   if (filters.sort === "country") return results.toSorted((a, b) => local(a.country, language).localeCompare(local(b.country, language), language));
   if (filters.sort === "process") return results.toSorted((a, b) => a.processFamily.localeCompare(b.processFamily) || local(a.country, language).localeCompare(local(b.country, language), language));
@@ -51,12 +63,18 @@ export function useOriginProfileFilters(profiles, language) {
   const navigate = useNavigate();
   const readFilters = (search) => {
     const params = new URLSearchParams(search);
+    const zones = new Set(profiles.map(({ zone }) => zone));
+    const countries = new Set(profiles.map(({ id }) => id));
+    const zone = params.get("zone") || "all";
+    const process = params.get("process") || "all";
+    const country = params.get("country") || "all";
+    const sort = params.get("sort") || "atlas";
     return {
-      query: params.get("q") || "",
-      zone: params.get("zone") || "all",
-      process: params.get("process") || "all",
-      country: params.get("country") || "all",
-      sort: params.get("sort") || "atlas",
+      query: (params.get("q") || "").slice(0, 120),
+      zone: zone === "all" || zones.has(zone) ? zone : "all",
+      process: ["all", "washed", "natural", "mixed"].includes(process) ? process : "all",
+      country: country === "all" || countries.has(country) ? country : "all",
+      sort: ["atlas", "country", "process"].includes(sort) ? sort : "atlas",
     };
   };
   const [filters, setFilters] = useState(() => readFilters(location.search));
@@ -66,7 +84,7 @@ export function useOriginProfileFilters(profiles, language) {
   );
   const persistFilters = (next, replace = false) => {
     const params = new URLSearchParams(location.search);
-    ["q", "zone", "process", "country", "sort"].forEach((key) => params.delete(key));
+    ["q", "zone", "process", "country", "sort", "focus"].forEach((key) => params.delete(key));
     if (next.query) params.set("q", next.query);
     if (next.zone !== "all") params.set("zone", next.zone);
     if (next.process !== "all") params.set("process", next.process);
@@ -115,13 +133,13 @@ export default function OriginFilters({
   const copy = language === "tr"
     ? {
       eyebrow: "Menşe filtreleri",
-      title: "Ülke, bölge veya işleme yöntemine göre keşfedin.",
-      search: "Menşe ara",
-      searchPlaceholder: "Ülke, bölge veya fincan profili",
-      region: "Bölge",
+      title: "Aradığınız ülkeye ve kahve profiline daha hızlı ulaşın.",
+      search: "Ülke veya profil ara",
+      searchPlaceholder: "Örn. Etiyopya, Cerrado veya kakao",
+      region: "Coğrafi bölge",
       process: "İşleme yöntemi",
       sort: "Sıralama",
-      flag: "Ülke seçin",
+      flag: "Ülkeye göre daralt",
       all: "Tümü",
       africa: "Afrika",
       latinAmerica: "Latin Amerika",
@@ -132,12 +150,14 @@ export default function OriginFilters({
       natural: "Doğal işlenmiş",
       mixed: "Birden fazla yöntem",
       atlas: "Atlas sırası",
-      country: "Ülke A–Z",
+      country: "Ülke adına göre (A–Z)",
       processOrder: "İşleme yöntemine göre",
-      results: `${resultCount} menşe gösteriliyor`,
-      reset: "Filtreleri sıfırla",
-      showAdvanced: "Arama ve ayrıntılı filtreler",
-      hideAdvanced: "Ayrıntılı filtreleri kapat",
+      results: `${resultCount} menşe bulundu`,
+      reset: "Tüm filtreleri temizle",
+      showAdvanced: "Arama ve filtreleri aç",
+      hideAdvanced: "Arama ve filtreleri kapat",
+      active: "Etkin filtreler",
+      remove: "Filtreyi kaldır",
     }
     : {
       eyebrow: "Smart origin filters",
@@ -164,6 +184,8 @@ export default function OriginFilters({
       reset: "Reset filters",
       showAdvanced: "Search and advanced filters",
       hideAdvanced: "Hide advanced filters",
+      active: "Active filters",
+      remove: "Remove filter",
     };
   const availableZones = new Set(profiles.map((profile) => profile.zone));
   const zones = [
@@ -175,6 +197,17 @@ export default function OriginFilters({
     ["middle-east", copy.middleEast],
   ].filter(([value]) => value === "all" || availableZones.has(value));
   const advancedId = `${idPrefix}-advanced-filters`;
+  const zoneLabels = Object.fromEntries(zones);
+  const processLabels = { washed: copy.washed, natural: copy.natural, mixed: copy.mixed };
+  const sortLabels = { country: copy.country, process: copy.processOrder };
+  const activeFilters = [
+    filters.query && ["query", `"${filters.query}"`],
+    filters.country !== "all" && ["country", local(profiles.find(({ id }) => id === filters.country)?.country, language)],
+    filters.zone !== "all" && ["zone", zoneLabels[filters.zone]],
+    filters.process !== "all" && ["process", processLabels[filters.process]],
+    filters.sort !== "atlas" && ["sort", sortLabels[filters.sort]],
+  ].filter(Boolean);
+  const clearFilter = (key) => onChange(key, EMPTY_FILTERS[key]);
 
   useEffect(() => {
     setAdvancedOpen(!compactLayout);
@@ -237,7 +270,7 @@ export default function OriginFilters({
   );
 
   return (
-    <div className={`origin-filter-panel ${compact ? "origin-filter-panel--compact" : ""}`}>
+    <section className={`origin-filter-panel ${compact ? "origin-filter-panel--compact" : ""}`} aria-labelledby={`${idPrefix}-filter-title`}>
       <div className="origin-filter-panel__heading">
         <span><SlidersHorizontal aria-hidden="true" /></span>
         <div>
@@ -260,17 +293,21 @@ export default function OriginFilters({
           <strong aria-hidden="true" style={{ fontSize: 18 }}>{advancedOpen ? "−" : "+"}</strong>
         </button>
       )}
-      {compactLayout ? (
-        <>
-          {flagFilters}
-          {fields}
-        </>
-      ) : (
-        <>
-          {fields}
-          {flagFilters}
-        </>
+      {fields}
+      {activeFilters.length > 0 && (
+        <div className="origin-filter-panel__active" aria-label={copy.active}>
+          <span className="eyebrow">{copy.active}</span>
+          <div>
+            {activeFilters.map(([key, label]) => (
+              <button key={key} className="button button--outline" type="button" onClick={() => clearFilter(key)} aria-label={`${copy.remove}: ${label}`}>
+                <span>{label}</span>
+                <X aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
       )}
-    </div>
+      {flagFilters}
+    </section>
   );
 }

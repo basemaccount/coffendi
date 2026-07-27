@@ -222,9 +222,15 @@ assert(await page.locator(".coffee-map__lenses button").count() === 3, "origin m
 assert(await page.locator(".origin-explorer__country-index button").count() === 38, "origin explorer did not expose all 38 country passports");
 await page.locator(".coffee-map__lenses button").filter({ hasText: "Process" }).click();
 assert((await page.locator(".coffee-map__pin.is-active small").textContent()).includes("Washed"), "process lens did not replace the geographic map labels");
-await page.locator(".origin-explorer__country-index button").filter({ hasText: "Kenya" }).click();
-assert((await page.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "map pin selection did not update the origin readout");
+const kenyaPin = await mapPins.filter({ has: page.locator('.origin-flag[data-country="KE"]') }).boundingBox();
+assert(kenyaPin, "Kenya map flag was not visible");
+await page.mouse.click(kenyaPin.x + (kenyaPin.width / 2), kenyaPin.y + (kenyaPin.height / 2));
+assert((await page.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "clicking a real map flag did not update the origin readout");
+assert(new URL(page.url()).searchParams.get("focus") === "kenya-vivid", "map focus was not preserved in the URL");
+await page.reload({ waitUntil: "networkidle" });
+assert((await page.locator(".origin-explorer__readout").textContent()).includes("Kenya"), "reloading the atlas did not restore the focused country");
 await page.locator('.coffee-map__stepper button[aria-label="Next origin"]').click();
+await page.waitForFunction(() => document.querySelector(".origin-explorer__readout")?.textContent.includes("Rwanda"));
 assert((await page.locator(".origin-explorer__readout").textContent()).includes("Rwanda"), "origin stepper did not advance to the next country");
 await flagFilters.filter({ hasText: "Rwanda" }).click();
 assert(await mapPins.count() === 1, "flag filter did not narrow the map to one country");
@@ -238,6 +244,15 @@ assert(await mapPins.count() >= 1 && await page.locator(".origin-explorer__count
 await page.locator(".origin-filter-panel__reset").click();
 await page.locator(".origin-search input").fill("Cerrado");
 assert(await mapPins.count() === 1 && await page.locator(".origin-explorer__country-index button").filter({ hasText: "Brazil" }).count() === 1, "text filter did not search regional profile information");
+assert(await page.locator(".origin-filter-panel__active button").count() === 1, "active origin filters were not exposed as removable controls");
+await page.locator(".origin-explorer__actions a").first().click();
+await page.waitForURL("**/origins/brazil");
+await page.waitForFunction(() => document.querySelector("h1")?.textContent.trim() === "Brazil");
+assert((await page.locator("h1").textContent()).trim() === "Brazil", "country profile did not identify the origin country as its primary heading");
+await page.locator(".breadcrumbs").click();
+await page.waitForURL(/\/origins\?/);
+assert(await page.locator(".origin-search input").inputValue() === "Cerrado", "returning from a country profile discarded the atlas search context");
+assert(await page.locator(".coffee-map__pin").count() === 1, "returning from a country profile discarded the filtered atlas result");
 await page.locator(".origin-search input").fill("no matching origin");
 assert(await page.locator(".origin-explorer__empty").count() === 1, "empty map filters did not expose a recovery state");
 await page.locator(".origin-explorer__empty button").click();
@@ -254,6 +269,10 @@ await page.locator(".origin-sort select").selectOption("country");
 assert((await page.locator(".profile-grid--catalog .profile-card").first().textContent()).includes("Bolivia"), "country sorting did not put Bolivia first in the coffee library");
 
 await page.goto(`${baseUrl}/origins/ethiopia`, { waitUntil: "networkidle" });
+await page.waitForSelector('.origin-local-nav a[aria-current="location"]');
+assert((await page.locator('.origin-local-nav a[aria-current="location"]').textContent()).trim() === "Overview", "country local navigation did not expose the active overview section");
+await page.evaluate(() => window.scrollTo(0, document.getElementById("origin-network").offsetTop - 150));
+await page.waitForFunction(() => document.querySelector('.origin-local-nav a[aria-current="location"]')?.getAttribute("href") === "#origin-network");
 await page.locator(".origin-constellation__map").scrollIntoViewIfNeeded();
 await page.locator(".origin-constellation__map .origin-map-artwork").evaluate((image) => image.decode());
 assert(await page.locator(".origin-constellation__pin").count() === 38, "profile page did not expose 38 spatial origin links");
@@ -266,6 +285,8 @@ assert(await page.locator(".origin-constellation__pin.is-active").count() === 1,
 assert(await page.locator(".origin-sheet-card").count() === 8, "Ethiopia profile did not expose all eight source sheets");
 assert(await page.locator(".origin-page-reader__thumbnails button").count() === 8, "Ethiopia reader did not expose all eight source pages");
 assert(await page.locator('.origin-pdf-launcher[data-page-count="8"]').count() === 1, "Ethiopia profile did not expose its eight-page PDF launcher");
+await page.evaluate(() => window.scrollTo(0, document.getElementById("catalog").offsetTop - 150));
+await page.waitForFunction(() => document.querySelector('.origin-local-nav a[aria-current="location"]')?.getAttribute("href") === "#catalog");
 
 await page.goto(`${baseUrl}/origins/kenya`, { waitUntil: "networkidle" });
 const kenyaSheetCards = page.locator(".origin-sheet-card");
@@ -280,6 +301,7 @@ await page.locator(".origin-document-dialog").waitFor({ state: "visible" });
 assert(new URL(page.url()).searchParams.get("sheet") === "kenya-aa-ab-faq-main-crop-export-classifications", "floating Kenya PDF launcher did not open the first ordered country page");
 await page.locator(".origin-document-dialog__close").click();
 await page.waitForFunction(() => !document.querySelector(".origin-document-dialog"));
+await page.waitForFunction(() => document.activeElement?.classList.contains("origin-pdf-launcher"));
 assert(await kenyaFloatingFile.evaluate((element) => document.activeElement === element), "floating country PDF launcher did not regain focus after closing the viewer");
 const kenyaReader = page.locator('.origin-page-reader[data-country-reader="kenya"]');
 assert(await kenyaReader.count() === 1, "Kenya profile did not expose its country-only PDF reader");
@@ -462,6 +484,10 @@ const mobileTargets = await mobile.evaluate(() => [document.querySelector(".menu
 assert(mobileTargets.every(({ width, height }) => width >= 44 && height >= 44), "mobile header has a touch target below 44px");
 assert(await mobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "mobile home has horizontal overflow");
 await mobile.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
+await mobile.locator(".origin-filter-panel").scrollIntoViewIfNeeded();
+await mobile.waitForTimeout(220);
+assert(await mobile.locator(".chapter-navigator").getAttribute("aria-hidden") === "true", "mobile chapter navigator covered the origin filters");
+assert(!await mobile.locator(".back-to-top.is-visible").count(), "mobile back-to-top control covered the origin filters");
 await mobile.locator(".origin-explorer__workspace").scrollIntoViewIfNeeded();
 await mobile.waitForTimeout(220);
 assert(await mobile.locator(".chapter-navigator").getAttribute("aria-hidden") === "true", "mobile chapter navigator covered the interactive origin map");
@@ -573,7 +599,8 @@ await turkishContext.addInitScript(() => localStorage.setItem("coffendi-language
 const turkishPage = await turkishContext.newPage();
 await turkishPage.goto(`${baseUrl}/origins/indonesia`, { waitUntil: "networkidle" });
 assert(await turkishPage.locator("html").getAttribute("lang") === "tr", "stored Turkish preference did not set the document language");
-assert((await turkishPage.locator("h1").textContent()).includes("Endonezya yeşil kahve portföyü"), "catalogue-generated origin title was not professionally localised");
+assert((await turkishPage.locator("h1").textContent()).trim() === "Endonezya", "Turkish country profile did not identify the origin country as its primary heading");
+assert((await turkishPage.locator(".profile-detail__descriptor").textContent()).includes("menşe portföyü"), "catalogue-generated Turkish profile descriptor was not professionally localised");
 const turkishProfileText = await turkishPage.locator(".profile-detail__copy").innerText();
 assert(turkishProfileText.includes("Islak kabuk ayırma (Giling Basah)"), "catalogue-generated processing terminology remained untranslated");
 assert(turkishProfileText.includes("Filtre kahve") && turkishProfileText.includes("Harmanlar"), "catalogue-generated intended uses remained untranslated");
@@ -582,12 +609,17 @@ await turkishPage.locator(".origin-page-reader").scrollIntoViewIfNeeded();
 await turkishPage.locator(".origin-page-reader__page").click();
 const turkishViewer = turkishPage.locator(".origin-document-dialog");
 await turkishViewer.waitFor({ state: "visible" });
-assert(await turkishViewer.getByRole("heading", { name: "Teknik özellikler" }).count() === 1, "Turkish document viewer did not use the editorial technical-specification label");
+assert(await turkishViewer.getByRole("heading", { name: "Kaynak sayfa özellikleri" }).count() === 1, "Turkish document viewer did not use the editorial source-sheet label");
 assert((await turkishViewer.locator(".origin-document-dialog__specifications").innerText()).includes("İŞLEME YÖNTEMİ"), "Turkish viewer did not localise the process field");
 assert((await turkishViewer.locator(".origin-document-dialog__specifications").innerText()).includes("AMBALAJ"), "Turkish viewer did not localise the packaging field");
 await turkishViewer.locator(".origin-document-dialog__close").click();
 await turkishPage.goto(`${baseUrl}/origins`, { waitUntil: "networkidle" });
-assert((await turkishPage.locator(".origin-filter-panel h2").textContent()).includes("işleme yöntemine"), "Turkish origin filters retained an unnatural process label");
+assert((await turkishPage.locator(".origin-filter-panel h2").textContent()).includes("kahve profiline"), "Turkish origin filters retained an unnatural discovery label");
+await turkishPage.locator(".origin-filter-panel__mobile-toggle").click();
+await turkishPage.locator(".origin-search input").fill("fildisi");
+assert(await turkishPage.locator(".coffee-map__pin").count() === 1, "Turkish origin search did not tolerate missing diacritics");
+assert((await turkishPage.locator(".origin-explorer__readout").textContent()).includes("Fildişi Sahili"), "ASCII Turkish search exposed the wrong country");
+assert(await turkishPage.locator(".origin-filter-panel__active button").count() === 1, "Turkish active filter did not expose a removable chip");
 assert(await turkishPage.getByRole("navigation", { name: "Ana menü" }).count() === 0, "desktop navigation should not be exposed at mobile width");
 await turkishPage.locator(".menu-button").click();
 assert(await turkishPage.getByRole("navigation", { name: "Mobil menü" }).count() === 1, "Turkish mobile navigation did not expose a natural accessible name");
@@ -689,7 +721,7 @@ for (const route of ["/", "/coffees", "/origins/kenya", "/compare", "/contact"])
   const effectiveHeadingOpacity = await readinessPage.locator("h1").evaluate((heading) => {
     let opacity = 1;
     for (let element = heading; element; element = element.parentElement) {
-      opacity *= Number.parseFloat(getComputedStyle(element).opacity);
+      opacity *= Number.parseFloat(getComputedStyle(element).opacity) || 1;
       if (element.id === "main-content") break;
     }
     return opacity;

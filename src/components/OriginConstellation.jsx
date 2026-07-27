@@ -67,6 +67,7 @@ export default function OriginConstellation({
   onToggle,
   comparisonFull = false,
   mode = "navigate",
+  originSearch = "",
 }) {
   const compact = useCompactOriginLayout();
   const viewport = useRef(null);
@@ -81,8 +82,8 @@ export default function OriginConstellation({
   const copy = language === "tr"
     ? {
       eyebrow: comparing ? "Coğrafi karşılaştırma" : "Menşe ağı",
-      title: comparing ? "Seçtiğiniz profilleri kahve kuşağı üzerinde görün." : "Kahve kuşağındaki diğer menşeleri keşfedin.",
-      note: "Noktalar, temsili menşeleri gösteren görsel bir dizindir; ticaret veya lojistik rotasını temsil etmez.",
+      title: comparing ? "Seçtiğiniz profilleri kahve kuşağı üzerinde görün." : "Kahve kuşağındaki diğer ülke profillerine geçin.",
+      note: "Haritadaki noktalar menşe ülkelerini keşfetmeye yardımcı olur; ticaret güzergâhı, lojistik kapsam veya canlı stok bilgisi göstermez.",
       map: "Temsili menşelerin harita görünümü",
       select: "Karşılaştırmayı değiştir",
       open: "Menşe profilini aç",
@@ -91,7 +92,7 @@ export default function OriginConstellation({
       world: "Dünya",
       focus: "Odak",
       worldHint: "Kahve kuşağının tamamı",
-      focusHint: "Seçili menşe ayrıntısı",
+      focusHint: "Seçili ülkenin ayrıntısı",
     }
     : {
       eyebrow: comparing ? "Geographic comparison" : "Origin constellation",
@@ -227,7 +228,16 @@ export default function OriginConstellation({
               return comparing ? (
                 <button key={profile.id} type="button" className={isSelected ? "is-active" : ""} style={itemStyle} onClick={() => onToggle(profile.id)} aria-pressed={isSelected} disabled={unavailable}>{content}</button>
               ) : (
-                <LinkComponent key={profile.id} className={isSelected ? "is-active" : ""} style={itemStyle} to={`/origins/${profile.slug}`} aria-current={isSelected ? "page" : undefined}>{content}</LinkComponent>
+                <LinkComponent
+                  key={profile.id}
+                  className={isSelected ? "is-active" : ""}
+                  style={itemStyle}
+                  to={`/origins/${profile.slug}`}
+                  state={originSearch ? { originSearch } : undefined}
+                  aria-current={isSelected ? "page" : undefined}
+                >
+                  {content}
+                </LinkComponent>
               );
             })}
           </div>
