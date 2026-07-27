@@ -6,6 +6,7 @@ const CATALOG_PREFIXES = [
   "coffendi/origins/2026-07-27-bilingual-v2/",
 ];
 const SAFE_PATH = /^coffendi\/origins\/(?:2026-07-27-full|2026-07-27-bilingual-v2)\/[a-z0-9-]+\/[a-z0-9-]+\.pdf$/;
+const TURKISH_DOCUMENT = /-tr(?:-[a-f0-9]{10})?\.pdf$/;
 
 function requestedPath(req) {
   const raw = Array.isArray(req.query?.path) ? req.query.path[0] : req.query?.path;
@@ -59,7 +60,7 @@ export default async function handler(req, res) {
     );
     res.setHeader("Cache-Control", "public, max-age=3600, stale-while-revalidate=86400");
     res.setHeader("ETag", result.blob.etag);
-    res.setHeader("Content-Language", pathname.endsWith("-tr.pdf") ? "tr" : "en");
+    res.setHeader("Content-Language", TURKISH_DOCUMENT.test(pathname) ? "tr" : "en");
     if (Number.isFinite(result.blob.size)) {
       res.setHeader("Content-Length", String(result.blob.size));
     }
