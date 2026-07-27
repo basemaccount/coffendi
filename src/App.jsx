@@ -33,6 +33,7 @@ import { usePersistentState } from "./hooks/usePersistentState";
 import { submitRequest } from "./lib/api";
 import { localizeCatalogWebsiteProfile } from "./lib/turkishCoffee";
 import { originCatalogIndexUrl, originCatalogMeta } from "./originCatalog";
+import "./origin-profile.css";
 
 const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
 const CONTACT_EMAIL = "info@makendi.com";
@@ -681,11 +682,26 @@ function OriginLocalNavigation({ profile, language }) {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => entry.isIntersecting && setActiveSection(entry.target.id));
     }, { rootMargin: "-150px 0px -60%" });
-    ["overview", "catalog", "origin-network"]
-      .map((id) => document.getElementById(id))
-      .filter(Boolean)
-      .forEach((section) => observer.observe(section));
-    return () => observer.disconnect();
+    const observedSections = new Set();
+    const observeCurrentSections = () => {
+      ["overview", "catalog", "origin-network"]
+        .map((id) => document.getElementById(id))
+        .filter((section) => section && !observedSections.has(section))
+        .forEach((section) => {
+          observedSections.add(section);
+          observer.observe(section);
+        });
+    };
+    observeCurrentSections();
+    const replacements = new MutationObserver(observeCurrentSections);
+    replacements.observe(document.getElementById("main-content"), {
+      childList: true,
+      subtree: true,
+    });
+    return () => {
+      replacements.disconnect();
+      observer.disconnect();
+    };
   }, []);
 
   const links = [
@@ -803,12 +819,12 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profil
           </div>
         </div>
       </section>
+      <OriginLocalNavigation profile={profile} language={language} />
       <Suspense fallback={(
         <section id="catalog" className="section" aria-busy="true">
           <div className="shell catalog-note"><Bean aria-hidden="true" /><p>{language === "tr" ? "Ülke kataloğu hazırlanıyor." : "Preparing the country catalogue."}</p></div>
         </section>
       )}>
-        <OriginLocalNavigation profile={profile} language={language} />
         <OriginDocumentLibrary profile={profile} language={language} />
       </Suspense>
       <OriginConstellation profiles={profiles} language={language} LinkComponent={Link} activeId={profile.id} originSearch={originReturnSearch} />
