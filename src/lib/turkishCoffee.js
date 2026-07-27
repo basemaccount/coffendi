@@ -74,6 +74,44 @@ const TURKISH_COFFEE_TERMS = new Map([
 ]);
 
 const TURKISH_GRADE_PHRASES = [
+  ["Pulped Natural (Semi-washed)", "Yarı yıkanmış (pulped natural)"],
+  ["Highlands & Morobe Smallholder Regional Lots", "Yüksek Bölgeler ve Morobe küçük üretici bölgesel lotları"],
+  ["Plantation Estate", "plantasyon çiftliği"],
+  ["Strictly Soft Fine Cup", "Kesin yumuşak, nitelikli fincan"],
+  ["Western Highlands", "Batı Yüksek Bölgeleri"],
+  ["Highlands & Morobe", "Yüksek Bölgeler ve Morobe"],
+  ["Pink Bourbon / Caturra Micro-lot", "Pink Bourbon / Caturra mikro lotu"],
+  ["Central Valley Specialty Honey", "Central Valley nitelikli bal yöntemi"],
+  ["Wild, complex berry", "Yabani karakter, kompleks orman meyveleri"],
+  ["Commercial natural", "Ticari doğal işlenmiş"],
+  ["Traceable Blends", "İzlenebilir harmanlar"],
+  ["Coffee Plantation Estate", "kahve plantasyonu çiftliği"],
+  ["Direct NKG Farm", "Doğrudan NKG çiftliği"],
+  ["Premium Profile", "Üst sınıf profil"],
+  ["Pulped Natural", "Yarı yıkanmış (pulped natural)"],
+  ["Northern Province", "Kuzey Bölgesi"],
+  ["Bolavens Plateau", "Bolavens Platosu"],
+  ["Bolaven Plateau", "Bolaven Platosu"],
+  ["Boquete Valley", "Boquete Vadisi"],
+  ["Pu'er Region", "Pu’er Bölgesi"],
+  ["East Coast", "Doğu Kıyısı"],
+  ["Elite Grade", "Elit sınıf"],
+  ["High Quality", "Yüksek kalite"],
+  ["Large Screen", "İri elek"],
+  ["Black/Broken", "siyah/kırık"],
+  ["Shade-Grown", "Gölgede yetiştirilmiş"],
+  ["Super Fine", "Süper nitelikli"],
+  ["Extra Bold", "Ekstra iri"],
+  ["Extra Prima", "Ekstra Prima"],
+  ["Monsooned", "Musonlanmış"],
+  ["Parchment", "Parşömen"],
+  ["Tanzanian", "Tanzanya"],
+  ["Micro-lot", "Mikro lot"],
+  ["Plateau", "Platosu"],
+  ["Highlands", "Yüksek bölgeler"],
+  ["Hills", "Tepeleri"],
+  ["Valley", "Vadisi"],
+  ["Lots", "Lotları"],
   ["Direct NKG Corporate Farm", "Doğrudan NKG kurumsal çiftliği"],
   ["Traceable Smallholder Cooperatives", "İzlenebilir küçük üretici kooperatifleri"],
   ["Proprietary Sugarcane Process Decaf", "Tescilli şeker kamışı yöntemiyle kafeinsizleştirilmiş"],
@@ -183,14 +221,39 @@ function translateDelimited(value) {
   const defects = value.match(/^([≤<>]?\s*\d+(?:-\d+)?)\s+(?:defects|imperfections)(?:\/300g)?$/i);
   if (defects) {
     const amount = defects[1].replace(/\s+/g, "");
-    return value.includes("/300g") ? `300 g'da ${amount} kusur` : `${amount} kusur`;
+    const number = amount.replace(/^[≤<>]/, "");
+    const localizedAmount = amount.startsWith("≤")
+      ? `en fazla ${number}`
+      : amount.startsWith("<")
+        ? `${number}’den az`
+        : amount.startsWith(">")
+          ? `${number}’den fazla`
+          : number;
+    return value.includes("/300g")
+      ? `300 g’da ${localizedAmount} kusur`
+      : `${localizedAmount} kusur`;
   }
 
   const moisture = value.match(/^([≤<]?\s*\d+(?:\.\d+)?)%\s+target$/i);
-  if (moisture) return `Hedef ${moisture[1].replace(".", ",").replace(/\s+/g, "")}%`;
+  if (moisture) {
+    const amount = moisture[1].replace(".", ",").replace(/\s+/g, "");
+    const number = amount.replace(/^[≤<]/, "");
+    return amount.startsWith("≤")
+      ? `Hedef: en fazla %${number}`
+      : amount.startsWith("<")
+        ? `Hedef: %${number}’den az`
+        : `Hedef: %${number}`;
+  }
 
   const moistureLimit = value.match(/^([≤<>]?\s*\d+(?:\.\d+)?)%$/i);
-  if (moistureLimit) return `${moistureLimit[1].replace(".", ",").replace(/\s+/g, "")}%`;
+  if (moistureLimit) {
+    const amount = moistureLimit[1].replace(".", ",").replace(/\s+/g, "");
+    const number = amount.replace(/^[≤<>]/, "");
+    if (amount.startsWith("≤")) return `En fazla %${number}`;
+    if (amount.startsWith("<")) return `%${number}’den az`;
+    if (amount.startsWith(">")) return `%${number}’den fazla`;
+    return `%${number}`;
+  }
 
   const packing = value.match(/^(\d+)\s*Kg\s+GrainPro-lined sack$/i);
   if (packing) return `GrainPro astarlı ${packing[1]} kg çuval`;
@@ -205,11 +268,14 @@ export function translateCoffeeValue(value, language) {
 
 export function translateCoffeeGrade(value, language) {
   if (language !== "tr" || typeof value !== "string" || !value.trim()) return value;
-  return TURKISH_GRADE_PHRASES.reduce(
+  return [...TURKISH_GRADE_PHRASES]
+    .sort(([sourceA], [sourceB]) => sourceB.length - sourceA.length)
+    .reduce(
     (translated, [source, target]) => translated.replaceAll(source, target),
     value.trim(),
   )
     .replace(/(\d)\.(\d)/g, "$1,$2")
+    .replace(/\s+&\s+/g, " ve ")
     .replace(/\s{2,}/g, " ");
 }
 

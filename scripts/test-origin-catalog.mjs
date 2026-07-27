@@ -167,11 +167,14 @@ async function readWebpDimensions(filename) {
 assert(originCatalogMeta.sheetCount === 117, "Catalog metadata must declare 117 sheets");
 assert(originCatalogMeta.countryCount === 38, "Catalog metadata must declare 38 PDF countries");
 assert(originCatalogMeta.exportedPageCount === 117, "Catalog metadata must account for all 117 unique pages");
-assert(originCatalogMeta.assetRevision === "uhd-bilingual-v2", "Catalog metadata must identify the current bilingual UHD asset revision");
+assert(originCatalogMeta.assetRevision === "branded-visual-v3", "Catalog metadata must identify the current branded visual asset revision");
 assert(originCatalogMeta.generatedLanguageCount === 2, "Catalog metadata must identify both generated languages");
 assert(originCatalogMeta.generatedDocumentCount === 234, "Catalog metadata must account for 234 generated bilingual PDFs");
 assert(originCatalogMeta.sourceOriginalCount === 117, "Catalog metadata must retain all 117 source originals");
 assert(originCatalogMeta.previewPpi === 270, "Catalog metadata must declare the 270 PPI preview density");
+assert(originCatalogMeta.distinctHeroVisualCount === 117, "Catalog metadata must declare 117 distinct hero compositions");
+assert(originCatalogMeta.distinctSourceVisualCount >= 30, "Catalog metadata must retain broad source-visual variety");
+assert(originCatalogMeta.processArtworkFamilies.length === 3, "Catalog metadata must cover all process artwork families");
 assert(originCatalogCountries.length === 38, "Generated catalog must contain 38 PDF countries");
 const countryCatalogs = await Promise.all(originCatalogCountries.map(async (country) => {
   assert(country.dataUrl.startsWith("/catalog/data/"), `${country.slug}: invalid deferred catalog URL`);
@@ -186,6 +189,9 @@ assert(originCatalogSheets.length === 117, "Generated catalog must contain 117 s
 assert(new Set(originCatalogSheets.map(({ id }) => id)).size === 117, "Every sheet ID must be unique");
 assert(new Set(originCatalogSheets.map(({ checksum }) => checksum)).size === 117, "Every canonical one-page PDF must have a unique checksum");
 assert(new Set(originCatalogSheets.map(({ turkishChecksum }) => turkishChecksum)).size === 117, "Every Turkish information PDF must have a unique checksum");
+assert(new Set(originCatalogSheets.map(({ generation }) => generation.heroChecksum)).size === 117, "Every information sheet must have a distinct hero composition");
+assert(new Set(originCatalogSheets.map(({ generation }) => generation.originVisualChecksum)).size >= 30, "Information sheets must preserve source-visual variety");
+assert(new Set(originCatalogSheets.map(({ generation }) => generation.processArtwork)).size === 3, "Information sheets must use all process-artwork families");
 assert(new Set(allOriginIsos).size === 38, "Expanded Coffendi origins must contain 38 unique ISO codes");
 for (let left = 0; left < originCatalogCountries.length; left += 1) {
   const a = originCatalogCountries[left];
@@ -257,6 +263,9 @@ for (const { country, sheets } of countryCatalogs) {
     assert(sheet.generation.fonts === "embedded-subset", `${sheet.id}: generated documents must use embedded subset fonts`);
     assert(sheet.generation.previewPpi === 270, `${sheet.id}: preview density metadata mismatch`);
     assert(sheet.generation.artwork === originCatalogMeta.decorativeArtwork, `${sheet.id}: decorative artwork provenance mismatch`);
+    assert(sheet.generation.logo === "coffendi-logo", `${sheet.id}: Coffendi logo provenance mismatch`);
+    assert(sheet.generation.originVisualRole === "source-provided contextual image", `${sheet.id}: source visual role mismatch`);
+    assert(sheet.generation.processVisualRole === "illustrative non-country-specific process image", `${sheet.id}: process visual role mismatch`);
     assert(sheet.generation.englishPdfBytes >= 100_000 && sheet.generation.englishPdfBytes <= 1_500_000, `${sheet.id}: generated English PDF byte size is outside the quality budget`);
     assert(sheet.generation.turkishPdfBytes >= 100_000 && sheet.generation.turkishPdfBytes <= 1_500_000, `${sheet.id}: generated Turkish PDF byte size is outside the quality budget`);
     assert(sheet.generation.sourcePdfBytes >= 10_000, `${sheet.id}: preserved source-original PDF is unexpectedly small`);

@@ -681,7 +681,7 @@ function OriginLocalNavigation({ profile, language }) {
   useEffect(() => {
     const observer = new IntersectionObserver((entries) => {
       entries.forEach((entry) => entry.isIntersecting && setActiveSection(entry.target.id));
-    }, { rootMargin: "-150px 0px -60%" });
+    }, { rootMargin: "-140px 0px -60%" });
     const observedSections = new Set();
     const observeCurrentSections = () => {
       ["overview", "catalog", "origin-network"]

@@ -200,6 +200,7 @@
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  animation: origin-reader-page-in .48s cubic-bezier(.22, .8, .24, 1) both;
 }
 
 .origin-page-reader__enlarge {
@@ -224,6 +225,10 @@
   border-radius: 999px;
   font-size: 9px;
   font-weight: 800;
+}
+
+.origin-page-reader__swipe-cue {
+  display: none;
 }
 
 .origin-page-reader__details {
@@ -823,10 +828,11 @@
 .origin-document-dialog__shell {
   height: 100%;
   display: grid;
-  grid-template-rows: auto auto auto minmax(0, 1fr);
+  grid-template-rows: auto auto auto minmax(0, 1fr) auto;
 }
 
 .origin-document-dialog__header {
+  grid-row: 1;
   min-width: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
@@ -885,6 +891,7 @@
 }
 
 .origin-document-dialog__toolbar {
+  grid-row: 2;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 10px;
@@ -949,6 +956,7 @@
 }
 
 .origin-document-dialog__status {
+  grid-row: 3;
   margin: 0;
   padding: 7px 16px;
   background: #6f4c17;
@@ -958,6 +966,7 @@
 }
 
 .origin-document-dialog__content {
+  grid-row: 4;
   min-height: 0;
   display: grid;
   grid-template-columns: minmax(0, 1fr) minmax(290px, 360px);
@@ -1086,6 +1095,22 @@
 
 .origin-document-dialog__provenance strong {
   color: var(--gold-light);
+}
+
+.origin-document-dialog__mobile-actions {
+  grid-row: 5;
+  display: none;
+}
+
+@keyframes origin-reader-page-in {
+  from {
+    opacity: .25;
+    transform: translate3d(0, 10px, 0) scale(.992);
+  }
+  to {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+  }
 }
 
 .document-viewer-open {
@@ -1360,6 +1385,24 @@ body.no-scroll .origin-pdf-launcher {
     padding-inline: 10px;
   }
 
+  .origin-page-reader__swipe-cue {
+    position: absolute;
+    z-index: 3;
+    bottom: 9px;
+    left: 50%;
+    display: inline-flex;
+    align-items: center;
+    padding: 7px 11px;
+    border: 1px solid rgba(255, 255, 255, .16);
+    border-radius: 999px;
+    background: rgba(9, 31, 25, .86);
+    color: #e8f0ec;
+    font-size: 9px;
+    transform: translateX(-50%);
+    backdrop-filter: blur(12px);
+    pointer-events: none;
+  }
+
   .origin-page-reader__details {
     gap: 19px;
     padding: 21px 16px;
@@ -1535,9 +1578,52 @@ body.no-scroll .origin-pdf-launcher {
   .origin-document-dialog__specifications dl > div {
     grid-template-columns: 78px minmax(0, 1fr);
   }
+
+  .origin-document-dialog__mobile-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+    padding: 7px 8px max(7px, env(safe-area-inset-bottom));
+    border-top: 1px solid rgba(255, 255, 255, .12);
+    background: rgba(9, 31, 25, .98);
+    box-shadow: 0 -16px 40px rgba(0, 0, 0, .24);
+  }
+
+  .origin-document-dialog__mobile-actions a,
+  .origin-document-dialog__mobile-actions button {
+    min-width: 0;
+    min-height: 48px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 7px;
+    border: 1px solid rgba(255, 255, 255, .14);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, .06);
+    color: #eef5f1;
+    font-size: 9px;
+    font-weight: 800;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .origin-document-dialog__mobile-actions a:first-child {
+    border-color: rgba(239, 201, 121, .45);
+    background: var(--gold);
+    color: #102e26;
+  }
+
+  .origin-document-dialog__mobile-actions button:disabled {
+    opacity: .42;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .origin-page-reader__page img {
+    animation: none;
+  }
+
   .origin-sheet-card,
   .origin-sheet-card__preview img {
     transition: none;

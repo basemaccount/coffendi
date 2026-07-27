@@ -75,6 +75,7 @@ function CountryPageReader({
   const [pageIndex, setPageIndex] = useState(0);
   const [mediaReady, setMediaReady] = useState(false);
   const reader = useRef(null);
+  const thumbnailRail = useRef(null);
   const swipeStart = useRef(null);
   const suppressClick = useRef(false);
   const activeSheet = sheets[pageIndex] || sheets[0];
@@ -93,6 +94,7 @@ function CountryPageReader({
       open: "PDF’yi aç",
       download: "PDF sayfasını indir",
       quality: "270 PPI Türkçe teknik föy",
+      swipeShort: "Sayfayı kaydır",
       swipe: "Sayfalar arasında kaydırın, küçük görsellerden seçim yapın veya ok düğmelerini kullanın.",
       pages: "Kaynak sayfalar",
       select: "Sayfayı seç",
@@ -108,6 +110,7 @@ function CountryPageReader({
       open: "Open PDF",
       download: "Download this page",
       quality: "270 PPI English technical sheet",
+      swipeShort: "Swipe the page",
       swipe: "Swipe the page or use the arrows to move through the country file.",
       pages: "Source pages",
       select: "Select page",
@@ -133,6 +136,33 @@ function CountryPageReader({
     observer.observe(element);
     return () => observer.disconnect();
   }, [mediaReady]);
+
+  useEffect(() => {
+    if (!mediaReady) return undefined;
+    const neighbors = [
+      sheets[(pageIndex + 1) % pageCount],
+      sheets[(pageIndex - 1 + pageCount) % pageCount],
+    ].filter(Boolean);
+    const images = neighbors.map((sheet) => {
+      const image = new Image();
+      image.src = sheetAssets(sheet, language).preview;
+      return image;
+    });
+    return () => images.forEach((image) => {
+      image.src = "";
+    });
+  }, [language, mediaReady, pageCount, pageIndex, sheets]);
+
+  useEffect(() => {
+    const rail = thumbnailRail.current;
+    const button = rail?.children[pageIndex];
+    if (!rail || !button || !mediaReady) return;
+    const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    rail.scrollTo({
+      behavior: reducedMotion ? "auto" : "smooth",
+      left: button.offsetLeft - ((rail.clientWidth - button.clientWidth) / 2),
+    });
+  }, [mediaReady, pageIndex]);
 
   if (!activeSheet) return null;
 
@@ -249,6 +279,13 @@ function CountryPageReader({
             <i className="origin-ui-icon" aria-hidden="true">⛶</i>
             {copy.enlarge}
           </span>
+          {pageCount > 1 && (
+            <span className="origin-page-reader__swipe-cue" aria-hidden="true">
+              <i>←</i>
+              {copy.swipeShort}
+              <i>→</i>
+            </span>
+          )}
         </button>
 
         <button
@@ -303,7 +340,7 @@ function CountryPageReader({
         <strong>{copy.pages}</strong>
         <span>{copy.swipe}</span>
       </div>
-      <div className="origin-page-reader__thumbnails" role="group" aria-label={copy.select}>
+      <div ref={thumbnailRail} className="origin-page-reader__thumbnails" role="group" aria-label={copy.select}>
         {sheets.map((sheet, index) => {
           const assets = sheetAssets(sheet, language);
           return (
@@ -459,6 +496,7 @@ function SheetViewer({
       english: "İngilizce orijinal",
       fidelity: "Görüntü kalitesi",
       highResolution: "2160 × 3240 px • 270 PPI ön izleme",
+      nextShort: "Sonraki",
       unavailable: "Tam ekran bu tarayıcıda kullanılamıyor. Tam pencere görüntüleyici açık kalır.",
       swipe: "Sayfalar arasında geçmek için sola veya sağa kaydırın.",
       loadingPage: "Belge sayfası yükleniyor",
@@ -502,6 +540,7 @@ function SheetViewer({
       english: "English",
       fidelity: "Preview quality",
       highResolution: "2160 × 3240 px • 270 PPI preview",
+      nextShort: "Next",
       unavailable: "Fullscreen is unavailable in this browser. The full-window viewer remains open.",
       swipe: "Swipe left or right to move through this country’s pages.",
       loadingPage: "Loading document page",
@@ -804,6 +843,23 @@ function SheetViewer({
             </div>
           </aside>
         </div>
+        <nav
+          className="origin-document-dialog__mobile-actions"
+          aria-label={language === "tr" ? "Mobil belge işlemleri" : "Mobile document actions"}
+        >
+          <a href={activeAssets.pdfUrl} target="_blank" rel="noreferrer">
+            <i className="origin-ui-icon" aria-hidden="true">↗</i>
+            {language === "tr" ? "PDF’yi aç" : "Open PDF"}
+          </a>
+          <a href={activeAssets.downloadUrl}>
+            <i className="origin-ui-icon" aria-hidden="true">↓</i>
+            {language === "tr" ? "İndir" : "Download"}
+          </a>
+          <button type="button" onClick={() => onStep(1)} disabled={sheets.length < 2}>
+            {copy.nextShort}
+            <i className="origin-ui-icon" aria-hidden="true">→</i>
+          </button>
+        </nav>
       </div>
     </dialog>
   );

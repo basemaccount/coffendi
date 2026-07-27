@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
 import path from "node:path";
 import { createCanvas, loadImage } from "@napi-rs/canvas";
@@ -45,6 +46,7 @@ const copyByLanguage = {
     originalGrade: "Commercial grade",
     status: "DOCUMENT QUALITY",
     quality: "Selectable text  •  Embedded fonts  •  270 PPI preview",
+    visualProvenance: "Visuals: source-provided origin context + an illustrative, non-country-specific process image.",
     footer: "Source-backed technical sheet",
     provenance: "Technical values are generated directly from the named English source page without changing the commercial specification.",
     fallbackUse: "Application confirmed during inquiry",
@@ -74,6 +76,7 @@ const copyByLanguage = {
     originalGrade: "Özgün ticari sınıf",
     status: "BELGE NİTELİĞİ",
     quality: "Seçilebilir metin  •  Gömülü yazı tipi  •  270 PPI ön izleme",
+    visualProvenance: "Görseller: kaynakta sunulan menşe bağlamı + ülkeye özgü olmayan temsili işleme görseli.",
     footer: "Kaynağa dayalı teknik föy",
     provenance: "Teknik değerler belirtilen İngilizce kaynak sayfadan alınmış ve Türkçe olarak yerelleştirilmiştir.",
     fallbackUse: "Kullanım amacı talep sırasında teyit edilir",
@@ -145,30 +148,166 @@ function localize(value, language) {
   return language === "tr" ? translateCoffeeValue(value, "tr") : value;
 }
 
+function drawCover(context, image, x, y, width, height, focusX = 0.5, focusY = 0.5) {
+  const sourceRatio = image.width / image.height;
+  const targetRatio = width / height;
+  let sourceWidth = image.width;
+  let sourceHeight = image.height;
+  if (sourceRatio > targetRatio) {
+    sourceWidth = image.height * targetRatio;
+  } else {
+    sourceHeight = image.width / targetRatio;
+  }
+  const sourceX = Math.max(0, Math.min(
+    image.width - sourceWidth,
+    (image.width - sourceWidth) * focusX,
+  ));
+  const sourceY = Math.max(0, Math.min(
+    image.height - sourceHeight,
+    (image.height - sourceHeight) * focusY,
+  ));
+  context.drawImage(
+    image,
+    sourceX,
+    sourceY,
+    sourceWidth,
+    sourceHeight,
+    x,
+    y,
+    width,
+    height,
+  );
+}
+
+function seededFocus(seed, offset = 0) {
+  const digest = createHash("sha256").update(`${seed}:${offset}`).digest();
+  return 0.22 + ((digest[offset % digest.length] / 255) * 0.56);
+}
+
+export function resolveProcessArtworkKey(process) {
+  const normalized = String(process || "").toLocaleLowerCase("en");
+  if (
+    normalized.includes("honey")
+    || normalized.includes("pulped")
+    || normalized.includes("anaerobic")
+    || normalized.includes("experimental")
+    || normalized.includes("/")
+  ) {
+    return "honey-mixed";
+  }
+  if (
+    normalized.includes("natural")
+    || normalized.includes("sun-dried")
+    || normalized.includes("unwashed")
+  ) {
+    return "natural";
+  }
+  return "washed";
+}
+
+export async function createSheetHeroArtwork({
+  sourceImageBytes,
+  processImageBytes,
+  seed,
+}) {
+  const [sourceImage, processImage] = await Promise.all([
+    loadImage(sourceImageBytes),
+    loadImage(processImageBytes),
+  ]);
+  const canvas = createCanvas(1440, 630);
+  const context = canvas.getContext("2d");
+  context.imageSmoothingEnabled = true;
+  context.imageSmoothingQuality = "high";
+  context.fillStyle = "#12372d";
+  context.fillRect(0, 0, canvas.width, canvas.height);
+
+  const gutter = 20;
+  const sourceWidth = 930;
+  drawCover(
+    context,
+    sourceImage,
+    0,
+    0,
+    sourceWidth,
+    canvas.height,
+    seededFocus(seed, 1),
+    seededFocus(seed, 2),
+  );
+  drawCover(
+    context,
+    processImage,
+    sourceWidth + gutter,
+    0,
+    canvas.width - sourceWidth - gutter,
+    canvas.height,
+    seededFocus(seed, 3),
+    seededFocus(seed, 4),
+  );
+
+  const sourceShade = context.createLinearGradient(0, 0, sourceWidth, 0);
+  sourceShade.addColorStop(0, "rgba(8,36,29,.22)");
+  sourceShade.addColorStop(0.68, "rgba(8,36,29,0)");
+  sourceShade.addColorStop(1, "rgba(8,36,29,.14)");
+  context.fillStyle = sourceShade;
+  context.fillRect(0, 0, sourceWidth, canvas.height);
+
+  const lowerShade = context.createLinearGradient(0, 390, 0, canvas.height);
+  lowerShade.addColorStop(0, "rgba(8,36,29,0)");
+  lowerShade.addColorStop(1, "rgba(8,36,29,.4)");
+  context.fillStyle = lowerShade;
+  context.fillRect(0, 390, canvas.width, canvas.height - 390);
+
+  context.fillStyle = "#c78634";
+  context.fillRect(sourceWidth + 6, 0, 8, canvas.height);
+  const bytes = await canvas.encode("jpeg", 92);
+  return {
+    bytes,
+    checksum: createHash("sha256").update(bytes).digest("hex"),
+  };
+}
+
 export async function prepareDocumentArtwork({
-  artworkPath,
+  logoPath,
+  processArtworkPaths,
   flagRoot,
   countries,
 }) {
-  const source = await loadImage(artworkPath);
-  const bannerCanvas = createCanvas(1440, 610);
-  const bannerContext = bannerCanvas.getContext("2d");
-  bannerContext.imageSmoothingEnabled = true;
-  bannerContext.imageSmoothingQuality = "high";
-  const cropHeight = Math.min(source.height, Math.round(source.width * (610 / 1440)));
-  const cropY = Math.max(0, Math.round((source.height - cropHeight) * 0.66));
-  bannerContext.drawImage(
-    source,
-    0,
-    cropY,
-    source.width,
-    cropHeight,
-    0,
-    0,
-    bannerCanvas.width,
-    bannerCanvas.height,
+  const logoSource = await loadImage(logoPath);
+  const logoCanvas = createCanvas(420, 400);
+  const logoContext = logoCanvas.getContext("2d");
+  logoContext.clearRect(0, 0, logoCanvas.width, logoCanvas.height);
+  const logoScale = Math.min(
+    logoCanvas.width / logoSource.width,
+    logoCanvas.height / logoSource.height,
   );
-  const bannerBytes = await bannerCanvas.encode("jpeg", 92);
+  const logoWidth = logoSource.width * logoScale;
+  const logoHeight = logoSource.height * logoScale;
+  logoContext.drawImage(
+    logoSource,
+    (logoCanvas.width - logoWidth) / 2,
+    (logoCanvas.height - logoHeight) / 2,
+    logoWidth,
+    logoHeight,
+  );
+  const logoBytes = await logoCanvas.encode("png");
+
+  const processImages = new Map();
+  for (const [key, processArtworkPath] of Object.entries(processArtworkPaths)) {
+    const source = await loadImage(processArtworkPath);
+    const processCanvas = createCanvas(1536, 1024);
+    const processContext = processCanvas.getContext("2d");
+    processContext.imageSmoothingEnabled = true;
+    processContext.imageSmoothingQuality = "high";
+    drawCover(
+      processContext,
+      source,
+      0,
+      0,
+      processCanvas.width,
+      processCanvas.height,
+    );
+    processImages.set(key, await processCanvas.encode("jpeg", 92));
+  }
 
   const flags = new Map();
   for (const { iso } of countries) {
@@ -179,7 +318,7 @@ export async function prepareDocumentArtwork({
     flagContext.drawImage(flagSource, 0, 0, flagCanvas.width, flagCanvas.height);
     flags.set(iso, await flagCanvas.encode("png"));
   }
-  return { bannerBytes, flags };
+  return { logoBytes, processImages, flags };
 }
 
 export async function loadDocumentFonts(fontRoot) {
@@ -197,7 +336,8 @@ export async function createLocalizedSheetPdf({
   sourcePage,
   normalFontBytes,
   boldFontBytes,
-  bannerBytes,
+  heroBytes,
+  logoBytes,
   flagBytes,
   language,
   catalogRevision,
@@ -205,10 +345,11 @@ export async function createLocalizedSheetPdf({
 }) {
   const document = await PDFDocument.create();
   document.registerFontkit(fontkit);
-  const [normal, bold, banner, flag] = await Promise.all([
+  const [normal, bold, hero, logo, flag] = await Promise.all([
     document.embedFont(normalFontBytes, { subset: true }),
     document.embedFont(boldFontBytes, { subset: true }),
-    document.embedJpg(bannerBytes),
+    document.embedJpg(heroBytes),
+    document.embedPng(logoBytes),
     document.embedPng(flagBytes),
   ]);
   const page = document.addPage([576, 864]);
@@ -225,7 +366,7 @@ export async function createLocalizedSheetPdf({
   document.setSubject(copy.subject);
   document.setLanguage(copy.languageTag);
   document.setCreator("Coffendi");
-  document.setProducer("Coffendi bilingual origin document generator");
+  document.setProducer("Coffendi branded bilingual origin document generator");
   document.setKeywords([
     "Coffendi",
     countryName,
@@ -243,7 +384,7 @@ export async function createLocalizedSheetPdf({
     height,
     color: colors.cream,
   });
-  page.drawImage(banner, {
+  page.drawImage(hero, {
     x: 0,
     y: 614,
     width,
@@ -252,10 +393,10 @@ export async function createLocalizedSheetPdf({
   page.drawRectangle({
     x: 0,
     y: 614,
-    width: 386,
+    width: 382,
     height: 250,
     color: colors.green,
-    opacity: 0.94,
+    opacity: 0.91,
   });
   page.drawRectangle({
     x: 0,
@@ -264,8 +405,22 @@ export async function createLocalizedSheetPdf({
     height: 8,
     color: colors.gold,
   });
-  page.drawText(`COFFENDI  •  ${copy.documentLabel}`, {
-    x: 32,
+  page.drawRectangle({
+    x: 24,
+    y: 794,
+    width: 52,
+    height: 50,
+    color: colors.cream,
+    opacity: 0.97,
+  });
+  page.drawImage(logo, {
+    x: 28,
+    y: 798,
+    width: 44,
+    height: 42,
+  });
+  page.drawText(copy.documentLabel, {
+    x: 88,
     y: 828,
     size: 7.8,
     font: bold,
@@ -289,8 +444,8 @@ export async function createLocalizedSheetPdf({
   });
   page.drawText(countryName.toLocaleUpperCase(language === "tr" ? "tr-TR" : "en"), {
     x: 32,
-    y: 790,
-    size: 23,
+    y: 778,
+    size: 22,
     font: bold,
     color: colors.white,
   });
@@ -299,7 +454,7 @@ export async function createLocalizedSheetPdf({
     size: 16.5,
     minimumSize: 10.5,
     x: 32,
-    y: 750,
+    y: 742,
     maximumWidth: 322,
     color: colors.white,
     lineHeightRatio: 1.22,
@@ -307,9 +462,9 @@ export async function createLocalizedSheetPdf({
   });
   page.drawRectangle({
     x: 32,
-    y: 636,
+    y: 630,
     width: 326,
-    height: 40,
+    height: 44,
     color: colors.greenSoft,
     borderColor: rgb(0.24, 0.43, 0.36),
     borderWidth: 0.8,
@@ -319,7 +474,7 @@ export async function createLocalizedSheetPdf({
     `${localize(specifications.type, language)}  •  ${localize(specifications.process, language)}`,
     {
       x: 44,
-      y: 652,
+      y: 648,
       maximumWidth: 302,
       size: 9,
       minimumSize: 7,
@@ -539,6 +694,17 @@ export async function createLocalizedSheetPdf({
     lineHeightRatio: 1.22,
     maximumLines: 5,
   });
+  drawFittedText(page, copy.visualProvenance, {
+    font: normal,
+    size: 6.2,
+    minimumSize: 5.5,
+    x: 310,
+    y: 214,
+    maximumWidth: 220,
+    color: colors.muted,
+    lineHeightRatio: 1.2,
+    maximumLines: 4,
+  });
 
   page.drawRectangle({
     x: 310,
@@ -589,11 +755,17 @@ export async function createLocalizedSheetPdf({
     color: colors.white,
   });
   page.drawText("coffendi.com", {
-    x: 458,
+    x: 424,
     y: 32,
-    size: 8,
+    size: 7,
     font: bold,
     color: colors.white,
+  });
+  page.drawImage(logo, {
+    x: 492,
+    y: 15,
+    width: 34,
+    height: 32,
   });
 
   return Buffer.from(await document.save({

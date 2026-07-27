@@ -7,9 +7,11 @@ import fontkit from "@pdf-lib/fontkit";
 import { put } from "@vercel/blob";
 import { geoNaturalEarth1 } from "d3-geo";
 import {
+  createSheetHeroArtwork,
   createLocalizedSheetPdf,
   loadDocumentFonts,
   prepareDocumentArtwork,
+  resolveProcessArtworkKey,
 } from "./lib/origin-document-generator.mjs";
 import { resolveOriginPinLayout } from "./origin-pin-layout.mjs";
 import { PDFDocument, rgb } from "pdf-lib";
@@ -28,18 +30,23 @@ const previewRoot = path.join(projectRoot, "public", "catalog", "previews");
 const catalogDataRoot = path.join(projectRoot, "public", "catalog", "data");
 const outputDataFile = path.join(projectRoot, "src", "originCatalog.js");
 const fontRoot = path.join(projectRoot, "node_modules", "dejavu-fonts-ttf", "ttf");
-const decorativeArtworkPath = path.join(
-  projectRoot,
-  "public",
-  "images",
-  "catalog",
-  "green-coffee-botanical-v1.png",
-);
+const logoPath = path.join(projectRoot, "public", "coffendi-logo.png");
+const processArtworkPaths = {
+  washed: path.join(projectRoot, "public", "images", "catalog", "process-washed-v1.png"),
+  natural: path.join(projectRoot, "public", "images", "catalog", "process-natural-v1.png"),
+  "honey-mixed": path.join(
+    projectRoot,
+    "public",
+    "images",
+    "catalog",
+    "process-honey-mixed-v1.png",
+  ),
+};
 const uploadDocuments = process.env.UPLOAD_ORIGIN_BLOBS === "1";
 const reuseUploadedDocuments = process.env.REUSE_ORIGIN_BLOBS === "1";
-const catalogRevision = "2026-07-27-bilingual-v2";
+const catalogRevision = "2026-07-27-branded-v3";
 const catalogRevisionDate = new Date("2026-07-27T00:00:00.000Z");
-const assetRevision = "uhd-bilingual-v2";
+const assetRevision = "branded-visual-v3";
 const previewWidths = {
   thumbnail: 360,
   preview: 1080,
@@ -669,6 +676,94 @@ async function extractSheet(pdf, pageNumber, expectedCountry) {
   };
 }
 
+function pageObject(page, name) {
+  return new Promise((resolve, reject) => {
+    try {
+      const value = page.objs.get(name, resolve);
+      if (value) resolve(value);
+    } catch (error) {
+      reject(error);
+    }
+  });
+}
+
+async function encodePdfImage(image) {
+  if (!image?.data || !Number.isFinite(image.width) || !Number.isFinite(image.height)) {
+    return null;
+  }
+  const { width, height, data } = image;
+  const pixelCount = width * height;
+  const canvas = createCanvas(width, height);
+  const context = canvas.getContext("2d");
+  const output = context.createImageData(width, height);
+
+  if (data.length === pixelCount * 4) {
+    output.data.set(data);
+  } else if (data.length === pixelCount * 3) {
+    for (let sourceIndex = 0, targetIndex = 0; sourceIndex < data.length;) {
+      output.data[targetIndex] = data[sourceIndex];
+      output.data[targetIndex + 1] = data[sourceIndex + 1];
+      output.data[targetIndex + 2] = data[sourceIndex + 2];
+      output.data[targetIndex + 3] = 255;
+      sourceIndex += 3;
+      targetIndex += 4;
+    }
+  } else if (data.length === pixelCount) {
+    for (let sourceIndex = 0, targetIndex = 0; sourceIndex < data.length;) {
+      const value = data[sourceIndex];
+      output.data[targetIndex] = value;
+      output.data[targetIndex + 1] = value;
+      output.data[targetIndex + 2] = value;
+      output.data[targetIndex + 3] = 255;
+      sourceIndex += 1;
+      targetIndex += 4;
+    }
+  } else {
+    return null;
+  }
+
+  context.putImageData(output, 0, 0);
+  return canvas.encode("jpeg", 91);
+}
+
+async function extractOriginContextVisual(page, sourcePageKey) {
+  const operatorList = await page.getOperatorList();
+  const names = [];
+  operatorList.fnArray.forEach((operator, index) => {
+    if (operator !== pdfjs.OPS.paintImageXObject) return;
+    const name = operatorList.argsArray[index]?.[0];
+    if (typeof name === "string" && !names.includes(name)) names.push(name);
+  });
+
+  const candidates = [];
+  for (const name of names) {
+    const image = await pageObject(page, name);
+    const ratio = image?.width / image?.height;
+    if (
+      !image?.data
+      || image.width < 300
+      || image.height < 200
+      || ratio < 1.15
+      || ratio > 1.55
+    ) {
+      continue;
+    }
+    const bytes = await encodePdfImage(image);
+    if (!bytes) continue;
+    candidates.push({
+      bytes,
+      width: image.width,
+      height: image.height,
+      checksum: createHash("sha256").update(bytes).digest("hex"),
+    });
+  }
+
+  if (!candidates.length) {
+    throw new Error(`${sourcePageKey}: no clean landscape source visual was found`);
+  }
+  return candidates[0];
+}
+
 async function renderPage(page, targetWidth, quality) {
   const baseViewport = page.getViewport({ scale: 1 });
   const viewport = page.getViewport({ scale: targetWidth / baseViewport.width });
@@ -1088,7 +1183,8 @@ async function main() {
   ] = await Promise.all([
     loadDocumentFonts(fontRoot),
     prepareDocumentArtwork({
-      artworkPath: decorativeArtworkPath,
+      logoPath,
+      processArtworkPaths,
       flagRoot: path.join(projectRoot, "public", "images", "flags"),
       countries,
     }),
@@ -1108,6 +1204,9 @@ async function main() {
 
   const generatedCountries = [];
   const sourcePageKeys = new Set();
+  const heroVisualChecksums = new Set();
+  const originVisualChecksums = new Set();
+  const processArtworkKeys = new Set();
 
   for (const country of countries) {
     const pageReferences = (country.segments || [{ source: country.source, pages: country.pages }])
@@ -1136,6 +1235,24 @@ async function main() {
       sourcePageKeys.add(sourcePageKey);
 
       const extracted = await extractSheet(source.pdf, pageNumber, expectedCountry);
+      const id = `${country.slug}-${slugify(extracted.specifications.grade)}`;
+      const originVisual = await extractOriginContextVisual(extracted.page, sourcePageKey);
+      const processArtworkKey = resolveProcessArtworkKey(extracted.specifications.process);
+      const processImageBytes = documentArtwork.processImages.get(processArtworkKey);
+      if (!processImageBytes) {
+        throw new Error(`${sourcePageKey}: missing ${processArtworkKey} process artwork`);
+      }
+      const heroArtwork = await createSheetHeroArtwork({
+        sourceImageBytes: originVisual.bytes,
+        processImageBytes,
+        seed: id,
+      });
+      if (heroVisualChecksums.has(heroArtwork.checksum)) {
+        throw new Error(`${sourcePageKey}: repeated hero artwork ${heroArtwork.checksum}`);
+      }
+      heroVisualChecksums.add(heroArtwork.checksum);
+      originVisualChecksums.add(originVisual.checksum);
+      processArtworkKeys.add(processArtworkKey);
       const sourcePagePdf = await PDFDocument.create();
       const [copiedPage] = await sourcePagePdf.copyPages(source.pdfLib, [pageNumber - 1]);
       sourcePagePdf.addPage(copiedPage);
@@ -1158,7 +1275,8 @@ async function main() {
         sourcePage: pageNumber,
         normalFontBytes,
         boldFontBytes,
-        bannerBytes: documentArtwork.bannerBytes,
+        heroBytes: heroArtwork.bytes,
+        logoBytes: documentArtwork.logoBytes,
         flagBytes: documentArtwork.flags.get(country.iso),
         language: "en",
         catalogRevision,
@@ -1171,7 +1289,8 @@ async function main() {
         sourcePage: pageNumber,
         normalFontBytes,
         boldFontBytes,
-        bannerBytes: documentArtwork.bannerBytes,
+        heroBytes: heroArtwork.bytes,
+        logoBytes: documentArtwork.logoBytes,
         flagBytes: documentArtwork.flags.get(country.iso),
         language: "tr",
         catalogRevision,
@@ -1179,7 +1298,6 @@ async function main() {
       });
       const hash = createHash("sha256").update(pdfBytes).digest("hex");
       const turkishHash = createHash("sha256").update(turkishPdfBytes).digest("hex");
-      const id = `${country.slug}-${slugify(extracted.specifications.grade)}`;
       const versionedName = `${id}-${hash.slice(0, 10)}-${assetRevision}`;
       const countryPreviewRoot = path.join(previewRoot, country.slug);
       await mkdir(countryPreviewRoot, { recursive: true });
@@ -1327,11 +1445,18 @@ async function main() {
         turkishLanguage: "tr-TR",
         turkishChecksum: turkishHash,
         generation: {
-          engine: "Coffendi bilingual origin document generator",
+          engine: "Coffendi branded bilingual origin document generator",
           textLayer: "selectable",
           fonts: "embedded-subset",
           previewPpi: 270,
-          artwork: "green-coffee-botanical-v1",
+          artwork: "source-origin-context-plus-process-v1",
+          logo: "coffendi-logo",
+          heroChecksum: heroArtwork.checksum,
+          originVisualChecksum: originVisual.checksum,
+          originVisualDimensions: `${originVisual.width}x${originVisual.height}`,
+          originVisualRole: "source-provided contextual image",
+          processArtwork: processArtworkKey,
+          processVisualRole: "illustrative non-country-specific process image",
           englishPdfBytes: pdfBytes.length,
           turkishPdfBytes: turkishPdfBytes.length,
           sourcePdfBytes: sourcePdfBytes.length,
@@ -1432,6 +1557,17 @@ async function main() {
 
   if (sourcePageKeys.size !== 117) {
     throw new Error(`Expected 117 canonical source pages, found ${sourcePageKeys.size}`);
+  }
+  if (heroVisualChecksums.size !== 117) {
+    throw new Error(`Expected 117 distinct hero compositions, found ${heroVisualChecksums.size}`);
+  }
+  if (originVisualChecksums.size < 30) {
+    throw new Error(`Expected at least 30 source visual variants, found ${originVisualChecksums.size}`);
+  }
+  if (processArtworkKeys.size !== Object.keys(processArtworkPaths).length) {
+    throw new Error(
+      `Expected all process artwork families, found ${[...processArtworkKeys].join(", ")}`,
+    );
   }
 
   await rm(catalogDataRoot, { recursive: true, force: true });
@@ -1572,8 +1708,12 @@ async function main() {
         generatedDocumentCount: 234,
         previewPpi: 270,
         sourceOriginalCount: 117,
-        documentGenerator: "Coffendi bilingual origin document generator",
-        decorativeArtwork: "green-coffee-botanical-v1",
+        documentGenerator: "Coffendi branded bilingual origin document generator",
+        decorativeArtwork: "source-origin-context-plus-process-v1",
+        distinctHeroVisualCount: heroVisualChecksums.size,
+        distinctSourceVisualCount: originVisualChecksums.size,
+        processArtworkFamilies: [...processArtworkKeys].sort(),
+        visualProvenance: "Source-provided context plus non-country-specific process illustration",
         canonicalSources: [
           { document: sources.p1.label, pages: "1–56" },
           { document: sources.p2India.label, pages: "1" },
