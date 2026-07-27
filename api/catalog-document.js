@@ -1,8 +1,8 @@
 import { Readable } from "node:stream";
 import { get } from "@vercel/blob";
 
-const CATALOG_PREFIX = "coffendi/origins/2026-07-27/";
-const SAFE_PATH = /^coffendi\/origins\/2026-07-27\/[a-z0-9-]+\/[a-z0-9-]+\.pdf$/;
+const CATALOG_PREFIX = "coffendi/origins/2026-07-27-full/";
+const SAFE_PATH = /^coffendi\/origins\/2026-07-27-full\/[a-z0-9-]+\/[a-z0-9-]+\.pdf$/;
 
 function requestedPath(req) {
   const raw = Array.isArray(req.query?.path) ? req.query.path[0] : req.query?.path;

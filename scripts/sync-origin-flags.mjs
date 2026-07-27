@@ -2,9 +2,23 @@ import { createHash } from "node:crypto";
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { gzipSync } from "node:zlib";
+import { createCanvas, loadImage } from "@napi-rs/canvas";
 
 const revision = "086f7e97d657358203916dbe84f61c2bccaa81eb";
 const expected = {
+  bo: "ee1075ebb655dd8252ec317827baa0a75cf0a5e4f0b0b35d6e9766b30686d183",
+  bi: "5ef1a56b4ebe90326d6d807bbf61bd2d6f0b752fd6966588cd42471a886307bb",
+  cm: "c9a327dc0e355739a9f2bc0a91e1293f8e08e13910e718bc63fda35a244acef5",
+  cn: "981da9bdf82d48e31691f20578cefcb26cf7d0bd95e4ebd5c0df00bdfe988c1a",
+  cr: "4775ef01d28b8a887cde3dbe2826466ed77c87aae4d00517c99d4977afdbdc20",
+  ci: "4ecfea70e4e0860fdb49a523db7cd64431b4da8130ee9038cf87bfcc85c3806e",
+  do: "02e5f5efbc60a73716f754ecb3f112dcccfeab1da925cb7b8a1764736a3a3ebd",
+  ec: "4472b0618e2f5e31d31d16c0d7d811310c33b07d5a101b54f60fcb7ec84d1d4d",
+  sv: "4c2b4e2b8bbb85d6cb97a5a35399f6fa9f269dc4b4c17591350441b61137041d",
+  ht: "d45f0285b56379b6816ab02ac0fcef2dc47b3f9a926a661e51a5c546b259e5d6",
+  hn: "67130fa043e9d30dda7691e0d59567ff32db435a0d72e4e57309bd439fd79995",
+  in: "91185efa1a9b52cdc0e470712518efeefc4e4d6a6555bae9de997ba71885bb98",
   et: "43d5922fff81ae1accda75ed99b1b6e68dbebaa3d88a5d87f10a744f17cba34c",
   co: "6bab3c96c1657510c6e49354dd40203c69401bee54da497392ab9267334e5fd4",
   br: "b0a912826c3ffd7287435ebed66e18fe058e992309c00dc10b430dd41a29ba91",
@@ -46,6 +60,16 @@ for (const [iso, integrity] of Object.entries(expected)) {
   const actual = createHash("sha256").update(artwork).digest("hex");
   if (actual !== integrity) throw new Error(`Integrity mismatch for ${iso.toUpperCase()} flag`);
 
-  await writeFile(path.join(destination, `${iso}.svg`), artwork);
-  console.log(`${iso.toUpperCase()}: verified ${artwork.byteLength} bytes`);
+  const outputPath = path.join(destination, `${iso}.svg`);
+  const sourceArtwork = artwork.toString("utf8");
+  const image = await loadImage(artwork);
+  const canvas = createCanvas(192, 144);
+  canvas.getContext("2d").drawImage(image, 0, 0, 192, 144);
+  const webp = await canvas.encode("webp", 94);
+  const rasterized = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 144"><image width="192" height="144" href="data:image/webp;base64,${webp.toString("base64")}"/></svg>`;
+  const selected = gzipSync(rasterized).byteLength < gzipSync(sourceArtwork).byteLength
+    ? rasterized
+    : sourceArtwork;
+  await writeFile(outputPath, selected);
+  console.log(`${iso.toUpperCase()}: verified ${artwork.byteLength} bytes, delivered in ${Buffer.byteLength(selected)} bytes`);
 }

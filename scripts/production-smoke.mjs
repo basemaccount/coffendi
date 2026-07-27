@@ -62,7 +62,7 @@ const downloadDocument = await fetch(`${baseUrl}${representativeSheet.downloadUr
 assert.equal(downloadDocument.ok, true, `Protected PDF download returned ${downloadDocument.status}`);
 assert.match(downloadDocument.headers.get("content-disposition") || "", /^attachment;/);
 
-const rejectedDocument = await fetch(`${baseUrl}/api/catalog-document?path=${encodeURIComponent("coffendi/origins/2026-07-27/../../secret.pdf")}`, {
+const rejectedDocument = await fetch(`${baseUrl}/api/catalog-document?path=${encodeURIComponent("coffendi/origins/2026-07-27-full/../../secret.pdf")}`, {
   redirect: "manual",
   signal: AbortSignal.timeout(12_000),
 });

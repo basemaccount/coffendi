@@ -80,7 +80,7 @@ for (const check of checks) {
   }
 
   if (check.name === "desktop-compare") {
-    if ((await page.locator(".origin-constellation__pin").count()) !== 26) failures.push("desktop-compare: geographic comparison controls were missing");
+    if ((await page.locator(".origin-constellation__pin").count()) !== 38) failures.push("desktop-compare: geographic comparison controls were missing");
     const rows = page.locator(".compare-table__row");
     if ((await rows.count()) !== 7) failures.push("desktop-compare: expected header plus six comparison rows");
     const columns = await rows.first().locator(":scope > *").count();
@@ -102,28 +102,32 @@ for (const check of checks) {
   }
 
   if (check.name === "desktop-coffees") {
-    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 27) failures.push("desktop-coffees: flag filters did not expose 26 countries plus all");
-    if ((await page.locator(".profile-card__process .origin-flag").count()) !== 26) failures.push("desktop-coffees: profile cards did not expose origin flags");
+    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 39) failures.push("desktop-coffees: flag filters did not expose 38 countries plus all");
+    if ((await page.locator(".profile-card__process .origin-flag").count()) !== 38) failures.push("desktop-coffees: profile cards did not expose origin flags");
   }
 
   if (["desktop-profile", "desktop-kenya", "desktop-indonesia"].includes(check.name)) {
-    if ((await page.locator(".origin-constellation__pin").count()) !== 26) failures.push(`${check.name}: constellation did not expose all 26 origins`);
-    if ((await page.locator(".origin-constellation__rail a").count()) !== 26) failures.push(`${check.name}: conventional origin links were missing`);
-    const expectedSheets = check.name === "desktop-kenya" ? 6 : check.name === "desktop-indonesia" ? 6 : 0;
+    if ((await page.locator(".origin-constellation__pin").count()) !== 38) failures.push(`${check.name}: constellation did not expose all 38 origins`);
+    if ((await page.locator(".origin-constellation__rail a").count()) !== 38) failures.push(`${check.name}: conventional origin links were missing`);
+    const expectedSheets = check.name === "desktop-kenya" || check.name === "desktop-indonesia" ? 6 : 8;
     if ((await page.locator(".origin-sheet-card").count()) !== expectedSheets) failures.push(`${check.name}: expected ${expectedSheets} country-specific sheets`);
     if (expectedSheets) {
+      if ((await page.locator(".origin-page-reader").count()) !== 1) failures.push(`${check.name}: country PDF reader was missing`);
+      if ((await page.locator(".origin-page-reader__thumbnails button").count()) !== expectedSheets) failures.push(`${check.name}: country PDF reader did not expose every source page`);
       await page.locator(".origin-sheet-card__preview").first().click();
       await page.locator(".origin-document-dialog").waitFor({ state: "visible" });
+      await page.locator(".origin-document-dialog__preview img").evaluate((image) => image.decode());
+      await page.locator(".origin-document-dialog__preview-status").waitFor({ state: "detached" });
       if ((await page.locator(".origin-document-dialog__specifications dl > div").count()) !== 11) failures.push(`${check.name}: viewer specifications were incomplete`);
       await page.screenshot({ path: new URL(`${check.name}-viewer.png`, outputDir).pathname, fullPage: false });
     }
   }
 
   if (check.name === "desktop-origins") {
-    if ((await page.locator(".coffee-map__pin").count()) !== 26) failures.push("desktop-origins: interactive map did not expose 26 pins");
-    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 27) failures.push("desktop-origins: flag filters did not expose 26 countries plus all");
+    if ((await page.locator(".coffee-map__pin").count()) !== 38) failures.push("desktop-origins: interactive map did not expose 38 pins");
+    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 39) failures.push("desktop-origins: flag filters did not expose 38 countries plus all");
     if ((await page.locator(".coffee-map__lenses button").count()) !== 3) failures.push("desktop-origins: information lenses were missing");
-    if ((await page.locator(".origin-explorer__country-index button").count()) !== 26) failures.push("desktop-origins: country passports were missing");
+    if ((await page.locator(".origin-explorer__country-index button").count()) !== 38) failures.push("desktop-origins: country passports were missing");
   }
 
   if (check.name === "mobile-home") {
@@ -146,8 +150,8 @@ for (const check of checks) {
   }
 
   if (check.name === "mobile-origins" || check.name === "compact-origins") {
-    if ((await page.locator(".coffee-map__pin").count()) !== 26) failures.push(`${check.name}: interactive map pins were missing`);
-    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 27) failures.push(`${check.name}: flag filters were missing`);
+    if ((await page.locator(".coffee-map__pin").count()) !== 38) failures.push(`${check.name}: interactive map pins were missing`);
+    if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 39) failures.push(`${check.name}: flag filters were missing`);
     if ((await page.locator(".coffee-map__lenses button").count()) !== 3) failures.push(`${check.name}: map lenses were missing`);
     if ((await page.locator(".coffee-map__scale button").count()) !== 2) failures.push(`${check.name}: World and Focus map controls were missing`);
     if ((await page.locator('.coffee-map__canvas[data-map-view="focus"]').count()) !== 1) failures.push(`${check.name}: map did not begin in Focus view`);
@@ -155,11 +159,12 @@ for (const check of checks) {
   }
 
   if (["mobile-profile", "mobile-kenya", "mobile-indonesia"].includes(check.name)) {
-    if ((await page.locator(".origin-constellation__pin").count()) !== 26) failures.push(`${check.name}: responsive origin constellation was missing`);
+    if ((await page.locator(".origin-constellation__pin").count()) !== 38) failures.push(`${check.name}: responsive origin constellation was missing`);
     if ((await page.locator(".origin-constellation__view-controls button").count()) !== 2) failures.push(`${check.name}: World and Focus controls were missing`);
     if (!(await page.locator(".origin-constellation__rail").evaluate((element) => element.scrollWidth > element.clientWidth))) failures.push(`${check.name}: origin continuation was not horizontally scrollable`);
-    const expectedSheets = check.name === "mobile-kenya" || check.name === "mobile-indonesia" ? 6 : 0;
+    const expectedSheets = check.name === "mobile-kenya" || check.name === "mobile-indonesia" ? 6 : 9;
     if ((await page.locator(".origin-sheet-card").count()) !== expectedSheets) failures.push(`${check.name}: expected ${expectedSheets} country-specific sheets`);
+    if (expectedSheets && (await page.locator(".origin-page-reader__thumbnails button").count()) !== expectedSheets) failures.push(`${check.name}: responsive country PDF reader did not expose every source page`);
   }
 
   console.log(`${check.name}: ${audit.clientWidth}x${check.height}, scrollWidth=${audit.scrollWidth}, title="${audit.title}"`);

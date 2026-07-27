@@ -759,8 +759,8 @@ function CoffeePage({ language, copy, selected, onToggle, comparisonFull, profil
 
 function OriginsPage({ language, profiles }) {
   usePageMeta(
-    language === "tr" ? "26 yeşil kahve menşesi — Coffendi" : "26 green coffee origins — Coffendi",
-    language === "tr" ? "Coffendi'nin 26 ülkelik menşe atlasını ve 60 kaynak föyünü keşfedin." : "Explore Coffendi’s 26-country origin atlas and 60 source-backed reference sheets.",
+    language === "tr" ? `${originCatalogMeta.countryCount} yeşil kahve menşesi — Coffendi` : `${originCatalogMeta.countryCount} green coffee origins — Coffendi`,
+    language === "tr" ? `Coffendi'nin ${originCatalogMeta.countryCount} ülkelik menşe atlasını ve ${originCatalogMeta.sheetCount} kaynak föyünü keşfedin.` : `Explore Coffendi’s ${originCatalogMeta.countryCount}-country origin atlas and ${originCatalogMeta.sheetCount} source-backed reference sheets.`,
     "/origins",
     language,
   );
@@ -768,7 +768,7 @@ function OriginsPage({ language, profiles }) {
     <>
       <PageHero
         eyebrow={language === "tr" ? "Küresel menşe atlası" : "Global origin atlas"}
-        title={language === "tr" ? "26 ülke. 60 kaynak föyü. Tek bir açık atlas." : "26 countries. 60 source sheets. One clear atlas."}
+        title={language === "tr" ? `${originCatalogMeta.countryCount} ülke. ${originCatalogMeta.sheetCount} kaynak föyü. Tek bir açık atlas.` : `${originCatalogMeta.countryCount} countries. ${originCatalogMeta.sheetCount} source sheets. One clear atlas.`}
         copy={language === "tr" ? "Ülkeye, bölgeye, işleme yöntemine veya fincan yönüne göre keşfedin; ardından yalnızca seçtiğiniz ülkeye ait föyleri inceleyin ve indirin." : "Explore by country, region, process, or cup direction, then review and download only the sheets related to the selected origin."}
         marker={String(profiles.length).padStart(2, "0")}
       />
@@ -983,8 +983,8 @@ function CatalogStatusPage({ language, path, error, onRetry }) {
     ? language === "tr" ? "Menşe kataloğu şu anda yüklenemiyor." : "The origin catalogue could not be loaded."
     : language === "tr" ? "Küresel menşe kataloğu hazırlanıyor." : "Preparing the global origin catalogue.";
   const description = error
-    ? language === "tr" ? "Bağlantınızı kontrol edin ve 26 ülkelik kataloğu yeniden deneyin." : "Check your connection and retry the 26-country catalogue."
-    : language === "tr" ? "26 ülke ve 60 doğrulanmış kaynak föyü yükleniyor." : "Loading 26 countries and 60 verified source sheets.";
+    ? language === "tr" ? `Bağlantınızı kontrol edin ve ${originCatalogMeta.countryCount} ülkelik kataloğu yeniden deneyin.` : `Check your connection and retry the ${originCatalogMeta.countryCount}-country catalogue.`
+    : language === "tr" ? `${originCatalogMeta.countryCount} ülke ve ${originCatalogMeta.sheetCount} doğrulanmış kaynak föyü yükleniyor.` : `Loading ${originCatalogMeta.countryCount} countries and ${originCatalogMeta.sheetCount} verified source sheets.`;
   usePageMeta(`${title} — Coffendi`, description, path, language, { indexable: !error });
   return (
     <>
@@ -992,7 +992,7 @@ function CatalogStatusPage({ language, path, error, onRetry }) {
         eyebrow={language === "tr" ? "Coffendi menşe atlası" : "Coffendi origin atlas"}
         title={title}
         copy={description}
-        marker={error ? "!" : "26"}
+        marker={error ? "!" : String(originCatalogMeta.countryCount)}
       />
       <section className="section shell catalog-route-status" aria-live="polite" aria-busy={!error}>
         <Globe2 aria-hidden="true" />
@@ -1043,7 +1043,7 @@ export default function App({ initialOriginCatalog = null }) {
           return response.json();
         })
         .then((payload) => {
-          if (payload.revision !== originCatalogMeta.revision || !Array.isArray(payload.countries) || payload.countries.length !== 22) {
+          if (payload.revision !== originCatalogMeta.revision || !Array.isArray(payload.countries) || payload.countries.length !== originCatalogMeta.countryCount) {
             throw new Error("Origin index validation failed");
           }
           setCatalogState({ status: "ready", countries: payload.countries });

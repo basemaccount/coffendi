@@ -26,7 +26,7 @@ if (catalogRoute) {
     });
     if (!response.ok) throw new Error(`Origin index returned ${response.status}`);
     const payload = await response.json();
-    if (payload.revision !== originCatalogMeta.revision || !Array.isArray(payload.countries) || payload.countries.length !== 22) {
+    if (payload.revision !== originCatalogMeta.revision || !Array.isArray(payload.countries) || payload.countries.length !== originCatalogMeta.countryCount) {
       throw new Error("Origin index validation failed");
     }
     initialOriginCatalog = { status: "ready", countries: payload.countries };

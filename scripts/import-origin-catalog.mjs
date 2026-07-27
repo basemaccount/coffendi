@@ -11,28 +11,241 @@ import * as pdfjs from "pdfjs-dist/legacy/build/pdf.mjs";
 const projectRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const sourceRoot =
   process.env.COFFENDI_CATALOG_SOURCE_ROOT ||
-  "/mnt/c/Users/progr/Downloads/Documents";
+  "/mnt/c/Users/progr/Downloads";
 const workRoot = path.join(projectRoot, ".catalog-work");
 const previewRoot = path.join(projectRoot, "public", "catalog", "previews");
 const catalogDataRoot = path.join(projectRoot, "public", "catalog", "data");
 const outputDataFile = path.join(projectRoot, "src", "originCatalog.js");
 const uploadDocuments = process.env.UPLOAD_ORIGIN_BLOBS === "1";
 const reuseUploadedDocuments = process.env.REUSE_ORIGIN_BLOBS === "1";
-const catalogRevision = "2026-07-27";
-const catalogRevisionDate = new Date(`${catalogRevision}T00:00:00.000Z`);
+const catalogRevision = "2026-07-27-full";
+const catalogRevisionDate = new Date("2026-07-27T00:00:00.000Z");
 
 const sources = {
+  p1: {
+    label: "v5 p1.pdf",
+    path: path.join(sourceRoot, "v5 p1.pdf"),
+  },
+  p2India: {
+    label: "v5 p2.pdf",
+    path: path.join(sourceRoot, "v5 p2.pdf"),
+  },
   indonesia: {
     label: "MAKENDI 117.pptx.pdf",
-    path: path.join(sourceRoot, "MAKENDI 117.pptx.pdf"),
+    path: path.join(sourceRoot, "Documents", "MAKENDI 117.pptx.pdf"),
   },
   catalog: {
     label: "MAKENDI 1.2.pdf",
-    path: path.join(sourceRoot, "MAKENDI 1.2.pdf"),
+    path: path.join(sourceRoot, "Documents", "MAKENDI 1.2.pdf"),
   },
 };
 
+const pageRange = (start, end) => Array.from(
+  { length: end - start + 1 },
+  (_, index) => start + index,
+);
+
 const countries = [
+  {
+    slug: "bolivia",
+    country: "Bolivia",
+    countryTr: "Bolivya",
+    iso: "BO",
+    emoji: "🇧🇴",
+    zone: "latin-america",
+    coordinates: [-64.7, -16.3],
+    regions: "Caranavi",
+    source: "p1",
+    pages: [1],
+  },
+  {
+    slug: "brazil",
+    profileId: "brazil-classic",
+    country: "Brazil",
+    countryTr: "Brezilya",
+    iso: "BR",
+    emoji: "🇧🇷",
+    zone: "latin-america",
+    coordinates: [-52, -10],
+    regions: "Santos · Sul de Minas · Cerrado Mineiro · Mogiana · Espírito Santo",
+    source: "p1",
+    pages: pageRange(2, 10),
+  },
+  {
+    slug: "burundi",
+    country: "Burundi",
+    countryTr: "Burundi",
+    iso: "BI",
+    emoji: "🇧🇮",
+    zone: "africa",
+    coordinates: [29.9, -3.4],
+    regions: "Kayanza · Regional blends",
+    source: "p1",
+    pages: pageRange(11, 13),
+  },
+  {
+    slug: "cameroon",
+    country: "Cameroon",
+    countryTr: "Kamerun",
+    iso: "CM",
+    emoji: "🇨🇲",
+    zone: "africa",
+    coordinates: [12.4, 5.7],
+    regions: "Western Highlands · Regional lots",
+    source: "p1",
+    pages: pageRange(14, 15),
+  },
+  {
+    slug: "china",
+    country: "China",
+    countryTr: "Çin",
+    iso: "CN",
+    emoji: "🇨🇳",
+    zone: "asia",
+    coordinates: [103.8, 35],
+    regions: "Yunnan · Pu’er",
+    source: "p1",
+    pages: pageRange(16, 17),
+  },
+  {
+    slug: "colombia",
+    profileId: "colombia-balanced",
+    country: "Colombia",
+    countryTr: "Kolombiya",
+    iso: "CO",
+    emoji: "🇨🇴",
+    zone: "latin-america",
+    coordinates: [-73.5, 4.5],
+    regions: "Medellín · Tolima · Huila · Regional lots",
+    source: "p1",
+    pages: pageRange(18, 25),
+  },
+  {
+    slug: "costa-rica",
+    country: "Costa Rica",
+    countryTr: "Kosta Rika",
+    iso: "CR",
+    emoji: "🇨🇷",
+    zone: "latin-america",
+    coordinates: [-84, 9.8],
+    regions: "Tarrazú · Central Valley · Tres Ríos",
+    source: "p1",
+    pages: pageRange(26, 28),
+  },
+  {
+    slug: "cote-divoire",
+    sourceCountry: "Côte d'Ivoire",
+    country: "Côte d’Ivoire",
+    countryTr: "Fildişi Sahili",
+    iso: "CI",
+    emoji: "🇨🇮",
+    zone: "africa",
+    coordinates: [-5.5, 7.6],
+    regions: "Regional lots",
+    source: "p1",
+    pages: [29],
+  },
+  {
+    slug: "dominican-republic",
+    sourceCountry: "Dominican Rep.",
+    country: "Dominican Republic",
+    countryTr: "Dominik Cumhuriyeti",
+    iso: "DO",
+    emoji: "🇩🇴",
+    zone: "latin-america",
+    coordinates: [-70.2, 18.8],
+    regions: "Barahona",
+    source: "p1",
+    pages: [30],
+  },
+  {
+    slug: "ecuador",
+    country: "Ecuador",
+    countryTr: "Ekvador",
+    iso: "EC",
+    emoji: "🇪🇨",
+    zone: "latin-america",
+    coordinates: [-78.2, -1.4],
+    regions: "Loja · Napo · Sucumbíos",
+    source: "p1",
+    pages: pageRange(31, 32),
+  },
+  {
+    slug: "el-salvador",
+    country: "El Salvador",
+    countryTr: "El Salvador",
+    iso: "SV",
+    emoji: "🇸🇻",
+    zone: "latin-america",
+    coordinates: [-88.9, 13.7],
+    regions: "Santa Ana · Regional lots",
+    source: "p1",
+    pages: pageRange(33, 34),
+  },
+  {
+    slug: "ethiopia",
+    profileId: "ethiopia-washed",
+    country: "Ethiopia",
+    countryTr: "Etiyopya",
+    iso: "ET",
+    emoji: "🇪🇹",
+    zone: "africa",
+    coordinates: [40, 9],
+    regions: "Yirgacheffe · Sidamo · Guji · Harrar · Djimmah · Limu",
+    source: "p1",
+    pages: pageRange(35, 42),
+  },
+  {
+    slug: "guatemala",
+    profileId: "guatemala-structured",
+    country: "Guatemala",
+    countryTr: "Guatemala",
+    iso: "GT",
+    emoji: "🇬🇹",
+    zone: "latin-america",
+    coordinates: [-90.3, 15.7],
+    regions: "Huehuetenango · Antigua",
+    source: "p1",
+    pages: pageRange(43, 46),
+  },
+  {
+    slug: "haiti",
+    country: "Haiti",
+    countryTr: "Haiti",
+    iso: "HT",
+    emoji: "🇭🇹",
+    zone: "latin-america",
+    coordinates: [-72.3, 19],
+    regions: "Regional lots",
+    source: "p1",
+    pages: [47],
+  },
+  {
+    slug: "honduras",
+    country: "Honduras",
+    countryTr: "Honduras",
+    iso: "HN",
+    emoji: "🇭🇳",
+    zone: "latin-america",
+    coordinates: [-86.5, 14.8],
+    regions: "Copán · Regional lots",
+    source: "p1",
+    pages: pageRange(48, 50),
+  },
+  {
+    slug: "india",
+    country: "India",
+    countryTr: "Hindistan",
+    iso: "IN",
+    emoji: "🇮🇳",
+    zone: "asia",
+    coordinates: [78, 22],
+    regions: "Mysore · Malabar · Regional estates",
+    segments: [
+      { source: "p1", pages: pageRange(51, 56) },
+      { source: "p2India", pages: [1] },
+    ],
+  },
   {
     slug: "indonesia",
     country: "Indonesia",
@@ -43,7 +256,7 @@ const countries = [
     coordinates: [117, -2],
     regions: "Sumatra · Sulawesi · Bali · Java",
     source: "indonesia",
-    pages: [1, 2, 3, 4, 5, 6],
+    pages: pageRange(1, 6),
   },
   {
     slug: "jamaica",
@@ -68,7 +281,7 @@ const countries = [
     coordinates: [37, -0.3],
     regions: "Central Highlands · Rift Valley",
     source: "catalog",
-    pages: [2, 3, 4, 5, 6, 7],
+    pages: pageRange(2, 7),
   },
   {
     slug: "laos",
@@ -80,7 +293,7 @@ const countries = [
     coordinates: [102.6, 19],
     regions: "Bolaven Plateau · Champasak",
     source: "catalog",
-    pages: [8, 9, 10],
+    pages: pageRange(8, 10),
   },
   {
     slug: "madagascar",
@@ -116,7 +329,7 @@ const countries = [
     coordinates: [-102, 23],
     regions: "Puebla · Chiapas · Oaxaca · Veracruz",
     source: "catalog",
-    pages: [13, 14, 15, 16],
+    pages: pageRange(13, 16),
   },
   {
     slug: "nicaragua",
@@ -128,7 +341,7 @@ const countries = [
     coordinates: [-85.2, 12.8],
     regions: "Jinotega · Matagalpa",
     source: "catalog",
-    pages: [17, 18, 19],
+    pages: pageRange(17, 19),
   },
   {
     slug: "panama",
@@ -140,7 +353,7 @@ const countries = [
     coordinates: [-80, 8.6],
     regions: "Boquete",
     source: "catalog",
-    pages: [20, 21],
+    pages: pageRange(20, 21),
   },
   {
     slug: "papua-new-guinea",
@@ -153,7 +366,7 @@ const countries = [
     coordinates: [145.5, -6.3],
     regions: "Highlands · Morobe · Kimel · Sigri",
     source: "catalog",
-    pages: [22, 23, 24, 25, 26, 27, 28],
+    pages: pageRange(22, 28),
   },
   {
     slug: "peru",
@@ -177,7 +390,7 @@ const countries = [
     coordinates: [122.5, 12],
     regions: "Mindanao · Batangas",
     source: "catalog",
-    pages: [30, 31],
+    pages: pageRange(30, 31),
   },
   {
     slug: "rwanda",
@@ -202,7 +415,7 @@ const countries = [
     coordinates: [35, -6],
     regions: "Kilimanjaro · Mbeya · Bukoba",
     source: "catalog",
-    pages: [33, 34, 35],
+    pages: pageRange(33, 35),
   },
   {
     slug: "thailand",
@@ -214,7 +427,7 @@ const countries = [
     coordinates: [100.8, 15.8],
     regions: "Chiang Mai · Doi Chang · Chumphon",
     source: "catalog",
-    pages: [36, 37],
+    pages: pageRange(36, 37),
   },
   {
     slug: "timor-leste",
@@ -226,7 +439,7 @@ const countries = [
     coordinates: [125.7, -8.8],
     regions: "Ermera · Regional lots",
     source: "catalog",
-    pages: [38, 39],
+    pages: pageRange(38, 39),
   },
   {
     slug: "togo",
@@ -250,7 +463,7 @@ const countries = [
     coordinates: [32.3, 1.3],
     regions: "Kaweri · Western Uganda",
     source: "catalog",
-    pages: [41, 42, 43, 44, 45],
+    pages: pageRange(41, 45),
   },
   {
     slug: "vietnam",
@@ -262,7 +475,7 @@ const countries = [
     coordinates: [107.8, 15.8],
     regions: "Da Lat · Son La · Regional lots",
     source: "catalog",
-    pages: [46, 47, 48, 49, 50, 51],
+    pages: pageRange(46, 51),
   },
   {
     slug: "yemen",
@@ -354,9 +567,16 @@ function slugify(value) {
 }
 
 function normalizeParts(items) {
-  return items
+  const parts = items
     .map((item) => String(item.str || "").replace(/\s+/g, " ").trim())
     .filter(Boolean);
+  return parts
+    .filter((item, index) => !(item === "PROFILE" && parts[index - 1] === "FLAVOR"))
+    .map((item) => ({
+      "COFFEE TYPE": "TYPE",
+      PROCESSING: "PROCESS",
+      "SCREEN SIZE": "SCREEN",
+    })[item] || item);
 }
 
 function valuesBetween(parts, startIndex, startLabel, endLabel) {
@@ -481,18 +701,26 @@ async function main() {
   const sourcePageKeys = new Set();
 
   for (const country of countries) {
-    const source = sourceDocuments[country.source];
+    const pageReferences = (country.segments || [{ source: country.source, pages: country.pages }])
+      .flatMap((segment) => segment.pages.map((pageNumber) => ({
+        sourceKey: segment.source,
+        pageNumber,
+      })));
     const expectedCountry = country.sourceCountry || country.country;
     const sheets = [];
     const countryPdf = await PDFDocument.create();
-    const bundlePages = await countryPdf.copyPages(
-      source.pdfLib,
-      country.pages.map((page) => page - 1),
-    );
-    bundlePages.forEach((page) => countryPdf.addPage(page));
+    for (const reference of pageReferences) {
+      const source = sourceDocuments[reference.sourceKey];
+      const [bundlePage] = await countryPdf.copyPages(
+        source.pdfLib,
+        [reference.pageNumber - 1],
+      );
+      countryPdf.addPage(bundlePage);
+    }
 
-    for (const pageNumber of country.pages) {
-      const sourcePageKey = `${country.source}:${pageNumber}`;
+    for (const { sourceKey, pageNumber } of pageReferences) {
+      const source = sourceDocuments[sourceKey];
+      const sourcePageKey = `${sourceKey}:${pageNumber}`;
       if (sourcePageKeys.has(sourcePageKey)) throw new Error(`Duplicate source page ${sourcePageKey}`);
       sourcePageKeys.add(sourcePageKey);
 
@@ -560,7 +788,7 @@ async function main() {
         language: "en",
         checksum: hash,
       });
-      process.stdout.write(`Sheet ${sheets.length}/${country.pages.length}: ${country.country} — ${extracted.specifications.grade}\n`);
+      process.stdout.write(`Sheet ${sheets.length}/${pageReferences.length}: ${country.country} — ${extracted.specifications.grade}\n`);
     }
 
     countryPdf.setTitle(`${country.country} — Coffendi green coffee catalogue`);
@@ -608,8 +836,8 @@ async function main() {
     });
   }
 
-  if (sourcePageKeys.size !== 60) {
-    throw new Error(`Expected 60 canonical source pages, found ${sourcePageKeys.size}`);
+  if (sourcePageKeys.size !== 117) {
+    throw new Error(`Expected 117 canonical source pages, found ${sourcePageKeys.size}`);
   }
 
   await rm(catalogDataRoot, { recursive: true, force: true });
@@ -715,20 +943,24 @@ async function main() {
 
   const fileContents = [
     "// Generated by scripts/import-origin-catalog.mjs.",
-    "// Canonical public set: MAKENDI 117 pages 1–6 plus MAKENDI 1.2 pages 1–54.",
-    "// Sparse alternate pages and the four-page duplicate PDF are intentionally excluded.",
+    "// Canonical public set: 117 unique sheets selected from the most complete matching exports.",
+    "// Alternate and repeated pages are retained only as audited duplicate references.",
     "",
     `export const originCatalogMeta = ${JSON.stringify(
       {
         revision: catalogRevision,
-        sheetCount: 60,
-        countryCount: 22,
+        exportedPageCount: 117,
+        sheetCount: 117,
+        countryCount: 38,
         canonicalSources: [
+          { document: sources.p1.label, pages: "1–56" },
+          { document: sources.p2India.label, pages: "1" },
           { document: sources.indonesia.label, pages: "1–6" },
           { document: sources.catalog.label, pages: "1–54" },
         ],
         excludedSources: [
-          { document: sources.indonesia.label, pages: "7–60", reason: "duplicate or incomplete alternate layouts" },
+          { document: "v5 p2.pdf", pages: "2–61", reason: "alternate versions of the selected complete Indonesia–Zimbabwe exports" },
+          { document: "MAKENDI 117.pptx.pdf", pages: "7–60", reason: "alternate duplicates of MAKENDI 1.2 pages 1–54" },
           { document: "MAKENDI 1.pptx.pdf", pages: "1–4", reason: "exact duplicates of MAKENDI 1.2 pages 51–54" },
         ],
       },
@@ -745,7 +977,7 @@ async function main() {
   await rm(workRoot, { recursive: true, force: true });
 
   const previewCount = generatedCountries.reduce((total, country) => total + country.sheets.length * 2, 0);
-  console.log(`Generated ${generatedCountries.length} countries, 60 sheets and ${previewCount} previews.`);
+  console.log(`Generated ${generatedCountries.length} countries, 117 sheets and ${previewCount} previews.`);
   console.log(`Document delivery: ${uploadDocuments ? "uploaded to Vercel Blob" : reuseUploadedDocuments ? "reused existing Vercel Blob paths" : "local fallback paths"}.`);
 }
 

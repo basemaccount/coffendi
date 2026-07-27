@@ -126,7 +126,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
                 <OriginFlag profile={profile} size="small" className="origin-atlas__flag" />
                 <span className="origin-atlas__control-index" aria-hidden="true">0{index + 1}</span>
                 <strong>{local(profile.country, language)}</strong>
-                <small>{profile.directions.length} {language === "tr" ? "kahve yönü" : "coffee directions"}</small>
+                <small>{Math.min(3, profile.directions.length)} {language === "tr" ? "öne çıkan kahve" : "featured coffees"}</small>
                 <i className="origin-atlas__control-status" aria-hidden="true" />
               </button>
             ))}
@@ -148,7 +148,7 @@ export default function OriginAtlas({ profiles, language, LinkComponent = Router
             <div className="origin-atlas__directions">
               <div><strong>{language === "tr" ? "Temsili kahveler" : "Representative coffees"}</strong><small>{language === "tr" ? "Canlı stok değildir" : "Not live inventory"}</small></div>
               <ul>
-                {active.directions.map((direction, index) => (
+                {active.directions.slice(0, 3).map((direction, index) => (
                   <li key={direction.name}>
                     <span aria-hidden="true">{String(index + 1).padStart(2, "0")}</span>
                     <div><strong>{direction.name}</strong><small>{local(direction.process, language)} · {local(direction.cup, language)}</small></div>

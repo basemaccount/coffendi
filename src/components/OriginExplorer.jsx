@@ -199,6 +199,8 @@ function CoffeeBeltMap({ profiles, activeId, onSelect, language, lens, compact }
 export default function OriginExplorer({ profiles, language, LinkComponent }) {
   const compactLayout = useCompactOriginLayout();
   const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(profiles, language);
+  const originCount = profiles.length;
+  const sourceSheetCount = profiles.reduce((total, profile) => total + (profile.sheetCount || 0), 0);
   const [activeId, setActiveId] = useState(profiles[0]?.id || "");
   const [lens, setLens] = useState("geography");
   const readout = useRef(null);
@@ -212,8 +214,8 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
   const copy = language === "tr"
     ? {
       eyebrow: "Etkileşimli menşe haritası",
-      title: "Kahve kuşağında 26 doğrulanabilir menşe.",
-      intro: "Ülke dizinini, mobil bayrak şeridini veya adım kontrollerini kullanın. Filtreler; 26 ülkeyi bölge, işleme, fincan yönü ve 60 kaynak föyü üzerinden daraltır.",
+      title: `Kahve kuşağında ${originCount} doğrulanabilir menşe.`,
+      intro: `Ülke dizinini, mobil bayrak şeridini veya adım kontrollerini kullanın. Filtreler; ${originCount} ülkeyi bölge, işleme, fincan yönü ve ${sourceSheetCount} kaynak föyü üzerinden daraltır.`,
       mapLabel: "Temsili Coffendi kahve menşeleri haritası",
       orientation: "Yönlendirme haritasıdır; okunabilirlik için bayraklar coğrafi noktalardan ayrılabilir. Canlı stok, lojistik kapsam veya tedarik garantisi değildir.",
       directions: "Temsili kahve yönleri",
@@ -242,8 +244,8 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
     }
     : {
       eyebrow: "Interactive origin map",
-      title: "26 traceable origins across the coffee belt.",
-      intro: "Use the country index, mobile flag rail, or step controls. Filters narrow 26 countries by region, process, cup direction, and 60 source-backed reference sheets.",
+      title: `${originCount} traceable origins across the coffee belt.`,
+      intro: `Use the country index, mobile flag rail, or step controls. Filters narrow ${originCount} countries by region, process, cup direction, and ${sourceSheetCount} source-backed reference sheets.`,
       mapLabel: "Map of representative Coffendi coffee origins",
       orientation: "Orientation map only; flags may be offset from geographic dots for legibility. Not live stock, logistics coverage or a sourcing guarantee.",
       directions: "Representative coffee directions",
