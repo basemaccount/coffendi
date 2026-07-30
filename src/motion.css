@@ -183,9 +183,9 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 .chapter-navigator__track::-webkit-scrollbar { display: none; }
 
 .chapter-navigator__track button {
-  width: 44px;
-  height: 44px;
-  flex: 0 0 44px;
+  width: 46px;
+  height: 46px;
+  flex: 0 0 46px;
   display: grid;
   place-items: center;
   border: 1px solid rgba(255, 255, 255, 0.14);
@@ -365,7 +365,7 @@ body.no-scroll .chapter-navigator { opacity: 0; pointer-events: none; }
 @media (max-width: 760px) {
   .motion-ready [data-reveal="true"] { translate: 0 14px; }
   .motion-ready .page-hero__grid > * { animation: none; }
-  .back-to-top { right: 14px; bottom: max(14px, env(safe-area-inset-bottom)); width: 44px; height: 44px; }
+  .back-to-top { right: max(14px, env(safe-area-inset-right)); bottom: max(14px, env(safe-area-inset-bottom)); width: 48px; height: 48px; }
   .chapter-navigator { left: 12px; width: calc(100vw - 78px); min-height: 56px; border-radius: 14px; }
   .chapter-navigator__meta { padding-inline: 7px 3px; }
   .chapter-navigator__track { max-width: min(176px, 43vw); }

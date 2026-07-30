@@ -189,6 +189,40 @@ for (const check of checks) {
     const expectedSheets = check.name === "mobile-kenya" || check.name === "mobile-indonesia" ? 6 : 9;
     if ((await page.locator(".origin-sheet-card").count()) !== expectedSheets) failures.push(`${check.name}: expected ${expectedSheets} country-specific sheets`);
     if (expectedSheets && (await page.locator(".origin-page-reader__thumbnails button").count()) !== expectedSheets) failures.push(`${check.name}: responsive country PDF reader did not expose every source page`);
+    if (check.name === "mobile-profile") {
+      await page.locator(".origin-sheet-card__preview").first().click();
+      await page.locator(".origin-document-dialog").waitFor({ state: "visible" });
+      const viewerLayout = await page.locator(".origin-document-dialog").evaluate((dialog) => {
+        const rect = dialog.getBoundingClientRect();
+        const visibleTargets = [...dialog.querySelectorAll("button, a")].filter((target) => {
+          const targetRect = target.getBoundingClientRect();
+          const style = getComputedStyle(target);
+          return targetRect.width > 0 && targetRect.height > 0 && style.display !== "none" && style.visibility !== "hidden";
+        }).map((target) => {
+          const targetRect = target.getBoundingClientRect();
+          return { width: targetRect.width, height: targetRect.height };
+        });
+        return {
+          left: rect.left,
+          right: rect.right,
+          top: rect.top,
+          bottom: rect.bottom,
+          viewportWidth: innerWidth,
+          viewportHeight: innerHeight,
+          toolbarOverflow: dialog.querySelector(".origin-document-dialog__toolbar").scrollWidth -
+            dialog.querySelector(".origin-document-dialog__toolbar").clientWidth,
+          mobileActionsVisible: getComputedStyle(dialog.querySelector(".origin-document-dialog__mobile-actions")).display !== "none",
+          visibleTargets,
+        };
+      });
+      if (viewerLayout.left < -1 || viewerLayout.right > viewerLayout.viewportWidth + 1) failures.push("mobile-profile: document viewer escaped the horizontal viewport");
+      if (viewerLayout.top < -1 || viewerLayout.bottom > viewerLayout.viewportHeight + 1) failures.push("mobile-profile: document viewer escaped the vertical viewport");
+      if (viewerLayout.toolbarOverflow > 1) failures.push(`mobile-profile: document toolbar overflowed by ${viewerLayout.toolbarOverflow}px`);
+      if (!viewerLayout.mobileActionsVisible) failures.push("mobile-profile: mobile document actions were not visible");
+      if (viewerLayout.visibleTargets.some(({ width, height }) => width < 44 || height < 44)) failures.push("mobile-profile: document viewer exposed a control below 44px");
+      await page.screenshot({ path: new URL("mobile-profile-viewer.png", outputDir).pathname, fullPage: false });
+      await page.getByRole("button", { name: "Close document viewer" }).click();
+    }
   }
 
   console.log(`${check.name}: ${audit.clientWidth}x${check.height}, scrollWidth=${audit.scrollWidth}, title="${audit.title}"`);

@@ -430,6 +430,7 @@ assert(!new URL(page.url()).searchParams.has("sheet"), "closing the source viewe
 await firstKenyaSheetTrigger.click();
 await page.locator(".origin-document-dialog__close").click();
 await page.waitForFunction(() => !document.querySelector(".origin-document-dialog"));
+await page.waitForFunction(() => document.activeElement?.classList.contains("origin-sheet-card__preview"));
 assert(await firstKenyaSheetTrigger.evaluate((element) => document.activeElement === element), "source viewer did not return focus to its opening control");
 
 await page.goto(`${baseUrl}/compare`, { waitUntil: "networkidle" });
