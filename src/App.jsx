@@ -703,7 +703,7 @@ function OriginLocalNavigation({ profile, language }) {
       window.removeEventListener("scroll", syncActiveSection);
       window.removeEventListener("resize", syncActiveSection);
     };
-  }, []);
+  }, [profile.id]);
 
   const links = [
     ["overview", language === "tr" ? "Ülke özeti" : "Overview"],
