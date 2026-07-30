@@ -285,7 +285,11 @@ await libraryFlags.filter({ hasText: "Colombia" }).click();
 assert(await page.locator(".profile-grid--catalog .profile-card").count() === 1, "coffee-library flag filter did not narrow the profile cards");
 assert((await page.locator(".profile-grid--catalog .profile-card").textContent()).includes("Colombia"), "coffee-library flag filter exposed the wrong profile");
 await page.locator(".origin-filter-panel__reset").click();
-assert(await page.locator(".profile-grid--catalog .profile-card").count() === 38, "coffee-library reset did not restore all profiles");
+assert(await page.locator(".profile-grid--catalog .profile-card").count() === 9, "coffee-library reset did not restore the progressive profile window");
+while (await page.locator(".catalog-load-more button").count()) {
+  await page.locator(".catalog-load-more button").click();
+}
+assert(await page.locator(".profile-grid--catalog .profile-card").count() === 38, "coffee-library progressive disclosure did not expose all profiles");
 await page.locator(".origin-sort select").selectOption("country");
 assert((await page.locator(".profile-grid--catalog .profile-card").first().textContent()).includes("Bolivia"), "country sorting did not put Bolivia first in the coffee library");
 
@@ -644,7 +648,7 @@ assert(await mobile.locator(".chapter-navigator").evaluate((element) => getCompu
 assert(await mobile.locator(".back-to-top").evaluate((element) => getComputedStyle(element).display === "none"), "mobile back-to-top control covered the country document reader");
 assert(!await mobile.locator(".origin-pdf-launcher.is-visible").count(), "floating PDF launcher covered the inline country document reader");
 const readerScrollPosition = await mobile.evaluate(() => window.scrollY);
-await mobile.locator(".origin-page-reader__step--next").click();
+await mobile.locator(".origin-page-reader__step--next").evaluate((button) => button.click());
 await mobile.waitForTimeout(360);
 assert(Math.abs((await mobile.evaluate(() => window.scrollY)) - readerScrollPosition) <= 1, "horizontal document-thumbnail centering interrupted the page scroll position");
 await mobile.locator(".origin-page-reader__page").click();

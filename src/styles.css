@@ -318,6 +318,7 @@ p { text-wrap: pretty; }
 .catalog-note svg { flex: 0 0 auto; width: 18px; color: var(--gold); }
 .catalog-note--plain { margin: 30px 0 0; }
 .profile-grid--catalog { grid-template-columns: repeat(3, minmax(0,1fr)); }
+.catalog-load-more { padding-top: 29px; text-align: center; }
 
 
 .decision-grid { display: grid; grid-template-columns: repeat(3,1fr); border-block: 1px solid var(--line); }
@@ -568,6 +569,16 @@ a.contact-channel:hover { border-color: rgba(239,201,121,.52); background: rgba(
   .footer-brand { grid-column: 1 / -1; }
   .footer-grid > div:last-child { grid-column: 1 / -1; }
   .footer-base { align-items: flex-start; flex-direction: column; justify-content: center; gap: 5px; padding-block: 15px; }
+}
+
+@media (min-width: 361px) and (max-width: 760px) {
+  .coffee-library .profile-grid--catalog { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 11px; }
+  .profile-grid--catalog .profile-card__content { min-height: 268px; padding: 13px; }
+  .profile-grid--catalog .profile-card h3 { font-size: 21px; }
+  .profile-grid--catalog .profile-card__content > p:not(.eyebrow) { font-size: 11px; }
+  .profile-grid--catalog .profile-card dl { display: none; }
+  .profile-grid--catalog .profile-card__actions .button { min-height: 48px; padding: 7px 5px; font-size: 7px; white-space: normal; }
+  .profile-grid--catalog .circle-link { display: none; }
 }
 
 @media (max-width: 360px) {

@@ -42,6 +42,7 @@ const CONTACT_PHONE_HREF = "+902163407028";
 const CONTACT_WEBSITE = "www.coffendi.com";
 const DEFAULT_SHARE_IMAGE = `${SITE_URL}/images/green-green-beans-sack.webp`;
 const DEFAULT_SHARE_IMAGE_ALT = "Green coffee beans in a jute sack";
+const CATALOG_PAGE_SIZE = 9;
 const OriginDocumentLibrary = lazy(() => import("./components/OriginDocumentLibrary"));
 
 const messages = {
@@ -659,6 +660,14 @@ function HomePage({ language, copy, selected, onToggle, comparisonFull, profiles
 function CoffeesPage({ language, copy, selected, onToggle, comparisonFull, profiles }) {
   usePageMeta(language === "tr" ? "Yeşil kahve profilleri — Coffendi" : "Green coffee profiles — Coffendi", language === "tr" ? "Temsili Coffendi yeşil kahve profillerini keşfedin ve karşılaştırın." : "Explore and compare representative Coffendi green coffee profiles.", "/coffees", language);
   const { filters, filteredProfiles, updateFilter, resetFilters, hasFilters } = useOriginProfileFilters(profiles, language);
+  const [visibleCount, setVisibleCount] = useState(CATALOG_PAGE_SIZE);
+  const visibleProfiles = filteredProfiles.slice(0, visibleCount);
+  const remainingCount = Math.max(0, filteredProfiles.length - visibleProfiles.length);
+
+  useEffect(() => {
+    setVisibleCount(CATALOG_PAGE_SIZE);
+  }, [filters.query, filters.zone, filters.process, filters.country, filters.sort]);
+
   return (
     <>
       <PageHero eyebrow={language === "tr" ? "Yeşil kahve kütüphanesi" : "Green coffee library"} title={language === "tr" ? "Doğru kahve seçimi, açık bir profille başlar." : "Coffee selection starts with a clear direction."} copy={language === "tr" ? "Temsili profilleri keşfedin. Güncel ürün, kalite, miktar ve lojistik ayrıntıları her talep için ayrıca teyit edilir." : "Explore representative profiles. Current product, quality, quantity and logistics details are confirmed separately for every inquiry."} marker={String(profiles.length).padStart(2, "0")} />
@@ -667,7 +676,17 @@ function CoffeesPage({ language, copy, selected, onToggle, comparisonFull, profi
         <div className="catalog-note"><Bean aria-hidden="true" /><p>{copy.sourceNote}</p></div>
         <OriginFilters profiles={profiles} language={language} filters={filters} onChange={updateFilter} onReset={resetFilters} hasFilters={hasFilters} resultCount={filteredProfiles.length} idPrefix="library-origin" compact />
         {filteredProfiles.length ? (
-          <div className="profile-grid profile-grid--catalog" aria-live="polite">{filteredProfiles.map((profile) => <ProfileCard key={profile.id} profile={profile} language={language} selected={selected.includes(profile.id)} onToggle={onToggle} copy={copy} comparisonFull={comparisonFull} />)}</div>
+          <>
+            <div className="profile-grid profile-grid--catalog">{visibleProfiles.map((profile) => <ProfileCard key={profile.id} profile={profile} language={language} selected={selected.includes(profile.id)} onToggle={onToggle} copy={copy} comparisonFull={comparisonFull} />)}</div>
+            {remainingCount > 0 && (
+              <div className="catalog-load-more">
+                <button className="button button--dark" type="button" onClick={() => setVisibleCount((count) => Math.min(count + CATALOG_PAGE_SIZE, filteredProfiles.length))}>
+                  {language === "tr" ? "Daha fazla" : "Show more"}
+                  <ChevronRight aria-hidden="true" />
+                </button>
+              </div>
+            )}
+          </>
         ) : (
           <div className="empty-state filter-empty"><Sprout aria-hidden="true" /><h2>{language === "tr" ? "Bu filtrelerle eşleşen bir profil bulunamadı." : "No profiles match these filters."}</h2><p>{language === "tr" ? "Farklı bir ülke, bölge veya işleme yöntemi seçin." : "Try another flag, region or process focus."}</p><button className="button button--dark" type="button" onClick={resetFilters}>{language === "tr" ? "Tüm profilleri göster" : "Show all profiles"}</button></div>
         )}

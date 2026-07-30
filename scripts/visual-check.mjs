@@ -108,7 +108,7 @@ for (const check of checks) {
 
   if (check.name === "desktop-coffees") {
     if ((await page.locator('.origin-flag-filter [role="group"] > button').count()) !== 39) failures.push("desktop-coffees: flag filters did not expose 38 countries plus all");
-    if ((await page.locator(".profile-card__process .origin-flag").count()) !== 38) failures.push("desktop-coffees: profile cards did not expose origin flags");
+    if ((await page.locator(".profile-card__process .origin-flag").count()) !== 9) failures.push("desktop-coffees: progressive profile window did not expose nine origin flags");
   }
 
   if (["desktop-profile", "desktop-kenya", "desktop-indonesia"].includes(check.name)) {

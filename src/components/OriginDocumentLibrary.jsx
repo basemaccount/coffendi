@@ -173,16 +173,22 @@ function CountryPageReader({
     const button = rail?.children[pageIndex];
     if (!rail || !button || !mediaReady) return;
     const reducedMotion = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (window.innerWidth <= 760) return;
+    const left = button.offsetLeft - ((rail.clientWidth - button.clientWidth) / 2);
     rail.scrollTo({
       behavior: reducedMotion ? "auto" : "smooth",
-      left: button.offsetLeft - ((rail.clientWidth - button.clientWidth) / 2),
+      left,
     });
   }, [mediaReady, pageIndex]);
 
   if (!activeSheet) return null;
 
   const step = (offset) => {
+    const scrollPosition = window.scrollY;
     setPageIndex((current) => (current + offset + pageCount) % pageCount);
+    window.requestAnimationFrame(() => {
+      window.scrollTo({ top: scrollPosition, behavior: "instant" });
+    });
   };
 
   const startSwipe = (event) => {
