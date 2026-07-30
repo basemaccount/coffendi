@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Check, GitCompareArrows, PackageCheck, Trash2, X } from "lucide-react";
 import { coffees } from "../data";
 

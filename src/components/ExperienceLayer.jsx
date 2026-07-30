@@ -225,7 +225,6 @@ export default function ExperienceLayer({ language }) {
     const main = document.querySelector("#main-content");
     const targets = new Set();
     const reveal = (element) => element.classList.add("is-revealed");
-    const revealAll = () => targets.forEach(reveal);
     const revealPassedViewport = () => targets.forEach((element) => {
       if (element.getBoundingClientRect().top < window.innerHeight) reveal(element);
     });

@@ -129,10 +129,12 @@ function CountryPageReader({
       select: "Select page",
     };
 
+  const firstSheetId = sheets[0]?.id;
+
   useEffect(() => {
     setPageIndex(0);
     setMediaReady(false);
-  }, [sheets[0]?.id]);
+  }, [firstSheetId]);
 
   useEffect(() => {
     const element = reader.current;

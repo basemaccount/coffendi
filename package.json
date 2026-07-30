@@ -3,12 +3,14 @@
   "private": true,
   "version": "1.0.0",
   "type": "module",
+  "packageManager": "npm@11.17.0",
   "engines": {
     "node": "24.x"
   },
   "scripts": {
     "dev": "vite --host 0.0.0.0",
     "dev:full": "vercel dev",
+    "lint": "eslint . --cache --cache-location node_modules/.cache/eslint/.eslintcache",
     "build:origin-map": "node scripts/build-origin-map.mjs",
     "sync:flags": "node scripts/sync-origin-flags.mjs",
     "optimize:images": "node scripts/optimize-images.mjs",
@@ -29,31 +31,38 @@
     "test:performance": "node scripts/performance-check.mjs",
     "test:interactions": "node scripts/interaction-check.mjs",
     "test:visual": "node scripts/visual-check.mjs",
-    "test:production": "node scripts/production-smoke.mjs"
+    "test:production": "node scripts/production-smoke.mjs",
+    "test:ci": "npm run lint && npm run test:bundle && npm run test:checkout && npm run test:security && npm run test:operations && npm run test:sourcing && npm run test:origins && npm run test:documents && npm run test:a11y && npm run test:interactions && npm run test:visual && npm run test:performance"
   },
   "dependencies": {
     "@vercel/blob": "^2.6.1",
     "d3-geo": "^3.1.1",
-    "lucide-react": "^1.25.0",
-    "react": "^19.2.7",
-    "react-dom": "^19.2.7",
+    "lucide-react": "^1.28.0",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
     "react-router": "^8.3.0",
-    "stripe": "^22.3.2",
+    "stripe": "^22.4.0",
     "topojson-client": "^3.1.0",
     "world-atlas": "^2.0.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.12.1",
+    "@babel/core": "^8.0.1",
+    "@eslint/js": "^10.0.1",
     "@fontsource-variable/manrope": "^5.3.0",
-    "@napi-rs/canvas": "^1.0.2",
+    "@napi-rs/canvas": "^1.0.3",
     "@pdf-lib/fontkit": "^1.1.1",
-    "@playwright/test": "^1.61.1",
-    "@vitejs/plugin-react": "^6.0.3",
+    "@playwright/test": "^1.62.0",
+    "@rolldown/plugin-babel": "^0.2.3",
+    "@vitejs/plugin-react": "^6.0.5",
+    "babel-plugin-react-compiler": "^1.0.0",
     "dejavu-fonts-ttf": "^2.37.3",
-    "lightningcss": "^1.33.0",
+    "eslint": "^10.8.0",
+    "eslint-plugin-react-hooks": "^7.1.1",
+    "eslint-plugin-react-refresh": "^0.5.3",
+    "globals": "^17.8.0",
     "pdf-lib": "^1.17.1",
-    "pdfjs-dist": "^6.1.200",
-    "terser": "^5.49.0",
-    "vite": "^8.1.5"
+    "pdfjs-dist": "^6.2.108",
+    "vite": "^8.2.0"
   }
 }

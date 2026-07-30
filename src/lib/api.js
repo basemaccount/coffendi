@@ -14,8 +14,10 @@ export async function submitRequest(endpoint, payload) {
       signal: controller.signal,
     });
   } catch (error) {
-    if (error.name === "AbortError") throw new Error("The request timed out. Please check your connection and try again.");
-    throw new Error("The service could not be reached. Please check your connection and try again.");
+    if (error.name === "AbortError") {
+      throw new Error("The request timed out. Please check your connection and try again.", { cause: error });
+    }
+    throw new Error("The service could not be reached. Please check your connection and try again.", { cause: error });
   } finally {
     window.clearTimeout(timeout);
   }

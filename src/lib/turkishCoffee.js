@@ -295,7 +295,6 @@ export function normalizeCoffeeSearch(value) {
 
 export function localizeCatalogWebsiteProfile(catalog) {
   const profile = catalog.websiteProfile;
-  const country = catalog.country.tr;
   const sheetCount = catalog.sheetCount;
   const types = translateCoffeeList(catalog.types);
   const flavors = translateCoffeeList(catalog.flavors);

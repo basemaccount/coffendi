@@ -373,19 +373,20 @@ function ScrollManager() {
   const ignoreScrollEvents = useRef(false);
 
   useEffect(() => {
+    const savedPositions = positions.current;
     const previousRestoration = window.history.scrollRestoration;
     const rememberPosition = () => {
-      if (!ignoreScrollEvents.current) positions.current.set(currentKey.current, window.scrollY);
+      if (!ignoreScrollEvents.current) savedPositions.set(currentKey.current, window.scrollY);
     };
     const rememberBeforeNavigation = () => {
-      positions.current.set(currentKey.current, window.scrollY);
+      savedPositions.set(currentKey.current, window.scrollY);
       ignoreScrollEvents.current = true;
     };
     const restoreAfterCache = (event) => {
       if (!event.persisted) return;
       ignoreScrollEvents.current = false;
       document.documentElement.classList.remove("is-restoring-scroll", "route-changing");
-      positions.current.set(currentKey.current, window.scrollY);
+      savedPositions.set(currentKey.current, window.scrollY);
     };
 
     window.history.scrollRestoration = "manual";
@@ -396,7 +397,7 @@ function ScrollManager() {
     window.addEventListener("app:before-navigation", rememberBeforeNavigation);
 
     return () => {
-      positions.current.set(currentKey.current, window.scrollY);
+      savedPositions.set(currentKey.current, window.scrollY);
       window.history.scrollRestoration = previousRestoration;
       window.removeEventListener("scroll", rememberPosition);
       window.removeEventListener("pagehide", rememberPosition);

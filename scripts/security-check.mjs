@@ -13,6 +13,9 @@ assert.match(csp, /default-src 'self'/);
 assert.match(csp, /object-src 'none'/);
 assert.match(csp, /frame-ancestors 'none'/);
 assert.equal(headerMap.get("x-frame-options"), "DENY");
+assert.equal(headerMap.get("cross-origin-resource-policy"), "same-origin");
+assert.equal(headerMap.get("origin-agent-cluster"), "?1");
+assert.equal(headerMap.get("x-dns-prefetch-control"), "off");
 assert.match(headerMap.get("strict-transport-security") || "", /max-age=31536000/);
 
 const browser = await chromium.launch();

@@ -827,7 +827,7 @@ function translatePdfValue(value) {
   return translateCoffeeValue(value, "tr");
 }
 
-async function createTurkishSheetPdf({
+async function _createTurkishSheetPdf({
   country,
   extracted,
   sourceDocument,

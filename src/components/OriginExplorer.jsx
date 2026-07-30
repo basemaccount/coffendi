@@ -305,8 +305,6 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
 
   useEffect(() => {
     if (filteredProfiles.length && !filteredProfiles.some(({ id }) => id === activeId)) setActiveIdState(filteredProfiles[0].id);
-    // Keep a URL-selected map focus synchronized with browser Back/Forward.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId, filteredProfiles, requestedFocus]);
 
   useEffect(() => {
@@ -315,8 +313,6 @@ export default function OriginExplorer({ profiles, language, LinkComponent }) {
       && requestedFocus !== activeId
       && filteredProfiles.some(({ id }) => id === requestedFocus)
     ) setActiveIdState(requestedFocus);
-    // location.search is the external source of truth for focus restoration.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeId, filteredProfiles, requestedFocus]);
 
   useEffect(() => {

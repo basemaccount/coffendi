@@ -1,22 +1,29 @@
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 export function usePersistentState(key, initialValue) {
   const initialValueRef = useRef(initialValue);
-  const storedValueRef = useRef(null);
-  const [value, setValue] = useState(() => {
+  const [state, setState] = useState(() => {
     try {
       const stored = window.localStorage.getItem(key);
-      if (stored) {
-        storedValueRef.current = stored;
-        return JSON.parse(stored);
-      }
-      storedValueRef.current = JSON.stringify(initialValue);
-      return initialValue;
+      return {
+        value: stored ? JSON.parse(stored) : initialValue,
+        serialized: stored ?? JSON.stringify(initialValue),
+      };
     } catch {
-      storedValueRef.current = null;
-      return initialValue;
+      return {
+        value: initialValue,
+        serialized: JSON.stringify(initialValue),
+      };
     }
   });
+  const storedValueRef = useRef(state.serialized);
+  const value = state.value;
+  const setValue = useCallback((nextValue) => {
+    setState((current) => ({
+      ...current,
+      value: typeof nextValue === "function" ? nextValue(current.value) : nextValue,
+    }));
+  }, []);
 
   useEffect(() => {
     const serialized = JSON.stringify(value);
@@ -37,7 +44,7 @@ export function usePersistentState(key, initialValue) {
       try {
         const nextValue = event.newValue === null ? initialValueRef.current : JSON.parse(serialized);
         storedValueRef.current = serialized;
-        setValue(nextValue);
+        setState((current) => ({ ...current, value: nextValue }));
       } catch {
         // Ignore malformed values written outside this application.
       }
