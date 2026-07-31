@@ -63,6 +63,10 @@
   letter-spacing: -.035em;
 }
 
+.origin-page-reader__header > div:first-child > .eyebrow {
+  color: #f2cf83;
+}
+
 .origin-page-reader__header > div:first-child > p:last-child {
   max-width: 650px;
   margin-top: 11px;

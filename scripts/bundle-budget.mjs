@@ -8,10 +8,10 @@ const files = await readdir(assetsDirectory);
 const budgets = {
   js: 111 * 1024,
   css: 16 * 1024,
-  combined: 126 * 1024,
+  combined: 127 * 1024,
   deferredJs: 24 * 1024,
-  deferredCss: 6 * 1024,
-  allCombined: 140 * 1024,
+  deferredCss: 9 * 1024,
+  allCombined: 148 * 1024,
 };
 
 async function compressedBytes(extension, candidates = files) {

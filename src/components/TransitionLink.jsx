@@ -31,7 +31,7 @@ function useSafeTransitionClick({
       && (!target || target === "_self")
       && !reloadDocument
       && download == null;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = document.documentElement.dataset.motion === "calm" || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 
     if (!isPlainNavigation) return;
 

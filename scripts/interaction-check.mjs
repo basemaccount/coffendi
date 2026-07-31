@@ -105,6 +105,25 @@ await hydrationPage.getByRole("heading", { level: 1, name: "Ethiopia" }).waitFor
 await hydrationContext.close();
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
+const discoveryTrigger = page.getByRole("button", { name: "Open quick discovery" });
+await discoveryTrigger.click();
+assert(await page.locator(".discovery-deck").evaluate((dialog) => dialog.open), "origin lens did not open as a modal dialog");
+await page.getByPlaceholder("Search country, process, grade or page…").fill("Ethiopia");
+assert(await page.locator('.discovery-deck__results a[href="/origins/ethiopia"]').count() >= 1, "origin lens did not find the Ethiopia origin route");
+await page.locator('.discovery-deck__results a[href="/origins/ethiopia"]').first().click();
+await page.waitForURL("**/origins/ethiopia");
+await page.goto(baseUrl, { waitUntil: "networkidle" });
+await page.getByRole("button", { name: "Open quick discovery" }).click();
+const motionControl = page.locator(".discovery-deck__footer > button");
+await motionControl.click();
+assert(await page.locator("html").getAttribute("data-motion") === "calm", "origin lens did not apply the saved calm-motion mode");
+await motionControl.click();
+assert(await page.locator("html").getAttribute("data-motion") === "full", "origin lens did not restore full motion mode");
+await page.keyboard.press("Escape");
+assert(!await page.locator(".discovery-deck").evaluate((dialog) => dialog.open), "origin lens did not close with Escape");
+assert(await discoveryTrigger.evaluate((element) => document.activeElement === element), "origin lens did not restore focus to its trigger");
+
+await page.goto(baseUrl, { waitUntil: "networkidle" });
 assert(await page.locator('.language-switcher[role="group"]').count() === 1, "language controls did not expose grouped semantics");
 const keyboardLink = page.locator('.desktop-nav a[href="/coffees"]');
 await keyboardLink.focus();

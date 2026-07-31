@@ -1,6 +1,8 @@
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { ArrowUp } from "lucide-react";
 import { useLocation } from "react-router";
+
+const DiscoveryDeck = lazy(() => import("./DiscoveryDeck"));
 
 const REVEAL_SELECTOR = [
   ".service-strip .shell > div",
@@ -33,7 +35,7 @@ const REVEAL_SELECTOR = [
   ".footer-grid > *",
 ].join(",");
 
-export default function ExperienceLayer({ language }) {
+export default function ExperienceLayer({ language, profiles }) {
   const { pathname } = useLocation();
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [showChapterNavigator, setShowChapterNavigator] = useState(false);
@@ -221,7 +223,7 @@ export default function ExperienceLayer({ language }) {
   }, [pathname, language]);
 
   useLayoutEffect(() => {
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = document.documentElement.dataset.motion === "calm" || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     const main = document.querySelector("#main-content");
     const targets = new Set();
     const reveal = (element) => element.classList.add("is-revealed");
@@ -273,7 +275,7 @@ export default function ExperienceLayer({ language }) {
 
   useEffect(() => {
     const precisePointer = window.matchMedia("(hover: hover) and (pointer: fine)").matches;
-    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const reduceMotion = document.documentElement.dataset.motion === "calm" || window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (!precisePointer || reduceMotion) return undefined;
 
     const cleanups = Array.from(document.querySelectorAll("[data-optical]")).map((surface) => {
@@ -314,14 +316,14 @@ export default function ExperienceLayer({ language }) {
   }, [pathname]);
 
   const returnToTop = () => {
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+    const behavior = document.documentElement.dataset.motion === "calm" || window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
     window.scrollTo({ top: 0, behavior });
   };
 
   const goToChapter = (chapterId) => {
     const target = document.getElementById(chapterId);
     if (!target) return;
-    const behavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
+    const behavior = document.documentElement.dataset.motion === "calm" || window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "instant" : "smooth";
     setActiveChapterId(chapterId);
     target.scrollIntoView({ block: "start", behavior });
   };
@@ -332,6 +334,7 @@ export default function ExperienceLayer({ language }) {
 
   return (
     <>
+      <Suspense fallback={null}><DiscoveryDeck language={language} profiles={profiles} /></Suspense>
       <p className="experience-announcer" role="status" aria-live="polite" aria-atomic="true">{routeAnnouncement}</p>
       {connectionNotice && <div className={`connection-notice is-${connectionNotice}`} role="status" aria-live="polite"><span aria-hidden="true" /><div><strong>{language === "tr" ? connectionNotice === "offline" ? "Bağlantı kesildi" : "Bağlantı yeniden kuruldu" : connectionNotice === "offline" ? "You’re offline" : "Connection restored"}</strong><small>{language === "tr" ? connectionNotice === "offline" ? "Bazı görseller ve talep gönderimi kullanılamayabilir." : "Gezinmeye ve talep göndermeye devam edebilirsiniz." : connectionNotice === "offline" ? "Some images and inquiry submission may be unavailable." : "You can continue browsing and submit an inquiry."}</small></div></div>}
       <div className="route-loader" aria-hidden="true"><span /></div>

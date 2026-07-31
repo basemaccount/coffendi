@@ -15,6 +15,7 @@ import {
   PackageCheck,
   PhoneCall,
   Send,
+  Search,
   Ship,
   Sprout,
   Warehouse,
@@ -526,6 +527,7 @@ function Header({ language, setLanguage, copy }) {
           {nav.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}
         </nav>
         <div className="header-actions">
+          <button className="discovery-trigger" type="button" onClick={(event) => window.dispatchEvent(new CustomEvent("app:open-discovery", { detail: { trigger: event.currentTarget } }))} aria-label={language === "tr" ? "Hızlı keşfi aç" : "Open quick discovery"}><Search aria-hidden="true" /><span>{language === "tr" ? "Keşfet" : "Explore"}</span><kbd>⌘K</kbd></button>
           <div className="language-switcher" role="group" aria-label={copy.language}>
             {['en', 'tr'].map((code) => (
               <button key={code} className={language === code ? "is-active" : ""} type="button" onClick={() => setLanguage(code)} aria-pressed={language === code}>{code.toUpperCase()}</button>
@@ -1195,7 +1197,7 @@ export default function App() {
     <div className="app-shell">
       <a className="skip-link" href="#main-content">{language === "tr" ? "İçeriğe geç" : "Skip to content"}</a>
       <ScrollManager />
-      <ExperienceLayer language={language} />
+      <ExperienceLayer language={language} profiles={profiles} />
       <Header language={language} setLanguage={setLanguage} copy={copy} />
       <main id="main-content">
         {catalogPending ? (
