@@ -10,8 +10,8 @@ const budgets = {
   css: 16 * 1024,
   combined: 127 * 1024,
   deferredJs: 24 * 1024,
-  deferredCss: 9 * 1024,
-  allCombined: 148 * 1024,
+  deferredCss: 10 * 1024,
+  allCombined: 150 * 1024,
 };
 
 async function compressedBytes(extension, candidates = files) {

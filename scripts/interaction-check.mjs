@@ -106,9 +106,20 @@ await hydrationContext.close();
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 const discoveryTrigger = page.getByRole("button", { name: "Open quick discovery" });
+assert(await page.locator(".discovery-deck").count() === 0, "origin lens was downloaded and mounted before search intent");
 await discoveryTrigger.click();
 assert(await page.locator(".discovery-deck").evaluate((dialog) => dialog.open), "origin lens did not open as a modal dialog");
-await page.getByPlaceholder("Search country, process, grade or page…").fill("Ethiopia");
+const discoveryInput = page.getByPlaceholder("Search country, process, grade or page…");
+assert(await discoveryInput.evaluate((element) => document.activeElement === element), "origin lens did not focus its search input");
+assert(await page.locator(".discovery-deck__quick-picks button").count() === 3, "origin lens did not expose quick origin searches");
+await page.locator(".discovery-deck__quick-picks button").nth(1).click();
+assert(await discoveryInput.inputValue() === "Brazil", "origin quick search did not update the query");
+await page.getByRole("button", { name: "Clear search" }).click();
+assert(await discoveryInput.inputValue() === "", "origin clear control did not reset the query");
+await discoveryInput.fill("Ethiopia");
+await page.locator('.discovery-deck__results a[href="/origins/ethiopia"]').first().waitFor();
+await page.waitForFunction(() => document.querySelector(".discovery-deck__results")?.getAttribute("aria-busy") === "false");
+assert(await page.locator(".discovery-deck__results").getAttribute("aria-busy") === "false", "origin results remained busy after deferred filtering");
 assert(await page.locator('.discovery-deck__results a[href="/origins/ethiopia"]').count() >= 1, "origin lens did not find the Ethiopia origin route");
 await page.locator('.discovery-deck__results a[href="/origins/ethiopia"]').first().click();
 await page.waitForURL("**/origins/ethiopia");
@@ -122,6 +133,22 @@ assert(await page.locator("html").getAttribute("data-motion") === "full", "origi
 await page.keyboard.press("Escape");
 assert(!await page.locator(".discovery-deck").evaluate((dialog) => dialog.open), "origin lens did not close with Escape");
 assert(await discoveryTrigger.evaluate((element) => document.activeElement === element), "origin lens did not restore focus to its trigger");
+
+const discoveryMobileContext = await browser.newContext({ viewport: { width: 390, height: 844 }, hasTouch: true });
+const discoveryMobile = await discoveryMobileContext.newPage();
+await discoveryMobile.goto(baseUrl, { waitUntil: "networkidle" });
+await discoveryMobile.keyboard.press("Control+k");
+await discoveryMobile.getByPlaceholder("Search country, process, grade or page…").fill("Kenya");
+await discoveryMobile.getByRole("button", { name: "Clear search" }).waitFor();
+await discoveryMobile.waitForTimeout(240);
+const mobileClearBounds = await discoveryMobile.getByRole("button", { name: "Clear search" }).boundingBox();
+const mobileChipBounds = await discoveryMobile.locator(".discovery-deck__quick-picks button").first().boundingBox();
+assert(mobileClearBounds?.width >= 43.5 && mobileClearBounds?.height >= 43.5, "origin mobile clear control was smaller than 44px");
+assert(mobileChipBounds?.height >= 43.5, "origin mobile quick search was smaller than 44px");
+assert(await discoveryMobile.locator(".discovery-deck").evaluate((dialog) => getComputedStyle(dialog, "::backdrop").backdropFilter === "none"), "origin mobile backdrop retained an expensive blur filter");
+assert(await discoveryMobile.evaluate(() => document.documentElement.scrollWidth === document.documentElement.clientWidth), "origin lens overflowed on mobile");
+assert((await discoveryMobile.locator(".discovery-deck__results > a").first().evaluate((element) => getComputedStyle(element).animationName)).includes("mobile"), "origin results did not use the mobile motion treatment");
+await discoveryMobileContext.close();
 
 await page.goto(baseUrl, { waitUntil: "networkidle" });
 assert(await page.locator('.language-switcher[role="group"]').count() === 1, "language controls did not expose grouped semantics");

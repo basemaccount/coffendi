@@ -527,7 +527,7 @@ function Header({ language, setLanguage, copy }) {
           {nav.map(([label, to]) => <NavLink key={to} to={to}>{label}</NavLink>)}
         </nav>
         <div className="header-actions">
-          <button className="discovery-trigger" type="button" onClick={(event) => window.dispatchEvent(new CustomEvent("app:open-discovery", { detail: { trigger: event.currentTarget } }))} aria-label={language === "tr" ? "Hızlı keşfi aç" : "Open quick discovery"}><Search aria-hidden="true" /><span>{language === "tr" ? "Keşfet" : "Explore"}</span><kbd>⌘K</kbd></button>
+          <button className="discovery-trigger" type="button" onPointerEnter={() => window.dispatchEvent(new Event("app:preload-discovery"))} onFocus={() => window.dispatchEvent(new Event("app:preload-discovery"))} onTouchStart={() => window.dispatchEvent(new Event("app:preload-discovery"))} onClick={(event) => window.dispatchEvent(new CustomEvent("app:open-discovery", { detail: { trigger: event.currentTarget } }))} aria-label={language === "tr" ? "Hızlı keşfi aç" : "Open quick discovery"}><Search aria-hidden="true" /><span>{language === "tr" ? "Keşfet" : "Explore"}</span><kbd>⌘K</kbd></button>
           <div className="language-switcher" role="group" aria-label={copy.language}>
             {['en', 'tr'].map((code) => (
               <button key={code} className={language === code ? "is-active" : ""} type="button" onClick={() => setLanguage(code)} aria-pressed={language === code}>{code.toUpperCase()}</button>
