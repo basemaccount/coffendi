@@ -126,6 +126,7 @@ export default function DiscoveryDeck({ language = "en", profiles = [], openRequ
   useEffect(() => {
     if (!openRequest) return;
     triggerRef.current = openRequest.trigger || document.activeElement;
+    triggerRef.current?.setAttribute?.("aria-expanded", "true");
     setOpen(true);
   }, [openRequest]);
 
@@ -166,6 +167,7 @@ export default function DiscoveryDeck({ language = "en", profiles = [], openRequ
 
   return (
     <dialog
+      id="discovery-dialog"
       ref={dialogRef}
       className="discovery-deck"
       data-updating={isSearching ? "true" : "false"}
@@ -174,6 +176,9 @@ export default function DiscoveryDeck({ language = "en", profiles = [], openRequ
       onClose={() => {
         setOpen(false);
         document.body.classList.remove("discovery-open");
+        triggerRef.current?.setAttribute?.("aria-expanded", "false");
+        triggerRef.current?.removeAttribute?.("aria-busy");
+        triggerRef.current?.classList?.remove("is-loading");
         triggerRef.current?.focus?.({ preventScroll: true });
       }}
       onClick={(event) => { if (event.target === event.currentTarget) close(); }}

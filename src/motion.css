@@ -76,6 +76,7 @@ html.route-pending .route-loader span { animation: route-loader-sweep 720ms var(
   white-space: nowrap;
 }
 
+
 .connection-notice {
   position: fixed;
   z-index: 1450;
