@@ -613,3 +613,143 @@ a.contact-channel:hover { border-color: rgba(239,201,121,.52); background: rgba(
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; }
 }
+
+/* ----------------------------------------------------
+   120 FPS Scroll & GPU Layer Optimizations
+   ---------------------------------------------------- */
+.site-header {
+  transform: translateZ(0);
+  will-change: transform;
+  contain: layout paint;
+}
+
+.coffee-card-grid,
+.origin-card-grid,
+.profile-card-grid {
+  contain: content;
+}
+
+/* ----------------------------------------------------
+   Group Ecosystem Cross-Link Bar (Subtle & Elegant)
+   ---------------------------------------------------- */
+.group-ecosystem-bar {
+  margin-top: 42px;
+  padding-top: 26px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.group-ecosystem-inner {
+  display: grid;
+  gap: 14px;
+}
+
+.group-ecosystem-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.6);
+  font-weight: 700;
+}
+
+.group-ecosystem-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--gold, #efc979);
+  display: inline-block;
+}
+
+.group-ecosystem-hint {
+  margin-left: auto;
+  font-size: 0.64rem;
+  letter-spacing: 0.02em;
+  text-transform: none;
+  color: rgba(255, 255, 255, 0.42);
+}
+
+.group-ecosystem-items {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.group-ecosystem-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  padding: 12px 14px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.82);
+  text-decoration: none;
+  transition: transform 180ms ease, background 180ms ease, border-color 180ms ease;
+  min-width: 0;
+}
+
+.group-ecosystem-item strong {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.group-ecosystem-item small {
+  font-size: 0.68rem;
+  color: rgba(255, 255, 255, 0.55);
+  line-height: 1.35;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.group-ecosystem-link-title {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+}
+
+.group-ecosystem-link-title svg {
+  color: rgba(255, 255, 255, 0.4);
+  transition: transform 180ms ease, color 180ms ease;
+}
+
+a.group-ecosystem-item:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(239, 201, 121, 0.35);
+  transform: translateY(-1px);
+}
+
+a.group-ecosystem-item:hover .group-ecosystem-link-title svg {
+  color: #ffffff;
+  transform: translate(1px, -1px);
+}
+
+.group-ecosystem-item.is-current {
+  background: rgba(255, 255, 255, 0.045);
+  border-color: rgba(239, 201, 121, 0.35);
+  cursor: default;
+}
+
+.group-ecosystem-badge {
+  align-self: flex-start;
+  font-size: 0.56rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(239, 201, 121, 0.18);
+  color: var(--gold, #efc979);
+  margin-bottom: 2px;
+}
+
+@media (max-width: 820px) {
+  .group-ecosystem-items {
+    grid-template-columns: 1fr;
+  }
+}
+

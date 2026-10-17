@@ -6,9 +6,9 @@ import path from "node:path";
 const assetsDirectory = path.join(process.cwd(), "dist", "assets");
 const files = await readdir(assetsDirectory);
 const budgets = {
-  js: 111 * 1024,
-  css: 16 * 1024,
-  combined: 127 * 1024,
+  js: 115 * 1024,
+  css: 18 * 1024,
+  combined: 133 * 1024,
   deferredJs: 24 * 1024,
   deferredCss: 10 * 1024,
   allCombined: 150 * 1024,

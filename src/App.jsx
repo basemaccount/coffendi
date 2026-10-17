@@ -23,6 +23,7 @@ import {
 } from "lucide-react";
 import { Navigate, Route, Routes, useLocation, useNavigationType, useParams } from "react-router";
 import ExperienceLayer from "./components/ExperienceLayer";
+import GroupEcosystemBar from "./components/GroupEcosystemBar";
 import InquiryProgress from "./components/InquiryProgress";
 import OriginAtlas from "./components/OriginAtlas";
 import OriginConstellation from "./components/OriginConstellation";
@@ -41,8 +42,8 @@ const CONTACT_EMAIL = "info@makendi.com";
 const CONTACT_PHONE = "+90 216 340 70 28";
 const CONTACT_PHONE_HREF = "+902163407028";
 const CONTACT_WEBSITE = "www.coffendi.com";
-const DEFAULT_SHARE_IMAGE = `${SITE_URL}/images/green-green-beans-sack.webp`;
-const DEFAULT_SHARE_IMAGE_ALT = "Green coffee beans in a jute sack";
+const DEFAULT_SHARE_IMAGE = `${SITE_URL}/og-image.jpg`;
+const DEFAULT_SHARE_IMAGE_ALT = "Coffendi Green Coffee Portfolio and 38-Country Origin Atlas";
 const CATALOG_PAGE_SIZE = 9;
 const OriginDocumentLibrary = lazy(() => import("./components/OriginDocumentLibrary"));
 
@@ -1073,7 +1074,70 @@ function PageHero({ eyebrow, title, copy, marker }) {
 }
 
 function Footer({ language, copy }) {
-  return <footer className="site-footer"><div className="shell footer-lead"><div><p className="eyebrow eyebrow--gold">{language === "tr" ? "Bir sonraki kahve görüşmeniz" : "The next coffee conversation"}</p><h2>{language === "tr" ? "Menşeyi keşfedin, ihtiyacınızı birlikte netleştirelim." : "Start with origin. Make it precise with the brief."}</h2></div><Link className="button button--gold" to="/contact">{copy.inquiry}<ArrowRight aria-hidden="true" /></Link></div><div className="shell footer-grid"><div className="footer-brand"><img src="/coffendi-logo-256.webp" srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w" sizes="118px" alt="Coffendi" width="256" height="243" loading="lazy" decoding="async" /><p>{copy.footerLine}</p></div><div><strong>{language === "tr" ? "Keşfet" : "Explore"}</strong><Link to="/coffees">{copy.nav.coffees}</Link><Link to="/origins">{copy.nav.origins}</Link><Link to="/compare">{copy.nav.compare}</Link></div><div><strong>Coffendi</strong><Link to="/approach">{copy.nav.impact}</Link><Link to="/contact">{copy.nav.contact}</Link><Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link></div><div><strong>{language === "tr" ? "İletişim" : "Contact"}</strong><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a><a href={`tel:${CONTACT_PHONE_HREF}`}>{CONTACT_PHONE}</a><span>{CONTACT_WEBSITE}</span></div></div><div className="shell footer-base"><span>© {new Date().getFullYear()} Coffendi</span><span>{language === "tr" ? "Bilgilendirme sitesidir · Çevrimiçi satış yapılmaz" : "Informational website · No online sales"}</span></div></footer>;
+  return (
+    <footer className="site-footer">
+      <div className="shell footer-lead">
+        <div>
+          <p className="eyebrow eyebrow--gold">
+            {language === "tr" ? "Bir sonraki kahve görüşmeniz" : "The next coffee conversation"}
+          </p>
+          <h2>
+            {language === "tr"
+              ? "Menşeyi keşfedin, ihtiyacınızı birlikte netleştirelim."
+              : "Start with origin. Make it precise with the brief."}
+          </h2>
+        </div>
+        <Link className="button button--gold" to="/contact">
+          {copy.inquiry}
+          <ArrowRight aria-hidden="true" />
+        </Link>
+      </div>
+      <div className="shell footer-grid">
+        <div className="footer-brand">
+          <img
+            src="/coffendi-logo-256.webp"
+            srcSet="/coffendi-logo-160.webp 160w, /coffendi-logo-256.webp 256w"
+            sizes="118px"
+            alt="Coffendi"
+            width="256"
+            height="243"
+            loading="lazy"
+            decoding="async"
+          />
+          <p>{copy.footerLine}</p>
+        </div>
+        <div>
+          <strong>{language === "tr" ? "Keşfet" : "Explore"}</strong>
+          <Link to="/coffees">{copy.nav.coffees}</Link>
+          <Link to="/origins">{copy.nav.origins}</Link>
+          <Link to="/compare">{copy.nav.compare}</Link>
+        </div>
+        <div>
+          <strong>Coffendi</strong>
+          <Link to="/approach">{copy.nav.impact}</Link>
+          <Link to="/contact">{copy.nav.contact}</Link>
+          <Link to="/privacy">{language === "tr" ? "Gizlilik" : "Privacy"}</Link>
+        </div>
+        <div>
+          <strong>{language === "tr" ? "İletişim" : "Contact"}</strong>
+          <a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a>
+          <a href={`tel:${CONTACT_PHONE_HREF}`}>{CONTACT_PHONE}</a>
+          <span>{CONTACT_WEBSITE}</span>
+        </div>
+      </div>
+      <div className="shell">
+        <GroupEcosystemBar language={language} currentId="coffendi" />
+      </div>
+      <div className="shell footer-base">
+        <span>© {new Date().getFullYear()} Coffendi</span>
+        <span>
+          {language === "tr"
+            ? "Bilgilendirme sitesidir · Çevrimiçi satış yapılmaz"
+            : "Informational website · No online sales"}
+        </span>
+      </div>
+    </footer>
+  );
 }
 
 function NotFound({ language }) {
