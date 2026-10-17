@@ -3,8 +3,8 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { originCatalogIndexUrl } from "../src/originCatalog.js";
 
-const baseUrl = String(process.env.COFFENDI_BASE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
-const canonicalUrl = String(process.env.COFFENDI_CANONICAL_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
+const baseUrl = String(process.env.COFFENDI_BASE_URL || "https://coffendi.com").replace(/\/$/, "");
+const canonicalUrl = String(process.env.COFFENDI_CANONICAL_URL || "https://coffendi.com").replace(/\/$/, "");
 const originCatalogCountries = JSON.parse(
   readFileSync(path.join(process.cwd(), "public", originCatalogIndexUrl), "utf8"),
 ).countries;
