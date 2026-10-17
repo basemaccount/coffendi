@@ -1,4 +1,5 @@
 import fs from "node:fs";
+import { fileURLToPath } from "node:url";
 import { chromium } from "@playwright/test";
 
 const outputDir = new URL("../test-output/", import.meta.url);
@@ -44,7 +45,7 @@ for (const check of checks) {
   page.on("console", (message) => { if (message.type() === "error") errors.push(message.text()); });
   await page.goto(`${baseUrl}${check.path}`, { waitUntil: "networkidle" });
   await page.evaluate(() => document.fonts.ready);
-  await page.screenshot({ path: new URL(`${check.name}.png`, outputDir).pathname, fullPage: false });
+  await page.screenshot({ path: fileURLToPath(new URL(`${check.name}.png`, outputDir)), fullPage: false });
 
   const audit = await page.evaluate(() => ({
     clientWidth: document.documentElement.clientWidth,
@@ -143,7 +144,7 @@ for (const check of checks) {
         if ((await page.locator(".origin-document-dialog__toolbar").getByRole("link", { name: "Kaynak orijinali" }).count()) !== 1) failures.push("desktop-kenya: Turkish reader did not preserve the English source original");
         if (!(await page.locator(".origin-document-dialog__provenance").getByText("Üretilmiş Türkçe teknik föy", { exact: true }).isVisible())) failures.push("desktop-kenya: generated Turkish document provenance was missing");
       }
-      await page.screenshot({ path: new URL(`${check.name}-viewer.png`, outputDir).pathname, fullPage: false });
+      await page.screenshot({ path: fileURLToPath(new URL(`${check.name}-viewer.png`, outputDir)), fullPage: false });
     }
   }
 
@@ -220,7 +221,7 @@ for (const check of checks) {
       if (viewerLayout.toolbarOverflow > 1) failures.push(`mobile-profile: document toolbar overflowed by ${viewerLayout.toolbarOverflow}px`);
       if (!viewerLayout.mobileActionsVisible) failures.push("mobile-profile: mobile document actions were not visible");
       if (viewerLayout.visibleTargets.some(({ width, height }) => width < 44 || height < 44)) failures.push("mobile-profile: document viewer exposed a control below 44px");
-      await page.screenshot({ path: new URL("mobile-profile-viewer.png", outputDir).pathname, fullPage: false });
+      await page.screenshot({ path: fileURLToPath(new URL("mobile-profile-viewer.png", outputDir)), fullPage: false });
       await page.getByRole("button", { name: "Close document viewer" }).click();
     }
   }

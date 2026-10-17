@@ -8,6 +8,14 @@
       "maxDuration": 15
     }
   },
+  "redirects": [
+    {
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "www.coffendi.com" }],
+      "destination": "https://coffendi.com/$1",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/(.*)",

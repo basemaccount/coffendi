@@ -36,7 +36,7 @@ import { localizeCatalogWebsiteProfile } from "./lib/turkishCoffee";
 import { originCatalogIndexUrl, originCatalogMeta } from "./originCatalog";
 import "./origin-profile.css";
 
-const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
+const SITE_URL = String(import.meta.env.VITE_PUBLIC_STORE_URL || "https://coffendi.com").replace(/\/$/, "");
 const CONTACT_EMAIL = "info@makendi.com";
 const CONTACT_PHONE = "+90 216 340 70 28";
 const CONTACT_PHONE_HREF = "+902163407028";

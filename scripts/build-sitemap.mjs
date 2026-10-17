@@ -2,7 +2,7 @@ import { readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { originCatalogIndexUrl } from "../src/originCatalog.js";
 
-const baseUrl = String(process.env.PUBLIC_STORE_URL || "https://coffendi.vercel.app").replace(/\/$/, "");
+const baseUrl = String(process.env.PUBLIC_STORE_URL || "https://coffendi.com").replace(/\/$/, "");
 const originCatalogCountries = JSON.parse(
   readFileSync(path.join(process.cwd(), "public", originCatalogIndexUrl), "utf8"),
 ).countries;
